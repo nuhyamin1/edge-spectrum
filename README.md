@@ -1,29 +1,45 @@
-# EduFlow - Modern Learning Platform
+# EduFlow Learning Platform
 
-EduFlow is a comprehensive learning platform that connects teachers and students through interactive virtual classrooms. Built with modern web technologies, it provides a seamless educational experience with features like video conferencing, real-time discussions, and organized learning materials.
+A modern web application that connects teachers and students through interactive virtual classrooms.
 
 ## Features
 
 ### Authentication
-- User registration for both teachers and students
-- Secure email verification system
-- JWT-based authentication
-- Protected routes and user sessions
+- JWT-based authentication for users (teachers and students)
+- Email verification during registration
+- Secure login with role-based access control
+- Token-based session management
 
-### Coming Soon
-- Virtual Classrooms with Video Chat (Agora)
-- Real-time Discussion Boards
-- Learning Materials Management
-- Interactive Teaching Tools
+### Teacher Features
+- Dashboard with session management
+- Create new learning sessions with:
+  - Title
+  - Subject
+  - Description
+  - Date/Time scheduling
+  - Optional materials link
+- View and manage all created sessions
+- Edit existing sessions
+- Delete sessions
+
+### Student Features
+- Dashboard showing available sessions
+- View upcoming session details including:
+  - Session title and subject
+  - Teacher information
+  - Date and time
+  - Session description
+  - Access to session materials
+- Session enrollment (Coming soon)
 
 ## Tech Stack
 
 ### Frontend
 - React.js
 - React Router for navigation
-- Tailwind CSS for styling
 - Axios for API requests
 - React Toastify for notifications
+- Tailwind CSS for styling
 
 ### Backend
 - Node.js
@@ -32,70 +48,99 @@ EduFlow is a comprehensive learning platform that connects teachers and students
 - JWT for authentication
 - Nodemailer for email services
 
-### Video Integration (Coming Soon)
-- Agora SDK for video conferencing
+## Project Structure
 
-## Prerequisites
+```
+client/
+├── src/
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   └── EmailVerification.jsx
+│   │   └── dashboard/
+│   │       ├── teacher/
+│   │       │   ├── MainPage.jsx
+│   │       │   ├── CreateSession.jsx
+│   │       │   ├── SessionList.jsx
+│   │       │   └── EditSession.jsx
+│   │       └── student/
+│   │           ├── MainPage.jsx
+│   │           └── AvailableSessions.jsx
+│   ├── context/
+│   │   └── AuthContext.js
+│   └── App.js
+│
+server/
+├── models/
+│   ├── User.js
+│   └── Session.js
+├── routes/
+│   ├── auth.js
+│   └── sessions.js
+├── middleware/
+│   ├── auth.js
+│   └── isTeacher.js
+└── server.js
+```
 
-Before running the application, make sure you have:
-- Node.js (v14 or higher)
-- MongoDB installed and running
-- Gmail account for email verification service
+## Environment Variables
 
-## Installation
+### Server
+- `JWT_SECRET`: Secret key for JWT token generation
+- `MONGODB_URI`: MongoDB connection string
+- `EMAIL_USER`: Email service username
+- `EMAIL_PASS`: Email service password
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd learning-platform
-   ```
+### Client
+- `REACT_APP_API_URL`: Backend API URL
 
-2. Install dependencies for both server and client:
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies:
    ```bash
    # Install server dependencies
+   cd server
    npm install
 
    # Install client dependencies
-   cd client
+   cd ../client
    npm install
    ```
 
-3. Create a `.env` file in the root directory:
-   ```env
-   MONGODB_URI=mongodb://127.0.0.1:27017/learning_platform
-   JWT_SECRET=your_jwt_secret
-   EMAIL_USER=your_gmail@gmail.com
-   EMAIL_PASS=your_gmail_app_password
-   ```
+3. Set up environment variables:
+   - Create `.env` file in server directory
+   - Create `.env` file in client directory
 
-4. Start the development server:
+4. Start the development servers:
    ```bash
-   # From the root directory
+   # Start backend server
+   cd server
    npm run dev
+
+   # Start frontend server
+   cd ../client
+   npm start
    ```
 
-## Development
+## Current Status
+- Authentication system implemented
+- Teacher dashboard with session management
+- Student dashboard with available sessions view
+- Session enrollment system (In Progress)
+- Real-time session notifications (Planned)
+- Interactive classroom features (Planned)
 
-The application uses a concurrent server setup:
-- Backend API runs on `http://localhost:5000`
-- React frontend runs on `http://localhost:3000`
-- MongoDB should be running on `mongodb://127.0.0.1:27017`
-
-## Scripts
-
-- `npm run dev`: Runs both frontend and backend in development mode
-- `npm run server`: Runs only the backend server
-- `npm run client`: Runs only the frontend client
-- `npm run install-all`: Installs dependencies for both frontend and backend
+## Next Steps
+1. Implement session enrollment functionality
+2. Add real-time notifications for session updates
+3. Create interactive classroom features
+4. Add file upload for session materials
+5. Implement student progress tracking
 
 ## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
 
 ## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE.md file for details.
