@@ -5,11 +5,16 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import EmailVerification from './components/auth/EmailVerification';
+import TeacherMainPage from './components/dashboard/teacher/MainPage';
+import CreateSession from './components/dashboard/teacher/CreateSession';
+import SessionList from './components/dashboard/teacher/SessionList';
+import StudentMainPage from './components/dashboard/student/MainPage';
+import AvailableSessions from './components/dashboard/student/AvailableSessions';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
 // Protected Route Component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
@@ -19,24 +24,76 @@ const ProtectedRoute = ({ children }) => {
   if (!user) {
     return <Navigate to="/login" />;
   }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" />;
+  }
   
   return children;
 };
 
-// Temporary Dashboard Component
-const Dashboard = () => {
-  const { user, logout } = useAuth();
+// AppRoutes component to contain all routes
+const AppRoutes = () => {
+  const { user } = useAuth();
+
   return (
-    <div className="p-4">
-      <h1>Welcome, {user.name}!</h1>
-      <p>Role: {user.role}</p>
-      <button 
-        onClick={logout}
-        className="bg-red-500 text-white px-4 py-2 rounded"
-      >
-        Logout
-      </button>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/verify/:token" element={<EmailVerification />} />
+      
+      {/* Default redirect based on user role */}
+      <Route
+        path="/"
+        element={
+          <Navigate to="/dashboard" replace />
+        }
+      />
+
+      {/* Teacher Routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <TeacherMainPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/create-session"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <CreateSession />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/sessions"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <SessionList />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Student Routes */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentMainPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/available-sessions"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <AvailableSessions />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 };
 
@@ -45,21 +102,8 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/verify/:token" element={<EmailVerification />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to="/login" />} />
-          </Routes>
-          <ToastContainer position="top-right" autoClose={5000} />
+          <AppRoutes />
+          <ToastContainer />
         </div>
       </Router>
     </AuthProvider>
