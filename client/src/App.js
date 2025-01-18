@@ -10,6 +10,7 @@ import CreateSession from './components/dashboard/teacher/CreateSession';
 import SessionList from './components/dashboard/teacher/SessionList';
 import StudentMainPage from './components/dashboard/student/MainPage';
 import AvailableSessions from './components/dashboard/student/AvailableSessions';
+import EditSession from './components/dashboard/teacher/EditSession';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
@@ -72,6 +73,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={['teacher']}>
             <SessionList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/edit-session/:id"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <EditSession />
           </ProtectedRoute>
         }
       />

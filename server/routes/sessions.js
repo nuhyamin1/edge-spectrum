@@ -82,21 +82,14 @@ router.put('/:id', auth, isTeacher, async (req, res) => {
             return res.status(404).json({ error: 'Session not found' });
         }
 
-        const updates = Object.keys(req.body);
-        const allowedUpdates = ['title', 'subject', 'description', 'dateTime', 'materials'];
-        const isValidOperation = updates.every(update => allowedUpdates.includes(update));
-
-        if (!isValidOperation) {
-            return res.status(400).json({ error: 'Invalid updates' });
-        }
-
-        updates.forEach(update => {
-            if (update === 'dateTime') {
-                session[update] = new Date(req.body[update]);
-            } else {
-                session[update] = req.body[update];
-            }
-        });
+        const { title, subject, description, dateTime, materials } = req.body;
+        
+        // Update the session fields
+        session.title = title;
+        session.subject = subject;
+        session.description = description;
+        session.dateTime = new Date(dateTime);
+        session.materials = materials;
         
         await session.save();
         res.json(session);
