@@ -49,7 +49,7 @@ const AvailableSessions = () => {
             sessions.map((session) => (
               <div key={session._id} className="p-6 hover:bg-gray-50">
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="flex-1 text-left">
                     <h3 className="text-lg font-semibold text-gray-800">{session.title}</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       {session.subject} • Taught by {session.teacher?.name || 'Unknown Teacher'}
