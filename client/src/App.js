@@ -51,15 +51,17 @@ const AppRoutes = () => {
         }
       />
 
-      {/* Teacher Routes */}
+      {/* Dashboard Route - Handles both teacher and student */}
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['teacher']}>
-            <TeacherMainPage />
+          <ProtectedRoute allowedRoles={['teacher', 'student']}>
+            {user?.role === 'teacher' ? <TeacherMainPage /> : <StudentMainPage />}
           </ProtectedRoute>
         }
       />
+
+      {/* Teacher Routes */}
       <Route
         path="/dashboard/create-session"
         element={
@@ -86,14 +88,6 @@ const AppRoutes = () => {
       />
 
       {/* Student Routes */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['student']}>
-            <StudentMainPage />
-          </ProtectedRoute>
-        }
-      />
       <Route
         path="/dashboard/available-sessions"
         element={

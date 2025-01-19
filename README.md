@@ -11,6 +11,7 @@ A modern web application that connects teachers and students through interactive
 - Token-based session management
 
 ### Teacher Features
+- Main page (still an empty page)
 - Dashboard with session management
 - Create new learning sessions with:
   - Title
@@ -23,6 +24,7 @@ A modern web application that connects teachers and students through interactive
 - Delete sessions
 
 ### Student Features
+- Main page (still an empty page)
 - Dashboard showing available sessions
 - View upcoming session details including:
   - Session title and subject
