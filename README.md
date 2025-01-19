@@ -22,6 +22,7 @@ A modern web application that connects teachers and students through interactive
 - View and manage all created sessions
 - Edit existing sessions
 - Delete sessions
+- Start a session
 
 ### Student Features
 - Main page (still an empty page)
@@ -53,37 +54,73 @@ A modern web application that connects teachers and students through interactive
 ## Project Structure
 
 ```
-client/
-├── src/
-│   ├── components/
-│   │   ├── auth/
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   └── EmailVerification.jsx
-│   │   └── dashboard/
-│   │       ├── teacher/
-│   │       │   ├── MainPage.jsx
-│   │       │   ├── CreateSession.jsx
-│   │       │   ├── SessionList.jsx
-│   │       │   └── EditSession.jsx
-│   │       └── student/
-│   │           ├── MainPage.jsx
-│   │           └── AvailableSessions.jsx
-│   ├── context/
-│   │   └── AuthContext.js
-│   └── App.js
-│
-server/
-├── models/
-│   ├── User.js
-│   └── Session.js
-├── routes/
-│   ├── auth.js
-│   └── sessions.js
-├── middleware/
-│   ├── auth.js
-│   └── isTeacher.js
-└── server.js
+learning_platform
+├── .gitignore
+├── README.md
+├── client
+│   ├── .gitignore
+│   ├── README.md
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   ├── favicon.ico
+│   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
+│   │   ├── manifest.json
+│   │   └── robots.txt
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   ├── App.test.js
+│   │   ├── components
+│   │   │   ├── auth
+│   │   │   │   ├── EmailVerification.js
+│   │   │   │   ├── Login.js
+│   │   │   │   └── Register.js
+│   │   │   └── dashboard
+│   │   │       ├── Layout.jsx
+│   │   │       ├── student
+│   │   │       │   ├── AvailableSessions.jsx
+│   │   │       │   ├── MainPage.jsx
+│   │   │       │   └── StudentDashboard.jsx
+│   │   │       └── teacher
+│   │   │           ├── Classroom.jsx
+│   │   │           ├── CreateSession.jsx
+│   │   │           ├── EditSession.jsx
+│   │   │           ├── MainPage.jsx
+│   │   │           └── SessionList.jsx
+│   │   ├── context
+│   │   │   └── AuthContext.js
+│   │   ├── index.css
+│   │   ├── index.js
+│   │   ├── logo.svg
+│   │   ├── reportWebVitals.js
+│   │   ├── setupTests.js
+│   │   └── utils
+│   │       └── axios.js
+│   └── tailwind.config.js
+├── package-lock.json
+├── package.json
+└── server
+    ├── middleware
+    │   ├── auth.js
+    │   └── isTeacher.js
+    ├── models
+    │   ├── Session.js
+    │   └── User.js
+    ├── routes
+    │   ├── auth.js
+    │   └── sessions.js
+    ├── server.js
+    └── src
+        ├── middleware
+        │   └── isTeacher.js
+        ├── models
+        │   └── Session.js
+        └── routes
+            └── sessions.js
 ```
 
 ## Environment Variables
