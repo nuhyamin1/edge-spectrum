@@ -115,6 +115,12 @@ const SessionList = () => {
                     </p>
                     <div className="mt-2 space-x-2">
                       <button
+                        onClick={() => navigate(`/teacher/classroom/${session._id}`)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      >
+                        Start Session
+                      </button>
+                      <button
                         onClick={() => navigate(`/dashboard/edit-session/${session._id}`)}
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                       >

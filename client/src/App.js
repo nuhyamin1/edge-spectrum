@@ -11,6 +11,7 @@ import SessionList from './components/dashboard/teacher/SessionList';
 import StudentMainPage from './components/dashboard/student/MainPage';
 import AvailableSessions from './components/dashboard/student/AvailableSessions';
 import EditSession from './components/dashboard/teacher/EditSession';
+import Classroom from './components/dashboard/teacher/Classroom';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
@@ -96,6 +97,8 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/teacher/classroom/:sessionId" element={<Classroom />} />
     </Routes>
   );
 };
