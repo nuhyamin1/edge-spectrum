@@ -28,6 +28,21 @@ const sessionSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    enrolledStudents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    status: {
+        type: String,
+        enum: ['scheduled', 'active', 'completed'],
+        default: 'scheduled'
+    },
+    startedAt: {
+        type: Date
+    },
+    endedAt: {
+        type: Date
+    },
     createdAt: {
         type: Date,
         default: Date.now

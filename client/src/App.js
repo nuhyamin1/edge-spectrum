@@ -12,6 +12,7 @@ import StudentMainPage from './components/dashboard/student/MainPage';
 import AvailableSessions from './components/dashboard/student/AvailableSessions';
 import EditSession from './components/dashboard/teacher/EditSession';
 import Classroom from './components/dashboard/teacher/Classroom';
+import StudentClassroom from './components/dashboard/student/StudentClassroom';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
@@ -98,22 +99,38 @@ const AppRoutes = () => {
         }
       />
 
-      <Route path="/teacher/classroom/:sessionId" element={<Classroom />} />
+      {/* Classroom Routes */}
+      <Route 
+        path="/teacher/classroom/:sessionId" 
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <Classroom />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/student/classroom/:sessionId" 
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentClassroom />
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   );
 };
 
-function App() {
+const App = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
+    <Router>
+      <AuthProvider>
+        <div className="min-h-screen bg-gray-100">
           <AppRoutes />
-          <ToastContainer />
+          <ToastContainer position="top-right" autoClose={5000} />
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
-}
+};
 
 export default App;
