@@ -3,6 +3,7 @@ const router = express.Router();
 const Session = require('../models/Session');
 const auth = require('../middleware/auth');
 const isTeacher = require('../middleware/isTeacher');
+const socketService = require('../services/socket');
 
 // Get all available sessions (for students)
 router.get('/available', auth, async (req, res) => {
@@ -248,6 +249,14 @@ router.post('/:id/start', auth, isTeacher, async (req, res) => {
         session.startedAt = new Date();
         await session.save();
 
+        // Emit socket event for real-time update
+        const io = socketService.getIO();
+        io.emit('sessionUpdate', {
+            type: 'statusUpdate',
+            sessionId: session._id.toString(),
+            status: 'active'
+        });
+
         // Populate teacher and student information before sending response
         await session.populate('teacher', 'name email');
         await session.populate('enrolledStudents', 'name email');
@@ -255,7 +264,7 @@ router.post('/:id/start', auth, isTeacher, async (req, res) => {
         res.json(session);
     } catch (error) {
         console.error('Error starting session:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Failed to start session' });
     }
 });
 
@@ -279,6 +288,14 @@ router.post('/:id/end', auth, isTeacher, async (req, res) => {
         session.endedAt = new Date();
         await session.save();
 
+        // Emit socket event for real-time update
+        const io = socketService.getIO();
+        io.emit('sessionUpdate', {
+            type: 'statusUpdate',
+            sessionId: session._id.toString(),
+            status: 'completed'
+        });
+
         // Populate teacher and student information before sending response
         await session.populate('teacher', 'name email');
         await session.populate('enrolledStudents', 'name email');
@@ -286,7 +303,7 @@ router.post('/:id/end', auth, isTeacher, async (req, res) => {
         res.json(session);
     } catch (error) {
         console.error('Error ending session:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Failed to end session' });
     }
 });
 

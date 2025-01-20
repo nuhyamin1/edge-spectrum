@@ -3,6 +3,7 @@ import axios from '../../../utils/axios';
 import Layout from '../Layout';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
 
 const AvailableSessions = () => {
   const [sessions, setSessions] = useState([]);
@@ -38,6 +39,35 @@ const AvailableSessions = () => {
     };
 
     fetchSessions();
+
+    // Set up Socket.IO connection
+    const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+      withCredentials: true
+    });
+
+    // Handle session updates
+    socket.on('sessionUpdate', (data) => {
+      if (data.type === 'statusUpdate') {
+        setSessions(prevSessions => 
+          prevSessions.map(session => 
+            session._id === data.sessionId 
+              ? { ...session, status: data.status }
+              : session
+          )
+        );
+      }
+    });
+
+    // Handle connection errors
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      toast.error('Real-time updates connection failed');
+    });
+
+    // Cleanup socket connection on component unmount
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const handleEnrollment = async (sessionId, isEnrolled) => {
