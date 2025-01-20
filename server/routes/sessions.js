@@ -72,10 +72,25 @@ router.post('/', auth, isTeacher, async (req, res) => {
             description,
             dateTime: new Date(dateTime),
             materials,
-            teacher: req.user._id
+            teacher: req.user._id,
+            status: 'scheduled' // Set default status
         });
 
         await session.save();
+        
+        // Populate teacher information
+        await session.populate('teacher', 'name email');
+        
+        // Emit socket event for real-time update
+        const io = socketService.getIO();
+        io.emit('sessionUpdate', {
+            type: 'sessionCreated',
+            session: {
+                ...session.toObject(),
+                enrolledStudents: [] // Initialize empty array for new session
+            }
+        });
+
         res.status(201).json(session);
     } catch (error) {
         console.error('Session creation error:', error);
@@ -217,6 +232,13 @@ router.delete('/:id', auth, isTeacher, async (req, res) => {
         if (!session) {
             return res.status(404).json({ error: 'Session not found' });
         }
+
+        // Emit socket event for real-time update
+        const io = socketService.getIO();
+        io.emit('sessionUpdate', {
+            type: 'sessionDeleted',
+            sessionId: session._id.toString()
+        });
 
         res.json(session);
     } catch (error) {

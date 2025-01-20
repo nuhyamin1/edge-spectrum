@@ -47,14 +47,36 @@ const AvailableSessions = () => {
 
     // Handle session updates
     socket.on('sessionUpdate', (data) => {
-      if (data.type === 'statusUpdate') {
-        setSessions(prevSessions => 
-          prevSessions.map(session => 
-            session._id === data.sessionId 
-              ? { ...session, status: data.status }
-              : session
-          )
-        );
+      switch (data.type) {
+        case 'statusUpdate':
+          setSessions(prevSessions => 
+            prevSessions.map(session => 
+              session._id === data.sessionId 
+                ? { ...session, status: data.status }
+                : session
+            )
+          );
+          break;
+
+        case 'sessionCreated':
+          // Only add if the session is in the future
+          const currentDate = new Date();
+          const sessionDate = new Date(data.session.dateTime);
+          if (sessionDate > currentDate) {
+            setSessions(prevSessions => [...prevSessions, data.session].sort((a, b) => 
+              new Date(a.dateTime) - new Date(b.dateTime)
+            ));
+          }
+          break;
+
+        case 'sessionDeleted':
+          setSessions(prevSessions => 
+            prevSessions.filter(session => session._id !== data.sessionId)
+          );
+          break;
+
+        default:
+          break;
       }
     });
 
