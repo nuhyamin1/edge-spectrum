@@ -13,7 +13,8 @@ A modern virtual learning platform that connects teachers and students through i
 ### Session Management
 - Teachers can create and manage learning sessions
 - Session scheduling with date and time
-- Session status tracking (Scheduled, Active, Completed)
+- Real-time session status updates
+- Real-time session creation and deletion notifications
 - Material uploads and sharing
 - Student enrollment system
 
@@ -25,7 +26,8 @@ A modern virtual learning platform that connects teachers and students through i
 - Session dashboard with real-time updates
 
 ### Student Features
-- Browse available sessions
+- Browse available sessions in real-time
+- Instant notifications of new sessions
 - Enroll/unenroll from sessions
 - Join live sessions
 - View session materials
@@ -46,6 +48,7 @@ A modern virtual learning platform that connects teachers and students through i
 - Axios for API requests
 - React Context for state management
 - React-Toastify for notifications
+- Socket.IO client for real-time updates
 
 ### Backend
 - Node.js with Express
@@ -53,6 +56,7 @@ A modern virtual learning platform that connects teachers and students through i
 - JWT for authentication
 - Bcrypt for password hashing
 - Nodemailer for email services
+- Socket.IO for real-time communication
 
 ## Getting Started
 
@@ -152,6 +156,8 @@ learning_platform
     │   └── sessions.js        # Session management routes
     ├── scripts                # Utility scripts
     │   └── updateSessionStatus.js  # Session status migration
+    ├── services              # Service layer
+    │   └── socket.js         # Socket.IO service for real-time updates
     ├── server.js              # Express server entry point
     └── src                    # Additional source files
         ├── middleware         # Additional middleware
