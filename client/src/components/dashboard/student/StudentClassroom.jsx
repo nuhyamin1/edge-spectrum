@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from '../../../utils/axios';
 import Layout from '../Layout';
+import io from 'socket.io-client';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -11,6 +12,7 @@ const StudentClassroom = () => {
   const [loading, setLoading] = useState(true);
   const [gracePeriodExpired, setGracePeriodExpired] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   const getGracePeriodInfo = () => {
     const storageKey = `gracePeriod_${sessionId}`;
@@ -46,6 +48,29 @@ const StudentClassroom = () => {
   };
 
   useEffect(() => {
+    // Initialize socket connection
+    const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
+    setSocket(newSocket);
+
+    // Listen for session updates
+    newSocket.on('sessionUpdate', (data) => {
+      if (data.sessionId === sessionId) {
+        if (data.status === 'completed') {
+          toast.info('The teacher has ended this session');
+          navigate('/dashboard');  
+        }
+      }
+    });
+
+    // Cleanup socket connection
+    return () => {
+      if (newSocket) {
+        newSocket.disconnect();
+      }
+    };
+  }, [sessionId, navigate]);
+
+  useEffect(() => {
     console.log('StudentClassroom mounted with sessionId:', sessionId);
     
     const initializeClassroom = async () => {
@@ -58,24 +83,29 @@ const StudentClassroom = () => {
         return;
       }
 
-      // Set up grace period timer
+      // Check grace period only once during initialization
+      const now = new Date();
       const endTime = new Date(gracePeriodInfo.endTime);
-      console.log('Setting up timer with end time:', endTime);
+      if (now > endTime) {
+        console.log('Cannot join - grace period has expired');
+        toast.error('Cannot join - grace period has expired');
+        navigate('/dashboard');
+        return;
+      }
 
+      // Set up countdown display timer (won't kick out student)
       const interval = setInterval(() => {
         const now = new Date();
         const remaining = endTime - now;
 
         if (remaining <= 0) {
-          console.log('Grace period expired');
+          console.log('Grace period countdown ended');
           clearInterval(interval);
           setGracePeriodExpired(true);
-          toast.error('Grace period has expired');
-          navigate('/dashboard');
-          return;
+          setTimeLeft(0);
+        } else {
+          setTimeLeft(remaining);
         }
-
-        setTimeLeft(remaining);
       }, 1000);
 
       // Fetch session details
@@ -133,13 +163,11 @@ const StudentClassroom = () => {
     );
   }
 
-  if (!session || gracePeriodExpired) {
+  if (!session) {
     return (
       <Layout userType="student">
         <div className="flex justify-center items-center h-64">
-          <div className="text-red-600">
-            {gracePeriodExpired ? 'Grace period has expired' : 'Session not found'}
-          </div>
+          <div className="text-red-600">Session not found</div>
         </div>
       </Layout>
     );

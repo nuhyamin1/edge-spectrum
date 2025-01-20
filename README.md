@@ -147,6 +147,14 @@ learning_platform
 - Added validation for session joining within grace period
 - Improved error handling and user feedback
 - Fixed session information persistence between navigation
+- Fixed grace period behavior:
+  - Students can join within the grace period
+  - Students remain in class after grace period expires
+  - Grace period only controls entry timing, not session access
+- Enhanced session end behavior:
+  - Real-time session end notification for students
+  - Automatic redirection to dashboard when teacher ends session
+  - Improved session cleanup and state management
 
 ## Next Steps
 - Implement classroom features:
