@@ -14,6 +14,8 @@ const CreateSession = () => {
     subject: '',
     description: '',
     dateTime: '',
+    duration: '',
+    gracePeriod: '',
     materials: ''
   });
 
@@ -29,8 +31,28 @@ const CreateSession = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Client-side validation
+    if (parseInt(session.duration) < 1) {
+      toast.error('Duration must be at least 1 minute');
+      setLoading(false);
+      return;
+    }
+
+    if (parseInt(session.gracePeriod) < 0) {
+      toast.error('Grace period must be 0 or more minutes');
+      setLoading(false);
+      return;
+    }
+
+    // Convert string values to numbers for duration and gracePeriod
+    const sessionData = {
+      ...session,
+      duration: parseInt(session.duration),
+      gracePeriod: parseInt(session.gracePeriod)
+    };
+
     try {
-      await api.post('/sessions', session);
+      await api.post('/sessions', sessionData);
       toast.success('Session created successfully!');
       navigate('/dashboard/sessions');
     } catch (error) {
@@ -54,35 +76,35 @@ const CreateSession = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
             <input
               type="text"
               name="title"
               value={session.title}
               onChange={handleChange}
+              placeholder="Session Title"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Subject</label>
             <input
               type="text"
               name="subject"
               value={session.subject}
               onChange={handleChange}
+              placeholder="Subject"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               name="description"
               value={session.description}
               onChange={handleChange}
+              placeholder="Session Description"
               rows="4"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
@@ -90,28 +112,51 @@ const CreateSession = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Date and Time</label>
             <input
               type="datetime-local"
               name="dateTime"
               value={session.dateTime}
               onChange={handleChange}
+              placeholder="Date and Time"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Materials Link (Optional)
-            </label>
             <input
-              type="url"
+              type="number"
+              name="duration"
+              value={session.duration}
+              onChange={handleChange}
+              placeholder="Duration (in minutes)"
+              min="1"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <input
+              type="number"
+              name="gracePeriod"
+              value={session.gracePeriod}
+              onChange={handleChange}
+              placeholder="Grace Period (in minutes)"
+              min="0"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <input
+              type="text"
               name="materials"
               value={session.materials}
               onChange={handleChange}
+              placeholder="Materials (optional)"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="https://"
             />
           </div>
 

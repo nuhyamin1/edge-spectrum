@@ -13,6 +13,7 @@ A modern virtual learning platform that connects teachers and students through i
 ### Session Management
 - Teachers can create and manage learning sessions
 - Session scheduling with date and time
+- Session duration and grace period settings
 - Real-time session status updates
 - Real-time session creation and deletion notifications
 - Material uploads and sharing
@@ -22,6 +23,7 @@ A modern virtual learning platform that connects teachers and students through i
 - Create and edit learning sessions
 - View enrolled students
 - Start and end live sessions
+- Set session duration and grace period
 - Manage classroom activities
 - Session dashboard with real-time updates
 
@@ -29,9 +31,10 @@ A modern virtual learning platform that connects teachers and students through i
 - Browse available sessions in real-time
 - Instant notifications of new sessions
 - Enroll/unenroll from sessions
-- Join live sessions
+- Join live sessions within grace period
 - View session materials
 - Real-time session status updates
+- Grace period countdown timer
 
 ### Classroom Features (In Development)
 - Real-time chat
@@ -95,121 +98,64 @@ A modern virtual learning platform that connects teachers and students through i
 
 ```
 learning_platform
-├── .gitignore                      # Git ignore file for project root
-├── README.md                       # Project documentation
+├── .gitignore                     # Git ignore file for project root
+├── README.md                      # Project documentation
 ├── client                         # Frontend React application
-│   ├── .gitignore                 # Git ignore file for client
-│   ├── README.md                  # Frontend documentation
-│   ├── package-lock.json          # NPM dependencies lock file
-│   ├── package.json               # Frontend dependencies and scripts
-│   ├── postcss.config.js          # PostCSS configuration for Tailwind
-│   ├── public                     # Static assets directory
-│   │   ├── favicon.ico            # Website favicon
-│   │   ├── index.html            # Main HTML file
-│   │   ├── logo192.png           # React logo for PWA
-│   │   ├── logo512.png           # React logo for PWA (larger)
-│   │   ├── manifest.json         # PWA manifest file
-│   │   └── robots.txt            # Search engine crawl rules
-│   ├── src                       # Source code directory
-│   │   ├── App.css               # Global application styles
-│   │   ├── App.js                # Main React component
-│   │   ├── App.test.js           # App component tests
-│   │   ├── components            # React components directory
-│   │   │   ├── auth              # Authentication components
-│   │   │   │   ├── EmailVerification.js  # Email verification page
-│   │   │   │   ├── Login.js              # Login page
-│   │   │   │   └── Register.js           # Registration page
-│   │   │   └── dashboard         # Dashboard components
-│   │   │       ├── Layout.jsx            # Common dashboard layout
-│   │   │       ├── student              # Student-specific components
-│   │   │       │   ├── AvailableSessions.jsx    # Available sessions list
-│   │   │       │   ├── MainPage.jsx             # Student main page
-│   │   │       │   ├── StudentClassroom.jsx     # Student's classroom view
-│   │   │       │   └── StudentDashboard.jsx     # Student dashboard
-│   │   │       └── teacher               # Teacher-specific components
-│   │   │           ├── Classroom.jsx            # Teacher's classroom view
-│   │   │           ├── CreateSession.jsx        # Session creation form
-│   │   │           ├── EditSession.jsx          # Session editing form
-│   │   │           ├── MainPage.jsx             # Teacher main page
-│   │   │           └── SessionList.jsx          # Teacher's sessions list
-│   │   ├── context             # React context providers
-│   │   │   └── AuthContext.js  # Authentication context
-│   │   ├── index.css           # Entry point styles
-│   │   ├── index.js            # Application entry point
-│   │   ├── logo.svg            # React logo asset
-│   │   ├── reportWebVitals.js  # Performance monitoring
-│   │   ├── setupTests.js       # Test configuration
-│   │   └── utils               # Utility functions
-│   │       └── axios.js        # Axios instance configuration
-│   └── tailwind.config.js      # Tailwind CSS configuration
-├── package-lock.json           # Root NPM dependencies lock
-├── package.json                # Root package configuration
-└── server                      # Backend Node.js application
-    ├── middleware             # Express middleware
-    │   ├── auth.js            # Authentication middleware
-    │   └── isTeacher.js       # Teacher role verification
-    ├── models                 # MongoDB models
-    │   ├── Session.js         # Session model definition
-    │   └── User.js            # User model definition
-    ├── routes                 # API routes
-    │   ├── auth.js            # Authentication routes
-    │   └── sessions.js        # Session management routes
-    ├── scripts                # Utility scripts
-    │   └── updateSessionStatus.js  # Session status migration
-    ├── services              # Service layer
-    │   └── socket.js         # Socket.IO service for real-time updates
-    ├── server.js              # Express server entry point
-    └── src                    # Additional source files
-        ├── middleware         # Additional middleware
-        │   └── isTeacher.js   # Teacher verification (duplicate)
-        ├── models             # Additional models
-        │   └── Session.js     # Session model (duplicate)
-        └── routes             # Additional routes
-            └── sessions.js    # Session routes (duplicate)
+│   ├── .gitignore                # Git ignore file for client
+│   ├── package.json              # Frontend dependencies
+│   ├── public                    # Public assets
+│   └── src                       # Source files
+│       ├── App.js                # Main application component
+│       ├── components            # React components
+│       │   ├── auth             # Authentication components
+│       │   │   ├── Login.jsx    # Login component
+│       │   │   └── Register.jsx # Registration component
+│       │   └── dashboard        # Dashboard components
+│       │       ├── Layout.jsx   # Dashboard layout
+│       │       ├── student      # Student components
+│       │       │   ├── AvailableSessions.jsx  # Available sessions list
+│       │       │   ├── MainPage.jsx           # Student main page
+│       │       │   └── StudentClassroom.jsx   # Student classroom view
+│       │       └── teacher      # Teacher components
+│       │           ├── CreateSession.jsx      # Session creation form
+│       │           ├── MainPage.jsx           # Teacher main page
+│       │           └── SessionList.jsx        # Teacher's sessions list
+│       ├── context              # React context providers
+│       │   └── AuthContext.js   # Authentication context
+│       ├── utils                # Utility functions
+│       │   └── axios.js         # Axios instance
+│       └── index.js             # Entry point
+├── server                        # Backend Node.js/Express application
+│   ├── .env                     # Environment variables
+│   ├── .gitignore              # Git ignore file for server
+│   ├── package.json            # Backend dependencies
+│   ├── models                  # Mongoose models
+│   │   ├── Session.js         # Session model
+│   │   └── User.js            # User model
+│   ├── routes                 # Express routes
+│   │   ├── auth.js           # Authentication routes
+│   │   └── sessions.js       # Session management routes
+│   └── server.js             # Express app entry point
 ```
 
-## Session States
+## Recent Updates
 
-Sessions in EduFlow follow a specific lifecycle:
+### Session Management Enhancements (January 20, 2025)
+- Added session duration and grace period functionality
+- Implemented countdown timer for grace period in student view
+- Enhanced session storage handling for classroom access
+- Added validation for session joining within grace period
+- Improved error handling and user feedback
+- Fixed session information persistence between navigation
 
-1. **Scheduled**
-   - Initial state when created
-   - Students can enroll/unenroll
-   - Teachers can edit session details
-
-2. **Active**
-   - When teacher starts the session
-   - Enrolled students can join the classroom
-   - Real-time features become available
-
-3. **Completed**
-   - Session has ended
-   - No further interactions possible
-   - Historical data preserved
-
-## Security Features
-
-- JWT-based authentication
-- Password hashing with bcrypt
-- Protected API routes
-- Role-based access control
-- Session validation middleware
-
-## Future Enhancements
-
-- Real-time chat implementation
-- Video conferencing integration
-- Interactive whiteboard features
-- Screen sharing capabilities
-- Student participation analytics
-- Session recording and playback
-- Resource library management
-- Assignment submission system
-
-## Contributing
-
-Please read our contributing guidelines before submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License.
+## Next Steps
+- Implement classroom features:
+  - Real-time chat functionality
+  - Video conferencing integration
+  - Interactive whiteboard
+  - Screen sharing capabilities
+  - Student participation tracking
+- Enhance session management:
+  - Session recording
+  - Attendance tracking
+  - Session analytics

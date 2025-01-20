@@ -19,6 +19,14 @@ const sessionSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    duration: {
+        type: Number,  // in minutes
+        required: true
+    },
+    gracePeriod: {
+        type: Number,  // in minutes
+        required: true
+    },
     materials: {
         type: String,
         trim: true

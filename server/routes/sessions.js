@@ -64,13 +64,24 @@ router.get('/enrolled', auth, async (req, res) => {
 // Create a new session (teachers only)
 router.post('/', auth, isTeacher, async (req, res) => {
     try {
-        const { title, subject, description, dateTime, materials } = req.body;
+        const { title, subject, description, dateTime, materials, duration, gracePeriod } = req.body;
         
+        // Validate required fields
+        if (!duration || duration < 1) {
+            return res.status(400).json({ error: 'Duration must be at least 1 minute' });
+        }
+
+        if (!gracePeriod || gracePeriod < 0) {
+            return res.status(400).json({ error: 'Grace period must be 0 or more minutes' });
+        }
+
         const session = new Session({
             title,
             subject,
             description,
             dateTime: new Date(dateTime),
+            duration,
+            gracePeriod,
             materials,
             teacher: req.user._id,
             status: 'scheduled' // Set default status

@@ -98,6 +98,14 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/classroom/:sessionId"
+        element={
+          <ProtectedRoute allowedRoles={['student']}>
+            <StudentClassroom />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Classroom Routes */}
       <Route 
@@ -105,14 +113,6 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={['teacher']}>
             <Classroom />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/student/classroom/:sessionId" 
-        element={
-          <ProtectedRoute allowedRoles={['student']}>
-            <StudentClassroom />
           </ProtectedRoute>
         } 
       />

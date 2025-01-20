@@ -10,6 +10,7 @@ const AvailableSessions = () => {
   const [loading, setLoading] = useState(true);
   const [enrolledSessions, setEnrolledSessions] = useState([]);
   const [error, setError] = useState(null);
+  const [gracePeriodTimers, setGracePeriodTimers] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +24,14 @@ const AvailableSessions = () => {
 
         if (availableResponse.data) {
           setSessions(availableResponse.data);
+          // Initialize grace period timers for active sessions
+          const timers = {};
+          availableResponse.data.forEach(session => {
+            if (session.status === 'active' && session.startedAt) {
+              updateGracePeriodTimer(session._id, new Date(session.startedAt), session.gracePeriod);
+            }
+          });
+          setGracePeriodTimers(timers);
         }
         
         if (enrolledResponse.data) {
@@ -49,13 +58,28 @@ const AvailableSessions = () => {
     socket.on('sessionUpdate', (data) => {
       switch (data.type) {
         case 'statusUpdate':
-          setSessions(prevSessions => 
-            prevSessions.map(session => 
-              session._id === data.sessionId 
-                ? { ...session, status: data.status }
-                : session
-            )
-          );
+          setSessions(prevSessions => {
+            const updatedSessions = prevSessions.map(session => {
+              if (session._id === data.sessionId) {
+                // Get the current time in ISO format
+                const now = new Date().toISOString();
+                const updatedSession = { 
+                  ...session, 
+                  status: data.status,
+                  startedAt: data.status === 'active' ? now : session.startedAt 
+                };
+                
+                // Initialize timer if session becomes active
+                if (data.status === 'active') {
+                  console.log('Session became active:', updatedSession);
+                  updateGracePeriodTimer(session._id, new Date(), session.gracePeriod);
+                }
+                return updatedSession;
+              }
+              return session;
+            });
+            return updatedSessions;
+          });
           break;
 
         case 'sessionCreated':
@@ -73,6 +97,15 @@ const AvailableSessions = () => {
           setSessions(prevSessions => 
             prevSessions.filter(session => session._id !== data.sessionId)
           );
+          // Clear timer if exists
+          if (gracePeriodTimers[data.sessionId]?.interval) {
+            clearInterval(gracePeriodTimers[data.sessionId].interval);
+            setGracePeriodTimers(prev => {
+              const newTimers = { ...prev };
+              delete newTimers[data.sessionId];
+              return newTimers;
+            });
+          }
           break;
 
         default:
@@ -86,11 +119,56 @@ const AvailableSessions = () => {
       toast.error('Real-time updates connection failed');
     });
 
-    // Cleanup socket connection on component unmount
+    // Cleanup function to clear all intervals
     return () => {
+      Object.values(gracePeriodTimers).forEach(timer => {
+        if (timer.interval) clearInterval(timer.interval);
+      });
       socket.disconnect();
     };
   }, []);
+
+  const updateGracePeriodTimer = (sessionId, startTime, gracePeriod) => {
+    const endTime = new Date(startTime.getTime() + gracePeriod * 60000);
+    
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const timeLeft = endTime - now;
+      
+      if (timeLeft <= 0) {
+        if (gracePeriodTimers[sessionId]?.interval) {
+          clearInterval(gracePeriodTimers[sessionId].interval);
+        }
+        setGracePeriodTimers(prev => ({
+          ...prev,
+          [sessionId]: { timeLeft: 0, interval: null }
+        }));
+        return 0;
+      }
+      
+      return timeLeft;
+    };
+
+    const interval = setInterval(() => {
+      const timeLeft = calculateTimeLeft();
+      setGracePeriodTimers(prev => ({
+        ...prev,
+        [sessionId]: { ...prev[sessionId], timeLeft }
+      }));
+    }, 1000);
+
+    setGracePeriodTimers(prev => ({
+      ...prev,
+      [sessionId]: { timeLeft: calculateTimeLeft(), interval }
+    }));
+  };
+
+  const formatTimeLeft = (timeLeft) => {
+    if (timeLeft <= 0) return 'Grace period expired';
+    const minutes = Math.floor(timeLeft / 60000);
+    const seconds = Math.floor((timeLeft % 60000) / 1000);
+    return `${minutes}m ${seconds}s remaining`;
+  };
 
   const handleEnrollment = async (sessionId, isEnrolled) => {
     try {
@@ -111,8 +189,69 @@ const AvailableSessions = () => {
     }
   };
 
-  const handleJoinSession = (sessionId) => {
-    navigate(`/student/classroom/${sessionId}`);
+  const handleJoinSession = (session) => {
+    try {
+      console.log('Attempting to join session:', session);
+      
+      // Check if session is active
+      if (session.status !== 'active') {
+        toast.error('This session is not currently active');
+        return;
+      }
+
+      if (!session.startedAt) {
+        console.error('Session startedAt is missing:', session);
+        toast.error('Session start time information is missing');
+        return;
+      }
+
+      // Calculate if within grace period
+      const startTime = new Date(session.startedAt);
+      const currentTime = new Date();
+      const gracePeriodEnd = new Date(startTime.getTime() + (session.gracePeriod * 60000));
+
+      console.log('Grace period calculation:', {
+        startTime,
+        currentTime,
+        gracePeriodEnd,
+        gracePeriod: session.gracePeriod
+      });
+
+      if (currentTime > gracePeriodEnd) {
+        toast.error('Grace period has expired for this session');
+        return;
+      }
+
+      // Store grace period info in sessionStorage
+      const storageKey = `gracePeriod_${session._id}`;
+      const gracePeriodInfo = {
+        startedAt: session.startedAt,
+        gracePeriod: session.gracePeriod,
+        endTime: gracePeriodEnd.toISOString(),
+        sessionId: session._id
+      };
+
+      console.log('Storing grace period info:', gracePeriodInfo);
+      
+      // Store the data and verify it was stored correctly
+      sessionStorage.setItem(storageKey, JSON.stringify(gracePeriodInfo));
+      const storedData = sessionStorage.getItem(storageKey);
+      
+      if (!storedData) {
+        console.error('Failed to store session data');
+        toast.error('Failed to prepare session data');
+        return;
+      }
+
+      console.log('Verified stored data:', storedData);
+      console.log('Navigating to classroom...');
+
+      // If within grace period and data is stored, proceed to join
+      navigate(`/classroom/${session._id}`);
+    } catch (error) {
+      console.error('Error joining session:', error);
+      toast.error('Failed to join session');
+    }
   };
 
   if (loading) {
@@ -189,6 +328,23 @@ const AvailableSessions = () => {
                           View Materials
                         </a>
                       )}
+                      {session.status === 'active' && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-blue-600">
+                            Session is active!
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Grace period: {gracePeriodTimers[session._id] ? 
+                              formatTimeLeft(gracePeriodTimers[session._id].timeLeft) :
+                              `${session.gracePeriod} minutes`}
+                          </p>
+                          {session.startedAt && (
+                            <p className="text-xs text-gray-500">
+                              Started at: {new Date(session.startedAt).toLocaleTimeString()}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-600">
@@ -196,7 +352,7 @@ const AvailableSessions = () => {
                       </p>
                       {isEnrolled && isActive ? (
                         <button 
-                          onClick={() => handleJoinSession(session._id)}
+                          onClick={() => handleJoinSession(session)}
                           className="mt-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                         >
                           Join Live Session
