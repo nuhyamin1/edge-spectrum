@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../Layout';
 import axios from '../../../utils/axios';
+import { useNavigate } from 'react-router-dom';
 
 const StudentMainPage = () => {
   const [materials, setMaterials] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -35,7 +37,7 @@ const StudentMainPage = () => {
               <div 
                 key={material._id} 
                 className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => {/* TODO: Add material view page navigation */}}
+                onClick={() => navigate(`/dashboard/material/${material._id}`)}
               >
                 <h3 className="text-lg font-semibold text-gray-800">{material.title}</h3>
                 <p className="text-sm text-blue-600 mb-2">{material.subject}</p>

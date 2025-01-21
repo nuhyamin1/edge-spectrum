@@ -15,6 +15,7 @@ import Classroom from './components/dashboard/teacher/Classroom';
 import StudentClassroom from './components/dashboard/student/StudentClassroom';
 import CreateMaterial from './components/dashboard/teacher/CreateMaterial';
 import EditMaterial from './components/dashboard/teacher/EditMaterial';
+import MaterialView from './components/dashboard/MaterialView';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
@@ -105,6 +106,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={['teacher']}>
             <EditMaterial />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/material/:id"
+        element={
+          <ProtectedRoute allowedRoles={['teacher', 'student']}>
+            <MaterialView />
           </ProtectedRoute>
         }
       />

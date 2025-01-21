@@ -51,18 +51,29 @@ const TeacherMainPage = () => {
                 key={material._id} 
                 className="p-4 border rounded-lg hover:shadow-md transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-gray-800">{material.title}</h3>
-                <p className="text-sm text-blue-600 mb-2">{material.subject}</p>
-                <p className="text-gray-600 text-sm mb-4">{material.description}</p>
+                <div 
+                  onClick={() => navigate(`/dashboard/material/${material._id}`)}
+                  className="cursor-pointer"
+                >
+                  <h3 className="text-lg font-semibold text-gray-800">{material.title}</h3>
+                  <p className="text-sm text-blue-600 mb-2">{material.subject}</p>
+                  <p className="text-gray-600 text-sm mb-4">{material.description}</p>
+                </div>
                 <div className="flex justify-end space-x-2">
                   <button
-                    onClick={() => navigate(`/dashboard/edit-material/${material._id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/dashboard/edit-material/${material._id}`);
+                    }}
                     className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(material._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(material._id);
+                    }}
                     className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                   >
                     Delete
