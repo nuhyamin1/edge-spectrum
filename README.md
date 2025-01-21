@@ -10,17 +10,26 @@ A modern virtual learning platform that connects teachers and students through i
 - Secure login with JWT tokens
 - Password hashing and security measures
 
+### Material Management
+- Teachers can create and manage learning materials
+- Full-text content support for comprehensive articles
+- Material categorization by subject
+- Interactive material cards with edit and delete functionality
+- Material viewing for both teachers and students
+- Real-time material updates
+
 ### Session Management
 - Teachers can create and manage learning sessions
 - Session scheduling with date and time
 - Session duration and grace period settings
 - Real-time session status updates
 - Real-time session creation and deletion notifications
-- Material uploads and sharing
+- Material linking with sessions
 - Student enrollment system
 
 ### Teacher Features
 - Create and edit learning sessions
+- Create and manage learning materials
 - View enrolled students
 - Start and end live sessions
 - Set session duration and grace period
@@ -29,6 +38,7 @@ A modern virtual learning platform that connects teachers and students through i
 
 ### Student Features
 - Browse available sessions in real-time
+- Access semester materials and content
 - Instant notifications of new sessions
 - Enroll/unenroll from sessions
 - Join live sessions within grace period
@@ -48,6 +58,7 @@ A modern virtual learning platform that connects teachers and students through i
 ### Frontend
 - React.js with React Router for navigation
 - Tailwind CSS for styling
+- Heroicons for UI icons
 - Axios for API requests
 - React Context for state management
 - React-Toastify for notifications
@@ -98,72 +109,111 @@ A modern virtual learning platform that connects teachers and students through i
 
 ```
 learning_platform
-├── .gitignore                     # Git ignore file for project root
-├── README.md                      # Project documentation
-├── client                         # Frontend React application
-│   ├── .gitignore                # Git ignore file for client
-│   ├── package.json              # Frontend dependencies
-│   ├── public                    # Public assets
-│   └── src                       # Source files
-│       ├── App.js                # Main application component
-│       ├── components            # React components
-│       │   ├── auth             # Authentication components
-│       │   │   ├── Login.jsx    # Login component
-│       │   │   └── Register.jsx # Registration component
-│       │   └── dashboard        # Dashboard components
-│       │       ├── Layout.jsx   # Dashboard layout
-│       │       ├── student      # Student components
-│       │       │   ├── AvailableSessions.jsx  # Available sessions list
-│       │       │   ├── MainPage.jsx           # Student main page
-│       │       │   └── StudentClassroom.jsx   # Student classroom view
-│       │       └── teacher      # Teacher components
-│       │           ├── CreateSession.jsx      # Session creation form
-│       │           ├── MainPage.jsx           # Teacher main page
-│       │           └── SessionList.jsx        # Teacher's sessions list
-│       ├── context              # React context providers
-│       │   └── AuthContext.js   # Authentication context
-│       ├── utils                # Utility functions
-│       │   └── axios.js         # Axios instance
-│       └── index.js             # Entry point
-├── server                        # Backend Node.js/Express application
-│   ├── .env                     # Environment variables
-│   ├── .gitignore              # Git ignore file for server
-│   ├── package.json            # Backend dependencies
-│   ├── models                  # Mongoose models
-│   │   ├── Session.js         # Session model
-│   │   └── User.js            # User model
-│   ├── routes                 # Express routes
-│   │   ├── auth.js           # Authentication routes
-│   │   └── sessions.js       # Session management routes
-│   └── server.js             # Express app entry point
+├── .gitignore
+├── README.md
+├── client
+│   ├── .gitignore
+│   ├── README.md
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   ├── favicon.ico
+│   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
+│   │   ├── manifest.json
+│   │   └── robots.txt
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   ├── App.test.js
+│   │   ├── components
+│   │   │   ├── auth
+│   │   │   │   ├── EmailVerification.js
+│   │   │   │   ├── Login.js
+│   │   │   │   └── Register.js
+│   │   │   └── dashboard
+│   │   │       ├── Layout.jsx
+│   │   │       ├── MaterialView.jsx
+│   │   │       ├── student
+│   │   │       │   ├── AvailableSessions.jsx
+│   │   │       │   ├── MainPage.jsx
+│   │   │       │   ├── StudentClassroom.jsx
+│   │   │       │   └── StudentDashboard.jsx
+│   │   │       └── teacher
+│   │   │           ├── Classroom.jsx
+│   │   │           ├── CreateMaterial.jsx
+│   │   │           ├── CreateSession.jsx
+│   │   │           ├── EditMaterial.jsx
+│   │   │           ├── EditSession.jsx
+│   │   │           ├── MainPage.jsx
+│   │   │           └── SessionList.jsx
+│   │   ├── context
+│   │   │   └── AuthContext.js
+│   │   ├── index.css
+│   │   ├── index.js
+│   │   ├── logo.svg
+│   │   ├── reportWebVitals.js
+│   │   ├── setupTests.js
+│   │   └── utils
+│   │       └── axios.js
+│   └── tailwind.config.js
+├── package-lock.json
+├── package.json
+└── server
+    ├── middleware
+    │   ├── auth.js
+    │   └── isTeacher.js
+    ├── models
+    │   ├── Material.js
+    │   ├── Session.js
+    │   └── User.js
+    ├── public
+    │   └── uploads
+    │       └── profiles
+    ├── routes
+    │   ├── auth.js
+    │   ├── materials.js
+    │   ├── sessions.js
+    │   └── sse.js
+    ├── scripts
+    │   └── updateSessionStatus.js
+    ├── server.js
+    ├── services
+    │   ├── sessionEvents.js
+    │   └── socket.js
+    └── src
+        ├── middleware
+        │   └── isTeacher.js
+        ├── models
+        │   └── Session.js
+        └── routes
+            └── sessions.js
 ```
 
 ## Recent Updates
 
+### Material Management Enhancement (January 21, 2025)
+- Added comprehensive material management system
+- Implemented material creation and editing functionality
+- Added material viewing for students and teachers
+- Enhanced UI with modern design and icons
+- Improved material organization and display
+- Added real-time material updates
+- Implemented material deletion with confirmation
+
 ### Session Management Enhancements (January 20, 2025)
 - Added session duration and grace period functionality
-- Implemented countdown timer for grace period in student view
-- Enhanced session storage handling for classroom access
-- Added validation for session joining within grace period
+- Implemented countdown timer for grace period
+- Enhanced session storage handling
+- Added validation for session joining
 - Improved error handling and user feedback
-- Fixed session information persistence between navigation
-- Fixed grace period behavior:
-  - Students can join within the grace period
-  - Students remain in class after grace period expires
-  - Grace period only controls entry timing, not session access
-- Enhanced session end behavior:
-  - Real-time session end notification for students
-  - Automatic redirection to dashboard when teacher ends session
-  - Improved session cleanup and state management
 
 ## Next Steps
-- Implement classroom features:
-  - Real-time chat functionality
-  - Video conferencing integration
-  - Interactive whiteboard
-  - Screen sharing capabilities
-  - Student participation tracking
-- Enhance session management:
-  - Session recording
-  - Attendance tracking
-  - Session analytics
+- Implement classroom features
+- Add material search and filtering
+- Enhance session analytics
+- Add student progress tracking
+- Implement file upload for materials
+- Add rich text editor for material content
