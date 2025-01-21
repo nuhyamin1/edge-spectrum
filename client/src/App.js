@@ -13,6 +13,8 @@ import AvailableSessions from './components/dashboard/student/AvailableSessions'
 import EditSession from './components/dashboard/teacher/EditSession';
 import Classroom from './components/dashboard/teacher/Classroom';
 import StudentClassroom from './components/dashboard/student/StudentClassroom';
+import CreateMaterial from './components/dashboard/teacher/CreateMaterial';
+import EditMaterial from './components/dashboard/teacher/EditMaterial';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
@@ -85,6 +87,24 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRoles={['teacher']}>
             <EditSession />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Material Routes */}
+      <Route
+        path="/dashboard/create-material"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <CreateMaterial />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/edit-material/:id"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <EditMaterial />
           </ProtectedRoute>
         }
       />

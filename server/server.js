@@ -31,6 +31,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/sse', require('./routes/sse'));
+app.use('/api/materials', require('./routes/materials'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
