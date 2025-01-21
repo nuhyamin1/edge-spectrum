@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../Layout';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
@@ -49,7 +50,7 @@ const TeacherMainPage = () => {
             {materials.map((material) => (
               <div 
                 key={material._id} 
-                className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                className="p-4 border rounded-lg hover:shadow-md transition-shadow relative group"
               >
                 <div 
                   onClick={() => navigate(`/dashboard/material/${material._id}`)}
@@ -59,24 +60,28 @@ const TeacherMainPage = () => {
                   <p className="text-sm text-blue-600 mb-2">{material.subject}</p>
                   <p className="text-gray-600 text-sm mb-4">{material.description}</p>
                 </div>
-                <div className="flex justify-end space-x-2">
+                
+                {/* Action buttons */}
+                <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/dashboard/edit-material/${material._id}`);
                     }}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                    title="Edit material"
                   >
-                    Edit
+                    <PencilIcon className="w-5 h-5" />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete(material._id);
                     }}
-                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                    title="Delete material"
                   >
-                    Delete
+                    <TrashIcon className="w-5 h-5" />
                   </button>
                 </div>
               </div>
