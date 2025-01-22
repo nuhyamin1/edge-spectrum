@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import axios from '../../utils/axios';
 import Layout from './Layout';
 import { toast } from 'react-toastify';
+import 'react-quill/dist/quill.snow.css';
 
 const MaterialView = () => {
   const { id } = useParams();
@@ -58,15 +59,10 @@ const MaterialView = () => {
 
           {/* Content */}
           <div className="p-6">
-            <div className="prose max-w-none">
-              {material.content.split('\n').map((paragraph, index) => (
-                paragraph.trim() && (
-                  <p key={index} className="mb-4 text-gray-800 leading-relaxed">
-                    {paragraph}
-                  </p>
-                )
-              ))}
-            </div>
+            <div 
+              className="prose max-w-none ql-editor" 
+              dangerouslySetInnerHTML={{ __html: material.content }}
+            />
           </div>
 
           {/* Teacher Actions */}

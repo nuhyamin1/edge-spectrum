@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
 import Layout from '../Layout';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const EditMaterial = () => {
   const navigate = useNavigate();
@@ -13,6 +15,18 @@ const EditMaterial = () => {
     description: '',
     content: ''
   });
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
 
   useEffect(() => {
     const fetchMaterial = async () => {
@@ -32,6 +46,13 @@ const EditMaterial = () => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
+    });
+  };
+
+  const handleContentChange = (content) => {
+    setFormData({
+      ...formData,
+      content: content
     });
   };
 
@@ -89,14 +110,15 @@ const EditMaterial = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Content</label>
-            <textarea
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              required
-              rows={10}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+            <div className="quill-container mt-1">
+              <ReactQuill
+                theme="snow"
+                value={formData.content}
+                onChange={handleContentChange}
+                modules={modules}
+                className="h-64 mb-12"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3">

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
 import Layout from '../Layout';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const CreateMaterial = () => {
   const navigate = useNavigate();
@@ -13,10 +15,29 @@ const CreateMaterial = () => {
     content: ''
   });
 
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
+    });
+  };
+
+  const handleContentChange = (content) => {
+    setFormData({
+      ...formData,
+      content: content
     });
   };
 
@@ -67,15 +88,16 @@ const CreateMaterial = () => {
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
 
-            <textarea
-              name="content"
-              placeholder="Content"
-              value={formData.content}
-              onChange={handleChange}
-              required
-              rows={10}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+            <div className="quill-container">
+              <ReactQuill
+                theme="snow"
+                value={formData.content}
+                onChange={handleContentChange}
+                modules={modules}
+                placeholder="Write your content here..."
+                className="h-64 mb-12"
+              />
+            </div>
 
             <div className="flex justify-end">
               <button
