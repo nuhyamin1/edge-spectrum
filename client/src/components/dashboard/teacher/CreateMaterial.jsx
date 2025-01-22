@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
@@ -15,16 +15,61 @@ const CreateMaterial = () => {
     content: ''
   });
 
+  const imageHandler = useCallback(() => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      try {
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const response = await axios.post('/api/upload/image', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        const imageUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${response.data.url}`;
+        console.log('Inserting image with URL:', imageUrl);
+
+        // Get Quill instance
+        const quillEditor = document.querySelector('.quill').querySelector('.ql-editor');
+        const range = quillEditor.ownerDocument.getSelection().getRangeAt(0);
+        
+        // Create and insert the image
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        
+        range.deleteContents();
+        range.insertNode(img);
+      } catch (error) {
+        console.error('Image upload error:', error);
+        toast.error('Failed to upload image');
+      }
+    };
+  }, []);
+
   const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'align': [] }],
-      ['link', 'image'],
-      ['clean']
-    ],
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
+      }
+    }
   };
 
   const handleChange = (e) => {
@@ -95,7 +140,7 @@ const CreateMaterial = () => {
                 onChange={handleContentChange}
                 modules={modules}
                 placeholder="Write your content here..."
-                className="h-64 mb-12"
+                className="h-64 mb-12 quill"
               />
             </div>
 

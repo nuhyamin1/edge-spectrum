@@ -5,6 +5,7 @@ import axios from '../../utils/axios';
 import Layout from './Layout';
 import { toast } from 'react-toastify';
 import 'react-quill/dist/quill.snow.css';
+import './MaterialView.css';
 
 const MaterialView = () => {
   const { id } = useParams();
@@ -16,7 +17,13 @@ const MaterialView = () => {
     const fetchMaterial = async () => {
       try {
         const response = await axios.get(`/api/materials/${id}`);
-        setMaterial(response.data);
+        // Process image URLs in the content
+        const content = response.data.content.replace(
+          /src="\/uploads\//g,
+          `src="${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/`
+        );
+        console.log('Processed content:', content);
+        setMaterial({ ...response.data, content });
       } catch (error) {
         toast.error('Failed to load material');
         navigate('/dashboard');
@@ -60,7 +67,7 @@ const MaterialView = () => {
           {/* Content */}
           <div className="p-6">
             <div 
-              className="prose max-w-none ql-editor" 
+              className="prose max-w-none ql-editor material-content"
               dangerouslySetInnerHTML={{ __html: material.content }}
             />
           </div>

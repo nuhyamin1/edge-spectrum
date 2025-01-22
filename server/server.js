@@ -22,6 +22,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB Connected'))
@@ -32,6 +35,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/sse', require('./routes/sse'));
 app.use('/api/materials', require('./routes/materials'));
+app.use('/api/upload', require('./routes/upload'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
