@@ -12,6 +12,8 @@ A modern virtual learning platform that connects teachers and students through i
 
 ### Material Management
 - Teachers can create and manage learning materials
+- Rich text formatting support with React Quill editor
+- Image upload functionality for enhanced content
 - Full-text content support for comprehensive articles
 - Material categorization by subject
 - Interactive material cards with edit and delete functionality
@@ -58,6 +60,7 @@ A modern virtual learning platform that connects teachers and students through i
 ### Frontend
 - React.js with React Router for navigation
 - Tailwind CSS for styling
+- React Quill for rich text editing
 - Heroicons for UI icons
 - Axios for API requests
 - React Context for state management
@@ -135,6 +138,7 @@ learning_platform
 │   │   │   │   └── Register.js
 │   │   │   └── dashboard
 │   │   │       ├── Layout.jsx
+│   │   │       ├── MaterialView.css
 │   │   │       ├── MaterialView.jsx
 │   │   │       ├── student
 │   │   │       │   ├── AvailableSessions.jsx
@@ -161,6 +165,9 @@ learning_platform
 │   └── tailwind.config.js
 ├── package-lock.json
 ├── package.json
+├── public
+│   └── uploads
+│       └── materials
 └── server
     ├── middleware
     │   ├── auth.js
@@ -171,12 +178,14 @@ learning_platform
     │   └── User.js
     ├── public
     │   └── uploads
+    │       ├── materials
     │       └── profiles
     ├── routes
     │   ├── auth.js
     │   ├── materials.js
     │   ├── sessions.js
-    │   └── sse.js
+    │   ├── sse.js
+    │   └── upload.js
     ├── scripts
     │   └── updateSessionStatus.js
     ├── server.js
@@ -209,6 +218,13 @@ learning_platform
 - Enhanced session storage handling
 - Added validation for session joining
 - Improved error handling and user feedback
+
+### Rich Text Editor Integration (January 22, 2025)
+- Added React Quill editor for rich text formatting in materials
+- Implemented image upload functionality in material content
+- Enhanced material viewing with proper HTML rendering
+- Added support for text formatting (bold, italic, lists, etc.)
+- Improved content styling and readability
 
 ## Next Steps
 - Implement classroom features
