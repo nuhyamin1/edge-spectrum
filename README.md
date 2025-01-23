@@ -13,7 +13,13 @@ A modern virtual learning platform that connects teachers and students through i
 ### Material Management
 - Teachers can create and manage learning materials
 - Rich text formatting support with React Quill editor
-- Image upload functionality for enhanced content
+- Advanced image handling features:
+  - Image upload and insertion
+  - Image resizing with aspect ratio lock
+  - Image positioning (left, right, center alignment)
+  - Context menu for image editing
+  - Image properties dialog for precise control
+  - Custom image styling and margins
 - Full-text content support for comprehensive articles
 - Material categorization by subject
 - Interactive material cards with edit and delete functionality
