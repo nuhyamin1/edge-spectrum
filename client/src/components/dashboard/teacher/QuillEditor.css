@@ -1,0 +1,57 @@
+.ql-editor img {
+  max-width: 100%;
+  transition: all 0.3s ease;
+  user-select: none; /* Prevent text selection when right-clicking */
+}
+
+.ql-editor img[style*="float: left"], 
+.ql-editor img[style*="float: right"] {
+  margin-top: 0.5em;
+}
+
+.ql-editor img[style*="float: left"] {
+  margin-right: 1.5em;
+}
+
+.ql-editor img[style*="float: right"] {
+  margin-left: 1.5em;
+}
+
+/* Additional styling for the resize handles */
+.ql-editor .image-resizer {
+  border: 1px dashed #999;
+  position: absolute;
+}
+
+.ql-editor .image-resizer .resize-handle {
+  width: 7px;
+  height: 7px;
+  background-color: #fff;
+  border: 1px solid #999;
+  position: absolute;
+}
+
+.ql-editor .image-resizer:hover {
+  border-style: solid;
+}
+
+/* Context menu styles */
+.context-menu {
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  animation: fadeIn 0.15s ease-in-out;
+}
+
+.context-menu button:active {
+  background-color: #f3f4f6;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
