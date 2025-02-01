@@ -25,6 +25,11 @@ A modern virtual learning platform that connects teachers and students through i
 - Interactive material cards with edit and delete functionality
 - Material viewing for both teachers and students
 - Real-time material updates
+- Easy material linking system:
+  - Copy material link button on material cards
+  - Material selector dropdown in session creation
+  - Automatic URL generation for material links
+  - Standardized URL pattern: `/dashboard/material/:id`
 
 ### Session Management
 - Teachers can create and manage learning sessions
@@ -32,7 +37,10 @@ A modern virtual learning platform that connects teachers and students through i
 - Session duration and grace period settings
 - Real-time session status updates
 - Real-time session creation and deletion notifications
-- Material linking with sessions
+- Integrated material linking:
+  - Easy material selection during session creation
+  - Direct access to session materials via standardized URLs
+  - Material preview support
 - Student enrollment system
 
 ### Teacher Features
@@ -231,6 +239,19 @@ learning_platform
 - Enhanced material viewing with proper HTML rendering
 - Added support for text formatting (bold, italic, lists, etc.)
 - Improved content styling and readability
+
+### Material Linking System (January 23, 2025)
+- Implemented easy material linking system
+- Added copy material link button on material cards
+- Added material selector dropdown in session creation
+- Implemented automatic URL generation for material links
+- Standardized URL pattern: `/dashboard/material/:id`
+
+### Integrated Material Linking (January 24, 2025)
+- Integrated material linking with session management
+- Added easy material selection during session creation
+- Implemented direct access to session materials via standardized URLs
+- Added material preview support
 
 ## Next Steps
 - Implement classroom features
