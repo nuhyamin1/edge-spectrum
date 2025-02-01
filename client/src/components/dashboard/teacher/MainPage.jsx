@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../Layout';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
@@ -34,6 +34,13 @@ const TeacherMainPage = () => {
     }
   };
 
+  const copyMaterialLink = (id) => {
+    const materialUrl = `${window.location.origin}/dashboard/material/${id}`;
+    navigator.clipboard.writeText(materialUrl)
+      .then(() => toast.success('Material link copied to clipboard!'))
+      .catch(() => toast.error('Failed to copy link'));
+  };
+
   return (
     <Layout userType="teacher">
       <div className="space-y-6">
@@ -48,8 +55,8 @@ const TeacherMainPage = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Semester Materials</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {materials.map((material) => (
-              <div 
-                key={material._id} 
+              <div
+                key={material._id}
                 className="p-4 border rounded-lg hover:shadow-md transition-shadow relative group"
               >
                 <div 
@@ -63,6 +70,16 @@ const TeacherMainPage = () => {
                 
                 {/* Action buttons */}
                 <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyMaterialLink(material._id);
+                    }}
+                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
+                    title="Copy material link"
+                  >
+                    <DocumentDuplicateIcon className="w-5 h-5" />
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
