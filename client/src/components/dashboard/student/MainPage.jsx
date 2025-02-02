@@ -2,22 +2,45 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../Layout';
 import axios from '../../../utils/axios';
 import { useNavigate } from 'react-router-dom';
+import SessionsSection from '../SessionsSection';
 
 const StudentMainPage = () => {
   const [materials, setMaterials] = useState([]);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [completedSessions, setCompletedSessions] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchMaterials = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('/api/materials');
-        setMaterials(response.data);
+        const [materialsRes, sessionsRes] = await Promise.all([
+          axios.get('/api/materials'),
+          axios.get('/api/sessions')
+        ]);
+        
+        setMaterials(materialsRes.data);
+        
+        // Split sessions into upcoming and completed
+        const now = new Date();
+        const sessions = sessionsRes.data;
+        
+        setUpcomingSessions(
+          sessions.filter(session => 
+            session.status !== 'completed' && new Date(session.dateTime) >= now
+          ).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+        );
+        
+        setCompletedSessions(
+          sessions.filter(session => 
+            session.status === 'completed'
+          ).sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt))
+        );
       } catch (error) {
-        console.error('Error fetching materials:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchMaterials();
+    fetchData();
   }, []);
 
   return (
@@ -49,6 +72,18 @@ const StudentMainPage = () => {
             <p className="text-gray-500 text-center py-4">No materials available yet.</p>
           )}
         </div>
+
+        <SessionsSection 
+          title="Upcoming Sessions"
+          sessions={upcomingSessions}
+          type="upcoming"
+        />
+
+        <SessionsSection 
+          title="Completed Sessions"
+          sessions={completedSessions}
+          type="completed"
+        />
       </div>
     </Layout>
   );

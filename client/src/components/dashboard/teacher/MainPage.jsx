@@ -4,21 +4,45 @@ import Layout from '../Layout';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
 import { PencilIcon, TrashIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
+import SessionsSection from '../SessionsSection';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [completedSessions, setCompletedSessions] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchMaterials();
+    fetchData();
   }, []);
 
-  const fetchMaterials = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get('/api/materials');
-      setMaterials(response.data);
+      const [materialsRes, sessionsRes] = await Promise.all([
+        axios.get('/api/materials'),
+        axios.get('/api/sessions')
+      ]);
+      
+      setMaterials(materialsRes.data);
+      
+      // Split sessions into upcoming and completed
+      const now = new Date();
+      const sessions = sessionsRes.data;
+      
+      setUpcomingSessions(
+        sessions.filter(session => 
+          session.status !== 'completed' && new Date(session.dateTime) >= now
+        ).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+      );
+      
+      setCompletedSessions(
+        sessions.filter(session => 
+          session.status === 'completed'
+        ).sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt))
+      );
     } catch (error) {
-      console.error('Error fetching materials:', error);
+      console.error('Error fetching data:', error);
+      toast.error('Failed to fetch dashboard data');
     }
   };
 
@@ -27,7 +51,7 @@ const TeacherMainPage = () => {
       try {
         await axios.delete(`/api/materials/${id}`);
         toast.success('Material deleted successfully');
-        fetchMaterials(); // Refresh the list
+        fetchData(); // Refresh all data
       } catch (error) {
         toast.error('Failed to delete material');
       }
@@ -52,7 +76,15 @@ const TeacherMainPage = () => {
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Semester Materials</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">Semester Materials</h2>
+            <button
+              onClick={() => navigate('/dashboard/create-material')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Create Material
+            </button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {materials.map((material) => (
               <div
@@ -68,7 +100,6 @@ const TeacherMainPage = () => {
                   <p className="text-gray-600 text-sm mb-4">{material.description}</p>
                 </div>
                 
-                {/* Action buttons */}
                 <div className="absolute top-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => {
@@ -105,9 +136,31 @@ const TeacherMainPage = () => {
             ))}
           </div>
           {materials.length === 0 && (
-            <p className="text-gray-500 text-center py-4">No materials created yet.</p>
+            <p className="text-gray-500 text-center py-4">No materials available yet.</p>
           )}
         </div>
+
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-800">Sessions</h2>
+          <button
+            onClick={() => navigate('/dashboard/create-session')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Create Session
+          </button>
+        </div>
+
+        <SessionsSection 
+          title="Upcoming Sessions"
+          sessions={upcomingSessions}
+          type="upcoming"
+        />
+
+        <SessionsSection 
+          title="Completed Sessions"
+          sessions={completedSessions}
+          type="completed"
+        />
       </div>
     </Layout>
   );

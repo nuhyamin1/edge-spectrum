@@ -109,6 +109,38 @@ router.post('/', auth, isTeacher, async (req, res) => {
     }
 });
 
+// Get all sessions (with role-based filtering)
+router.get('/', auth, async (req, res) => {
+    try {
+        let query = {};
+        
+        // For teachers, only show their sessions
+        if (req.user.role === 'teacher') {
+            query.teacher = req.user._id;
+        }
+        
+        const sessions = await Session.find(query)
+            .populate('teacher', 'name email')
+            .populate('enrolledStudents', '_id name')
+            .sort({ dateTime: 'desc' })
+            .lean();
+
+        // Add default status and process dates for each session
+        const processedSessions = sessions.map(session => ({
+            ...session,
+            status: session.status || 'scheduled'
+        }));
+
+        res.json(processedSessions);
+    } catch (error) {
+        console.error('Error fetching sessions:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch sessions',
+            details: error.message 
+        });
+    }
+});
+
 // Get all sessions (for teachers - their own sessions)
 router.get('/teacher', auth, isTeacher, async (req, res) => {
     try {
