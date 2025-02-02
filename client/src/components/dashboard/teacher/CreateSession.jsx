@@ -99,55 +99,54 @@ const CreateSession = () => {
           <h2 className="text-2xl font-bold mb-6">Create New Session</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Title</label>
               <input
                 type="text"
                 name="title"
                 value={session.title}
                 onChange={handleChange}
                 required
+                placeholder="Title"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Subject</label>
               <input
                 type="text"
                 name="subject"
                 value={session.subject}
                 onChange={handleChange}
                 required
+                placeholder="Subject"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
               <textarea
                 name="description"
                 value={session.description}
                 onChange={handleChange}
                 required
+                placeholder="Description"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Date and Time</label>
               <input
                 type="datetime-local"
                 name="dateTime"
                 value={session.dateTime}
                 onChange={handleChange}
                 required
+                placeholder="Date and Time"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
                 <input
                   type="number"
                   name="duration"
@@ -155,12 +154,12 @@ const CreateSession = () => {
                   onChange={handleChange}
                   required
                   min="1"
+                  placeholder="Duration (minutes)"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Grace Period (minutes)</label>
                 <input
                   type="number"
                   name="gracePeriod"
@@ -168,13 +167,13 @@ const CreateSession = () => {
                   onChange={handleChange}
                   required
                   min="0"
+                  placeholder="Grace Period (minutes)"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Material</label>
               <div className="mt-1 flex space-x-2">
                 <select
                   onChange={handleMaterialSelect}
