@@ -1,9 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarIcon, ClockIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../../context/AuthContext';
+
+const MAX_DISPLAY_ITEMS = 3;
 
 const SessionsSection = ({ title, sessions, type }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isTeacher = user?.role === 'teacher';
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -28,14 +33,29 @@ const SessionsSection = ({ title, sessions, type }) => {
     }
   };
 
+  const handleSessionClick = (sessionId) => {
+    navigate(`/dashboard/session/${sessionId}`);
+  };
+
+  const handleViewMore = () => {
+    if (isTeacher) {
+      navigate('/dashboard/sessions');
+    } else {
+      navigate('/dashboard/available-sessions');
+    }
+  };
+
+  const displayedSessions = sessions.slice(0, MAX_DISPLAY_ITEMS);
+  const hasMore = sessions.length > MAX_DISPLAY_ITEMS;
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">{title}</h2>
       <div className="space-y-4">
-        {sessions.map((session) => (
+        {displayedSessions.map((session) => (
           <div
             key={session._id}
-            onClick={() => navigate(`/dashboard/session/${session._id}`)}
+            onClick={() => handleSessionClick(session._id)}
             className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
           >
             <div className="flex justify-between items-start">
@@ -70,6 +90,16 @@ const SessionsSection = ({ title, sessions, type }) => {
         ))}
         {sessions.length === 0 && (
           <p className="text-gray-500 text-center py-4">No {type} sessions available.</p>
+        )}
+        {hasMore && (
+          <div className="text-center pt-4">
+            <button
+              onClick={handleViewMore}
+              className="px-4 py-2 text-blue-600 hover:text-blue-800 font-medium"
+            >
+              View More Sessions
+            </button>
+          </div>
         )}
       </div>
     </div>
