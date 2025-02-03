@@ -198,6 +198,9 @@ learning_platform
 │   └── uploads
 │       └── materials
 └── server
+    ├── controllers
+    │   ├── authController.js
+    │   └── sessionController.js
     ├── middleware
     │   ├── auth.js
     │   └── isTeacher.js
@@ -207,8 +210,7 @@ learning_platform
     │   └── User.js
     ├── public
     │   └── uploads
-    │       ├── materials
-    │       └── profiles
+    │       └── materials
     ├── routes
     │   ├── auth.js
     │   ├── materials.js
@@ -216,6 +218,7 @@ learning_platform
     │   ├── sse.js
     │   └── upload.js
     ├── scripts
+    │   ├── fixDatabase.js
     │   └── updateSessionStatus.js
     ├── server.js
     ├── services
