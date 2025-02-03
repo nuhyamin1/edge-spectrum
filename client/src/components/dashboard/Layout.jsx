@@ -9,11 +9,13 @@ const Layout = ({ children, userType }) => {
     { path: '/dashboard/create-session', label: 'Create Session' },
     { path: '/dashboard/sessions', label: 'Session List' },
     { path: '/dashboard/create-material', label: 'Create Material' },
+    { path: '/dashboard/profile', label: 'User Profile' },
   ];
 
   const studentMenus = [
     { path: '/dashboard', label: 'Main Page' },
     { path: '/dashboard/available-sessions', label: 'Available Sessions' },
+    { path: '/dashboard/profile', label: 'User Profile' },
   ];
 
   const menus = userType === 'teacher' ? teacherMenus : studentMenus;

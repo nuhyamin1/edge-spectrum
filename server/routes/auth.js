@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const User = require('../models/User');
+const User = require('../src/models/User');
 
 // Email transporter
 const transporter = nodemailer.createTransport({

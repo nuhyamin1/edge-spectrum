@@ -9,6 +9,14 @@ A modern virtual learning platform that connects teachers and students through i
 - Role-based authentication (Teacher/Student)
 - Secure login with JWT tokens
 - Password hashing and security measures
+- User profile management:
+  - Profile picture upload and display
+  - Personal information editing (name, email)
+  - About Me section
+  - Role-specific profile views
+  - Secure file upload handling
+  - Real-time profile updates
+  - Persistent profile data storage
 
 ### Material Management
 - Teachers can create and manage learning materials
@@ -63,6 +71,8 @@ A modern virtual learning platform that connects teachers and students through i
 - Set session duration and grace period
 - Manage classroom activities
 - Session dashboard with real-time updates
+- Personalized teacher profile with profile picture
+- Professional profile customization
 
 ### Student Features
 - Browse available sessions in real-time
@@ -73,6 +83,8 @@ A modern virtual learning platform that connects teachers and students through i
 - View session materials
 - Real-time session status updates
 - Grace period countdown timer
+- Customizable student profile
+- Personal profile management
 
 ### Classroom Features (In Development)
 - Real-time chat
@@ -92,6 +104,8 @@ A modern virtual learning platform that connects teachers and students through i
 - React Context for state management
 - React-Toastify for notifications
 - Socket.IO client for real-time updates
+- Multer for file upload handling
+- FormData for multipart form submissions
 
 ### Backend
 - Node.js with Express
@@ -99,7 +113,8 @@ A modern virtual learning platform that connects teachers and students through i
 - JWT for authentication
 - Bcrypt for password hashing
 - Nodemailer for email services
-- Socket.IO for real-time communication
+- Multer middleware for file uploads
+- Static file serving for profile pictures
 
 ## Getting Started
 

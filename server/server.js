@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const http = require('http');
 const socketService = require('./services/socket');
+const fs = require('fs');
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +16,12 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = socketService.init(server);
 
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads/profile-pictures');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
@@ -23,7 +30,7 @@ app.use(cors({
 app.use(express.json());
 
 // Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
@@ -36,6 +43,7 @@ app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/sse', require('./routes/sse'));
 app.use('/api/materials', require('./routes/materials'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/users', require('./routes/users')); // Fixed path to users routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

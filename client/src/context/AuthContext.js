@@ -60,8 +60,27 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (userData) => {
+    try {
+      // Preserve the token when updating user data
+      const token = user?.token;
+      const updatedUser = { ...userData, token };
+      
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Update state
+      setUser(updatedUser);
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, api }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading, api }}>
       {!loading && children}
     </AuthContext.Provider>
   );
