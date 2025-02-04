@@ -19,6 +19,7 @@ import MaterialView from './components/dashboard/MaterialView';
 import SessionView from './components/dashboard/SessionView';
 import TeacherProfile from './components/dashboard/teacher/TeacherProfile';
 import StudentProfile from './components/dashboard/student/StudentProfile';
+import Layout from './components/dashboard/Layout'; // Import the Layout component
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
@@ -164,7 +165,9 @@ const AppRoutes = () => {
         path="/dashboard/profile"
         element={
           <ProtectedRoute allowedRoles={['teacher', 'student']}>
-            {user?.role === 'teacher' ? <TeacherProfile /> : <StudentProfile />}
+            <Layout userType={user?.role}>
+              {user?.role === 'teacher' ? <TeacherProfile /> : <StudentProfile />}
+            </Layout>
           </ProtectedRoute>
         }
       />
