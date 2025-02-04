@@ -12,6 +12,7 @@ import {
   LinkIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
+import { UserCircleIcon } from '@heroicons/react/24/solid';
 
 const SessionView = () => {
   const { id } = useParams();
@@ -186,6 +187,30 @@ const SessionView = () => {
                 </a>
               </div>
             )}
+          </div>
+
+          {/* Enrolled Students Section */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Enrolled Students</h3>
+            <div className="space-y-4">
+              {session.enrolledStudents.map((student) => (
+                <div key={student._id} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  {student.profilePicture ? (
+                    <img
+                      src={student.profilePicture}
+                      alt={student.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserCircleIcon className="w-10 h-10 text-gray-400" />
+                  )}
+                  <div className="ml-3">
+                    <p className="font-medium text-gray-800">{student.name}</p>
+                    <p className="text-sm text-gray-600">{student.email}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {isTeacher ? (

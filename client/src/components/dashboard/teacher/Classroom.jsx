@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from '../../../utils/axios';
 import Layout from '../Layout';
+import { UserCircleIcon } from '@heroicons/react/24/solid';
 
 const Classroom = () => {
   const { sessionId } = useParams();
@@ -119,14 +120,25 @@ const Classroom = () => {
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Enrolled Students</h3>
             {session.enrolledStudents?.length > 0 ? (
-              <ul className="divide-y divide-gray-200">
+              <div className="space-y-4">
                 {session.enrolledStudents.map((student) => (
-                  <li key={student._id} className="py-3">
-                    <p className="text-gray-800">{student.name}</p>
-                    <p className="text-gray-600 text-sm">{student.email}</p>
-                  </li>
+                  <div key={student._id} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    {student.profilePicture ? (
+                      <img
+                        src={student.profilePicture}
+                        alt={student.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <UserCircleIcon className="w-10 h-10 text-gray-400" />
+                    )}
+                    <div className="ml-3">
+                      <p className="font-medium text-gray-800">{student.name}</p>
+                      <p className="text-sm text-gray-600">{student.email}</p>
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
               <p className="text-gray-600">No students enrolled yet</p>
             )}

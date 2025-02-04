@@ -48,6 +48,23 @@ router.get('/available', auth, async (req, res) => {
   }
 });
 
+// Get a single session
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id)
+      .populate('teacher', 'name email profilePicture')
+      .populate('enrolledStudents', 'name email profilePicture');
+    
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    res.json(session);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update a session (teachers only, their own sessions)
 router.put('/:id', auth, isTeacher, async (req, res) => {
   try {
