@@ -190,23 +190,25 @@ const SessionView = () => {
           </div>
 
           {/* Enrolled Students Section */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Enrolled Students</h3>
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Enrolled Students ({session.enrolledStudents.length})
+            </h3>
             <div className="space-y-4">
               {session.enrolledStudents.map((student) => (
-                <div key={student._id} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                  {student.profilePicture ? (
+                <div key={student._id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  {student.profilePicture?.data ? (
                     <img
-                      src={student.profilePicture}
-                      alt={student.name}
+                      src={student.profilePicture.data}
+                      alt={`${student.name}'s profile`}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
                     <UserCircleIcon className="w-10 h-10 text-gray-400" />
                   )}
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-800">{student.name}</p>
-                    <p className="text-sm text-gray-600">{student.email}</p>
+                  <div>
+                    <p className="font-medium text-gray-900">{student.name}</p>
+                    <p className="text-sm text-gray-500">{student.email}</p>
                   </div>
                 </div>
               ))}

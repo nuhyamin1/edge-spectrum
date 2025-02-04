@@ -117,31 +117,32 @@ const Classroom = () => {
             )}
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Enrolled Students</h3>
-            {session.enrolledStudents?.length > 0 ? (
-              <div className="space-y-4">
-                {session.enrolledStudents.map((student) => (
-                  <div key={student._id} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                    {student.profilePicture ? (
-                      <img
-                        src={student.profilePicture}
-                        alt={student.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <UserCircleIcon className="w-10 h-10 text-gray-400" />
-                    )}
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-800">{student.name}</p>
-                      <p className="text-sm text-gray-600">{student.email}</p>
-                    </div>
+          <div className="px-6 py-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Enrolled Students ({session.enrolledStudents.length})
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {session.enrolledStudents.map((student) => (
+                <div
+                  key={student._id}
+                  className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                >
+                  {student.profilePicture?.data ? (
+                    <img
+                      src={student.profilePicture.data}
+                      alt={`${student.name}'s profile`}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserCircleIcon className="w-10 h-10 text-gray-400" />
+                  )}
+                  <div>
+                    <p className="font-medium text-gray-900">{student.name}</p>
+                    <p className="text-sm text-gray-500">{student.email}</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-600">No students enrolled yet</p>
-            )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {session.status === 'active' && (

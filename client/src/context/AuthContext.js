@@ -33,7 +33,15 @@ export const AuthProvider = ({ children }) => {
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
-        setUser({ ...parsedUser, token });
+        
+        // Ensure all user data is properly loaded
+        setUser({
+          ...parsedUser,
+          token,
+          profilePicture: parsedUser.profilePicture || null,
+          aboutMe: parsedUser.aboutMe || '',
+          isEmailVerified: parsedUser.isEmailVerified || false
+        });
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('token');
@@ -45,9 +53,17 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData, token) => {
     try {
+      // Ensure all user data is included
+      const completeUserData = {
+        ...userData,
+        profilePicture: userData.profilePicture || null,
+        aboutMe: userData.aboutMe || '',
+        isEmailVerified: userData.isEmailVerified || false
+      };
+
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser({ ...userData, token });
+      localStorage.setItem('user', JSON.stringify(completeUserData));
+      setUser({ ...completeUserData, token });
     } catch (error) {
       console.error('Error during login:', error);
       throw error;
@@ -62,15 +78,20 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = (userData) => {
     try {
-      // Preserve the token when updating user data
+      // Preserve the token and ensure all data is included
       const token = user?.token;
-      const updatedUser = { ...userData, token };
+      const completeUserData = {
+        ...userData,
+        profilePicture: userData.profilePicture || null,
+        aboutMe: userData.aboutMe || '',
+        isEmailVerified: userData.isEmailVerified || false
+      };
       
-      // Update localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
+      // Update localStorage with complete data
+      localStorage.setItem('user', JSON.stringify(completeUserData));
       
-      // Update state
-      setUser(updatedUser);
+      // Update state with complete data
+      setUser({ ...completeUserData, token });
       
       return true;
     } catch (error) {
