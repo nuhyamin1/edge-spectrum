@@ -28,9 +28,9 @@ const Layout = ({ children, userType }) => {
         {/* Profile Section */}
         <Link to="/dashboard/profile" className="block p-4 border-b hover:bg-blue-50">
           <div className="flex items-center">
-            {user?.profilePicture ? (
+            {user?.profilePicture?.data ? (
               <img
-                src={user.profilePicture}
+                src={user.profilePicture.data}
                 alt="Profile"
                 className="w-10 h-10 rounded-full mr-3 object-cover"
               />

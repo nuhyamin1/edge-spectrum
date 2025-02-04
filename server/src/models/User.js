@@ -7,7 +7,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, select: false },
   role: { type: String, enum: ['student', 'teacher'], default: 'student' },
   aboutMe: String,
-  profilePicture: String,
+  profilePicture: {
+    data: String,  // Base64 string
+    contentType: String  // MIME type (e.g., 'image/jpeg', 'image/png')
+  },
   isEmailVerified: { type: Boolean, default: false },
   profileFields: {
     github: String,

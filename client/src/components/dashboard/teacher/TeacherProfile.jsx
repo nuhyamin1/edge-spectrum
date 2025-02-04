@@ -22,7 +22,7 @@ export default function TeacherProfile() {
         email: user.email || '',
         aboutMe: user.aboutMe || '',
       });
-      setPreviewUrl(user.profilePicture || '');
+      setPreviewUrl(user.profilePicture?.data || '');
     }
   }, [user]);
 
@@ -104,50 +104,46 @@ export default function TeacherProfile() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
 
-          <div>
-            <label htmlFor="aboutMe" className="block text-sm font-medium text-gray-700">
-              About Me
-            </label>
-            <textarea
-              id="aboutMe"
-              name="aboutMe"
-              value={formData.aboutMe}
-              onChange={handleChange}
-              rows={4}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
+        <div>
+          <label htmlFor="aboutMe" className="block text-sm font-medium text-gray-700">
+            About Me
+          </label>
+          <textarea
+            id="aboutMe"
+            name="aboutMe"
+            rows={4}
+            value={formData.aboutMe}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
         </div>
 
         <div className="flex justify-end">
@@ -161,4 +157,4 @@ export default function TeacherProfile() {
       </form>
     </div>
   );
-}
+};

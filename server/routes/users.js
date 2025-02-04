@@ -3,25 +3,22 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const User = require('../src/models/User');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '..', 'uploads', 'profile-pictures');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
+// Configure multer for memory storage instead of disk
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
   },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
   }
 });
-
-const upload = multer({ storage });
 
 router.put('/profile', auth, upload.single('profilePicture'), async (req, res) => {
   try {
@@ -35,8 +32,12 @@ router.put('/profile', auth, upload.single('profilePicture'), async (req, res) =
     };
 
     if (req.file) {
-      console.log('Profile picture uploaded:', req.file.filename);
-      updates.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
+      // Convert the image buffer to base64 string
+      const base64Image = req.file.buffer.toString('base64');
+      updates.profilePicture = {
+        data: `data:${req.file.mimetype};base64,${base64Image}`,
+        contentType: req.file.mimetype
+      };
     }
 
     const user = await User.findByIdAndUpdate(
