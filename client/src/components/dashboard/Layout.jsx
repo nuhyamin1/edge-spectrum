@@ -11,14 +11,12 @@ const Layout = ({ children, userType }) => {
     { path: '/dashboard', label: 'Main Page' },
     { path: '/dashboard/create-session', label: 'Create Session' },
     { path: '/dashboard/sessions', label: 'Session List' },
-    { path: '/dashboard/create-material', label: 'Create Material' },
-    { path: '/dashboard/profile', label: 'User Profile' },
+    { path: '/dashboard/create-material', label: 'Create Material' }
   ];
 
   const studentMenus = [
     { path: '/dashboard', label: 'Main Page' },
-    { path: '/dashboard/available-sessions', label: 'Available Sessions' },
-    { path: '/dashboard/profile', label: 'User Profile' },
+    { path: '/dashboard/available-sessions', label: 'Available Sessions' }
   ];
 
   const menus = userType === 'teacher' ? teacherMenus : studentMenus;
@@ -27,11 +25,25 @@ const Layout = ({ children, userType }) => {
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-md md:block">
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {userType === 'teacher' ? 'Teacher Dashboard' : 'Student Dashboard'}
-          </h2>
-        </div>
+        {/* Profile Section */}
+        <Link to="/dashboard/profile" className="block p-4 border-b hover:bg-blue-50">
+          <div className="flex items-center">
+            {user?.profilePicture ? (
+              <img
+                src={user.profilePicture}
+                alt="Profile"
+                className="w-10 h-10 rounded-full mr-3 object-cover"
+              />
+            ) : (
+              <UserCircleIcon className="w-10 h-10 mr-3 text-gray-500" />
+            )}
+            <span className="font-semibold text-gray-800">
+              {user?.name || 'User Name'}
+            </span>
+          </div>
+        </Link>
+
+        {/* Menu Items */}
         <nav className="mt-4">
           {menus.map((menu) => (
             <Link
@@ -41,22 +53,7 @@ const Layout = ({ children, userType }) => {
                 location.pathname === menu.path ? 'bg-blue-50 text-blue-700' : ''
               }`}
             >
-              {menu.label === 'User Profile' ? (
-                <div className="flex items-center">
-                  {user?.profilePicture ? (
-                    <img
-                      src={user.profilePicture}
-                      alt="Profile"
-                      className="w-6 h-6 rounded-full mr-2 object-cover"
-                    />
-                  ) : (
-                    <UserCircleIcon className="w-6 h-6 mr-2 text-gray-500" />
-                  )}
-                  {menu.label}
-                </div>
-              ) : (
-                menu.label
-              )}
+              {menu.label}
             </Link>
           ))}
         </nav>
