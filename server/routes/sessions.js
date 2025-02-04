@@ -215,7 +215,7 @@ router.get('/:id', auth, async (req, res) => {
     try {
         const session = await Session.findById(req.params.id)
             .populate('teacher', 'name email')
-            .populate('enrolledStudents', 'name email')
+            .populate('enrolledStudents', 'name email profilePicture')
             .lean();
 
         if (!session) {
@@ -324,7 +324,7 @@ router.post('/:id/start', auth, isTeacher, async (req, res) => {
 
         // Populate teacher and student information before sending response
         await session.populate('teacher', 'name email');
-        await session.populate('enrolledStudents', 'name email');
+        await session.populate('enrolledStudents', 'name email profilePicture');
 
         res.json(session);
     } catch (error) {
@@ -363,7 +363,7 @@ router.post('/:id/end', auth, isTeacher, async (req, res) => {
 
         // Populate teacher and student information before sending response
         await session.populate('teacher', 'name email');
-        await session.populate('enrolledStudents', 'name email');
+        await session.populate('enrolledStudents', 'name email profilePicture');
 
         res.json(session);
     } catch (error) {
