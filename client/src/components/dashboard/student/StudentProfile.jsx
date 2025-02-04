@@ -22,7 +22,7 @@ export default function StudentProfile() {
         email: user.email || '',
         aboutMe: user.aboutMe || '',
       });
-      setPreviewUrl(user.profilePicture || '');
+      setPreviewUrl(user.profilePicture?.data || '');
     }
   }, [user]);
 
