@@ -11,12 +11,14 @@ const Layout = ({ children, userType }) => {
     { path: '/dashboard', label: 'Main Page' },
     { path: '/dashboard/create-session', label: 'Create Session' },
     { path: '/dashboard/sessions', label: 'Session List' },
-    { path: '/dashboard/create-material', label: 'Create Material' }
+    { path: '/dashboard/create-material', label: 'Create Material' },
+    { path: '/dashboard/assignments', label: 'Assignments' }
   ];
 
   const studentMenus = [
     { path: '/dashboard', label: 'Main Page' },
-    { path: '/dashboard/available-sessions', label: 'Available Sessions' }
+    { path: '/dashboard/available-sessions', label: 'Available Sessions' },
+    { path: '/dashboard/assignments', label: 'Assignments' }
   ];
 
   const menus = userType === 'teacher' ? teacherMenus : studentMenus;

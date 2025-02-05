@@ -41,6 +41,7 @@ app.use('/api/sse', require('./routes/sse'));
 app.use('/api/materials', require('./routes/materials'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/users', require('./routes/users')); // Fixed path to users routes
+app.use('/api/assignments', require('./routes/assignments')); // Add assignments route
 
 // Error handling middleware
 app.use((err, req, res, next) => {

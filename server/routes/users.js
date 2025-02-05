@@ -20,6 +20,28 @@ const upload = multer({
   }
 });
 
+// Get users by role (requires authentication)
+router.get('/', auth, async (req, res) => {
+  try {
+    const { role } = req.query;
+    
+    // Only teachers can fetch student list
+    if (role === 'student' && req.user.role !== 'teacher') {
+      return res.status(403).json({ message: 'Access denied. Only teachers can view student list.' });
+    }
+
+    const query = role ? { role } : {};
+    const users = await User.find(query)
+      .select('name email role') // Only send necessary fields
+      .sort({ name: 1 }); // Sort by name
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
+  }
+});
+
 router.put('/profile', auth, upload.single('profilePicture'), async (req, res) => {
   try {
     console.log('Profile update request received:', req.body);

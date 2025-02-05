@@ -62,6 +62,20 @@ A modern virtual learning platform that connects teachers and students through i
   - Clear validation messages
   - Streamlined material selection
 
+### Assignment Management
+- Teachers can create and manage assignments
+- Assignment features:
+  - Create assignments with title, description, due date
+  - Select students from a dropdown menu
+  - Review submitted assignments
+  - Accept/Reject assignments with feedback
+  - Grade assignments (0-100)
+- Student features:
+  - View assigned assignments
+  - Submit assignments (supports PDF, DOCX, PPT files, or links)
+  - View assignment status (pending, submitted, accepted, rejected)
+  - View grades and feedback
+
 ### Teacher Features
 - Create and edit learning sessions
 - Create and manage learning materials
@@ -93,6 +107,27 @@ A modern virtual learning platform that connects teachers and students through i
 - Student participation tracking
 
 ## Recent Updates
+
+### Assignment Management System (February 5, 2025)
+- Added comprehensive assignment management system for teachers and students
+- Implemented features:
+  - Teachers can:
+    - Create assignments with title, description, due date
+    - Select students from a dropdown menu
+    - Review submitted assignments
+    - Accept/Reject assignments with feedback
+    - Grade assignments (0-100)
+  - Students can:
+    - View assigned assignments
+    - Submit assignments (supports PDF, DOCX, PPT files, or links)
+    - View assignment status (pending, submitted, accepted, rejected)
+    - View grades and feedback
+- Technical improvements:
+  - Added Assignment model with dynamic validation
+  - Integrated Material-UI components for better UX
+  - Implemented secure file upload system
+  - Added role-based access control for assignments
+  - Enhanced error handling and user feedback
 
 ### Material Management Enhancement (January 21, 2025)
 - Added comprehensive material management system
@@ -269,6 +304,7 @@ learning_platform
 │   │   │       ├── student
 │   │   │       │   ├── AvailableSessions.jsx
 │   │   │       │   ├── MainPage.jsx
+│   │   │       │   ├── StudentAssignments.jsx
 │   │   │       │   ├── StudentClassroom.jsx
 │   │   │       │   ├── StudentDashboard.jsx
 │   │   │       │   └── StudentProfile.jsx
@@ -281,6 +317,7 @@ learning_platform
 │   │   │           ├── MainPage.jsx
 │   │   │           ├── QuillEditor.css
 │   │   │           ├── SessionList.jsx
+│   │   │           ├── TeacherAssignments.jsx
 │   │   │           └── TeacherProfile.jsx
 │   │   ├── context
 │   │   │   └── AuthContext.js
@@ -288,6 +325,7 @@ learning_platform
 │   │   ├── index.js
 │   │   ├── logo.svg
 │   │   ├── reportWebVitals.js
+│   │   ├── routes
 │   │   ├── setupTests.js
 │   │   └── utils
 │   │       └── axios.js
@@ -312,6 +350,7 @@ learning_platform
     │   └── uploads
     │       └── materials
     ├── routes
+    │   ├── assignments.js
     │   ├── auth.js
     │   ├── materials.js
     │   ├── sessions.js
@@ -329,10 +368,13 @@ learning_platform
     │   ├── middleware
     │   │   └── isTeacher.js
     │   ├── models
+    │   │   ├── Assignment.js
     │   │   ├── Session.js
     │   │   └── User.js
     │   └── routes
     │       └── sessions.js
-    └── uploads
-        └── profile-pictures
-
+    ├── uploads
+    │   ├── assignments
+    │   └── profile-pictures
+    └── utils
+        └── upload.js
