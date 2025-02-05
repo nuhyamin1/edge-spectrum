@@ -9,9 +9,9 @@ const Layout = ({ children, userType }) => {
 
   const teacherMenus = [
     { path: '/dashboard', label: 'Main Page' },
+    { path: '/dashboard/create-material', label: 'Create Material' },
     { path: '/dashboard/create-session', label: 'Create Session' },
     { path: '/dashboard/sessions', label: 'Session List' },
-    { path: '/dashboard/create-material', label: 'Create Material' },
     { path: '/dashboard/assignments', label: 'Assignments' }
   ];
 
