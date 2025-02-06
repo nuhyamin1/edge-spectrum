@@ -13,6 +13,7 @@ import {
   Typography,
   MenuItem,
   IconButton,
+  Link,
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
@@ -134,6 +135,24 @@ const TeacherAssignments = () => {
     setOpenReviewDialog(true);
   };
 
+  const handleDownloadSubmission = async (assignmentId) => {
+    try {
+      const response = await api.get(`/assignments/${assignmentId}/download`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', selectedAssignment.fileOriginalName || 'submission');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      toast.error('Error downloading submission');
+    }
+  };
+
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -244,6 +263,28 @@ const TeacherAssignments = () => {
       >
         <DialogTitle>Review Assignment</DialogTitle>
         <DialogContent>
+          {selectedAssignment?.submissionContent && (
+            <Box mb={2}>
+              <Typography variant="subtitle1">Student Submission:</Typography>
+              {selectedAssignment.submissionType === 'file' ? (
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={() => handleDownloadSubmission(selectedAssignment._id)}
+                >
+                  Download File
+                </Button>
+              ) : (
+                <Link
+                  href={selectedAssignment.submissionContent}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Submission Link
+                </Link>
+              )}
+            </Box>
+          )}
           <TextField
             select
             fullWidth

@@ -229,4 +229,38 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// Add this new route before module.exports
+router.get('/:id/download', auth, async (req, res) => {
+  try {
+    const assignment = await Assignment.findById(req.params.id);
+    
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    if (req.user.role !== 'teacher' || assignment.teacherId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Unauthorized access' });
+    }
+
+    if (assignment.submissionType !== 'file' || !assignment.submissionContent) {
+      return res.status(400).json({ message: 'No file submission available' });
+    }
+
+    const filePath = path.join(__dirname, '../../', assignment.submissionContent);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    res.download(filePath, assignment.fileOriginalName, (err) => {
+      if (err) {
+        console.error('Download error:', err);
+        res.status(500).json({ message: 'Error downloading file' });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
