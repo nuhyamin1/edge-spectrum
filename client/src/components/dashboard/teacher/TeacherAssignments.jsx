@@ -79,6 +79,7 @@ const TeacherAssignments = () => {
     feedback: '',
     rejectionReason: '',
   });
+  const [assignToAll, setAssignToAll] = useState(false);
 
   useEffect(() => {
     fetchAssignments();
@@ -106,7 +107,7 @@ const TeacherAssignments = () => {
   const handleCreateAssignment = async () => {
     try {
       if (!formData.title || !formData.description || !formData.dueDate || 
-          !formData.studentId || !formData.maxFiles || !formData.maxLinks) {
+          (!assignToAll && !formData.studentId) || !formData.maxFiles || !formData.maxLinks) {
         toast.error('Please fill in all required fields');
         return;
       }
@@ -115,7 +116,8 @@ const TeacherAssignments = () => {
         ...formData,
         dueDate: new Date(formData.dueDate).toISOString(),
         maxFiles: parseInt(formData.maxFiles),
-        maxLinks: parseInt(formData.maxLinks)
+        maxLinks: parseInt(formData.maxLinks),
+        assignToAll: assignToAll
       };
 
       const response = await api.post('/assignments', assignment);
@@ -128,6 +130,7 @@ const TeacherAssignments = () => {
         maxFiles: 1,
         maxLinks: 1
       });
+      setAssignToAll(false);
       fetchAssignments();
       toast.success('Assignment created successfully');
     } catch (error) {
@@ -331,20 +334,45 @@ const TeacherAssignments = () => {
             value={formData.dueDate}
             onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
           />
-          <TextField
-            select
-            fullWidth
-            label="Select Student"
-            margin="normal"
-            value={formData.studentId}
-            onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-          >
-            {students.map((student) => (
-              <MenuItem key={student._id} value={student._id}>
-                {student.name} ({student.email})
-              </MenuItem>
-            ))}
-          </TextField>
+          <Box sx={{ mb: 2, mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Assignment Target:
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Button
+                variant={assignToAll ? "contained" : "outlined"}
+                onClick={() => {
+                  setAssignToAll(true);
+                  setFormData({ ...formData, studentId: '' });
+                }}
+              >
+                All Students
+              </Button>
+              <Button
+                variant={!assignToAll ? "contained" : "outlined"}
+                onClick={() => setAssignToAll(false)}
+              >
+                Individual Student
+              </Button>
+            </Box>
+          </Box>
+
+          {!assignToAll && (
+            <TextField
+              select
+              fullWidth
+              label="Select Student"
+              margin="normal"
+              value={formData.studentId}
+              onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+            >
+              {students.map((student) => (
+                <MenuItem key={student._id} value={student._id}>
+                  {student.name} ({student.email})
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
           <TextField
             fullWidth
             label="Maximum Files Allowed"

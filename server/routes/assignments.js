@@ -44,18 +44,11 @@ router.post('/', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only teachers can create assignments' });
     }
 
-    const { title, description, dueDate, studentId, maxFiles, maxLinks } = req.body;
+    const { title, description, dueDate, studentId, maxFiles, maxLinks, assignToAll } = req.body;
     
     // Add validation for maxFiles and maxLinks
     if (!maxFiles || !maxLinks) {
       return res.status(400).json({ message: 'Please specify maximum number of files and links allowed' });
-    }
-
-    // Validate student exists
-    const student = await User.findById(studentId);
-    if (!student || student.role !== 'student') {
-      console.log('Invalid student ID:', studentId);
-      return res.status(400).json({ message: 'Invalid student ID' });
     }
 
     // Validate date format
@@ -65,22 +58,61 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid date format' });
     }
 
-    const assignment = new Assignment({
-      title,
-      description,
-      dueDate: parsedDate,
-      teacherId: req.user._id,
-      studentId,
-      maxFiles: parseInt(maxFiles),
-      maxLinks: parseInt(maxLinks),
-      status: 'pending'
-    });
+    if (assignToAll) {
+      // Get all students
+      const students = await User.find({ role: 'student' });
+      
+      if (students.length === 0) {
+        return res.status(400).json({ message: 'No students found in the system' });
+      }
+      
+      // Create assignments for all students
+      const assignmentPromises = students.map(student => {
+        const assignment = new Assignment({
+          title,
+          description,
+          dueDate: parsedDate,
+          teacherId: req.user._id,
+          studentId: student._id,
+          maxFiles: parseInt(maxFiles),
+          maxLinks: parseInt(maxLinks),
+          status: 'pending'
+        });
+        return assignment.save();
+      });
 
-    console.log('Saving assignment:', assignment);
-    await assignment.save();
-    console.log('Assignment saved successfully');
-    
-    res.status(201).json(assignment);
+      await Promise.all(assignmentPromises);
+      res.status(201).json({ message: 'Assignments created for all students' });
+    } else {
+      // Validate student exists for individual assignment
+      if (!studentId) {
+        return res.status(400).json({ message: 'Please select a student' });
+      }
+
+      const student = await User.findById(studentId);
+      if (!student || student.role !== 'student') {
+        console.log('Invalid student ID:', studentId);
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+
+      // Create assignment for individual student
+      const assignment = new Assignment({
+        title,
+        description,
+        dueDate: parsedDate,
+        teacherId: req.user._id,
+        studentId,
+        maxFiles: parseInt(maxFiles),
+        maxLinks: parseInt(maxLinks),
+        status: 'pending'
+      });
+
+      console.log('Saving assignment:', assignment);
+      await assignment.save();
+      console.log('Assignment saved successfully');
+      
+      res.status(201).json(assignment);
+    }
   } catch (error) {
     console.error('Assignment creation error:', error);
     if (error.name === 'ValidationError') {
