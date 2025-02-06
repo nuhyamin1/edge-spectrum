@@ -35,7 +35,7 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
   }
-});
+}).array('files', 10); // Allow up to 10 files
 
 // Create a new assignment (Teacher only)
 router.post('/', auth, async (req, res) => {
@@ -44,23 +44,11 @@ router.post('/', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only teachers can create assignments' });
     }
 
-    // Log the received data
-    console.log('Creating assignment with data:', req.body);
-
-    // Validate required fields
-    const { title, description, dueDate, studentId } = req.body;
-    if (!title || !description || !dueDate || !studentId) {
-      console.log('Missing required fields:', {
-        title: !!title,
-        description: !!description,
-        dueDate: !!dueDate,
-        studentId: !!studentId
-      });
-      return res.status(400).json({ 
-        message: 'Missing required fields',
-        required: ['title', 'description', 'dueDate', 'studentId'],
-        received: req.body 
-      });
+    const { title, description, dueDate, studentId, maxFiles, maxLinks } = req.body;
+    
+    // Add validation for maxFiles and maxLinks
+    if (!maxFiles || !maxLinks) {
+      return res.status(400).json({ message: 'Please specify maximum number of files and links allowed' });
     }
 
     // Validate student exists
@@ -83,6 +71,8 @@ router.post('/', auth, async (req, res) => {
       dueDate: parsedDate,
       teacherId: req.user._id,
       studentId,
+      maxFiles: parseInt(maxFiles),
+      maxLinks: parseInt(maxLinks),
       status: 'pending'
     });
 
@@ -114,7 +104,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Submit assignment (Student only)
-router.post('/:id/submit', auth, upload.single('file'), async (req, res) => {
+router.post('/:id/submit', auth, async (req, res) => {
   try {
     if (req.user.role !== 'student') {
       return res.status(403).json({ message: 'Only students can submit assignments' });
@@ -129,15 +119,50 @@ router.post('/:id/submit', auth, upload.single('file'), async (req, res) => {
       return res.status(403).json({ message: 'You can only submit your own assignments' });
     }
 
-    assignment.submissionType = req.file ? 'file' : 'link';
-    assignment.submissionContent = req.file ? req.file.path : req.body.link;
-    assignment.fileOriginalName = req.file ? req.file.originalname : null;
-    assignment.status = 'submitted';
-    assignment.submittedAt = new Date();
-    assignment.submissionAttempts += 1;
+    // Handle file uploads
+    upload(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ message: err.message });
+      }
 
-    await assignment.save();
-    res.json(assignment);
+      const submissions = [];
+
+      // Handle files
+      if (req.files && req.files.length > 0) {
+        if (req.files.length > assignment.maxFiles) {
+          return res.status(400).json({ message: `Maximum ${assignment.maxFiles} files allowed` });
+        }
+
+        req.files.forEach(file => {
+          submissions.push({
+            type: 'file',
+            content: file.path,
+            originalName: file.originalname
+          });
+        });
+      }
+
+      // Handle links
+      const links = JSON.parse(req.body.links || '[]');
+      if (links.length > assignment.maxLinks) {
+        return res.status(400).json({ message: `Maximum ${assignment.maxLinks} links allowed` });
+      }
+
+      links.forEach(link => {
+        submissions.push({
+          type: 'link',
+          content: link
+        });
+      });
+
+      assignment.submissions = submissions;
+      assignment.status = 'submitted';
+      assignment.submittedAt = new Date();
+      assignment.submissionAttempts += 1;
+
+      await assignment.save();
+      res.json(assignment);
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -259,6 +284,30 @@ router.get('/:id/download', auth, async (req, res) => {
         res.status(500).json({ message: 'Error downloading file' });
       }
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add a new route for downloading multiple files
+router.get('/:id/download/:submissionIndex', auth, async (req, res) => {
+  try {
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    const submission = assignment.submissions[req.params.submissionIndex];
+    if (!submission || submission.type !== 'file') {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    const filePath = path.join(__dirname, '../../', submission.content);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    res.download(filePath, submission.originalName);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

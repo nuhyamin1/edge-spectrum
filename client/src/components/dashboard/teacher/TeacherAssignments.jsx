@@ -31,6 +31,8 @@ const TeacherAssignments = () => {
     description: '',
     dueDate: '',
     studentId: '',
+    maxFiles: 1,
+    maxLinks: 1
   });
   const [reviewData, setReviewData] = useState({
     status: '',
@@ -64,29 +66,28 @@ const TeacherAssignments = () => {
 
   const handleCreateAssignment = async () => {
     try {
-      // Validate required fields
-      if (!formData.title || !formData.description || !formData.dueDate || !formData.studentId) {
+      if (!formData.title || !formData.description || !formData.dueDate || 
+          !formData.studentId || !formData.maxFiles || !formData.maxLinks) {
         toast.error('Please fill in all required fields');
         return;
       }
 
-      // Format the date to ISO string
       const assignment = {
         ...formData,
         dueDate: new Date(formData.dueDate).toISOString(),
-        status: 'pending' // Explicitly set status to pending
+        maxFiles: parseInt(formData.maxFiles),
+        maxLinks: parseInt(formData.maxLinks)
       };
 
-      console.log('Sending assignment data:', assignment);
       const response = await api.post('/assignments', assignment);
-      console.log('Assignment created:', response.data);
-
       setOpenDialog(false);
       setFormData({
         title: '',
         description: '',
         dueDate: '',
-        studentId: ''
+        studentId: '',
+        maxFiles: 1,
+        maxLinks: 1
       });
       fetchAssignments();
       toast.success('Assignment created successfully');
@@ -135,16 +136,18 @@ const TeacherAssignments = () => {
     setOpenReviewDialog(true);
   };
 
-  const handleDownloadSubmission = async (assignmentId) => {
+  const handleDownloadSubmission = async (assignment, submissionIndex) => {
     try {
-      const response = await api.get(`/assignments/${assignmentId}/download`, {
-        responseType: 'blob'
-      });
+      const response = await api.get(
+        `/assignments/${assignment._id}/download/${submissionIndex}`,
+        { responseType: 'blob' }
+      );
       
+      const submission = assignment.submissions[submissionIndex];
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', selectedAssignment.fileOriginalName || 'submission');
+      link.setAttribute('download', submission.originalName || 'submission');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -207,10 +210,33 @@ const TeacherAssignments = () => {
                 </Typography>
                 {assignment.status === 'submitted' && (
                   <Box mt={2}>
+                    <Typography variant="subtitle2">Submissions:</Typography>
+                    {assignment.submissions.map((submission, index) => (
+                      <Box key={index} mt={1}>
+                        {submission.type === 'file' ? (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleDownloadSubmission(assignment, index)}
+                          >
+                            Download: {submission.originalName}
+                          </Button>
+                        ) : (
+                          <Link
+                            href={submission.content}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Link {index + 1}
+                          </Link>
+                        )}
+                      </Box>
+                    ))}
                     <Button
-                      variant="outlined"
+                      variant="contained"
                       color="primary"
                       onClick={() => handleOpenReview(assignment)}
+                      sx={{ mt: 2 }}
                     >
                       Review Submission
                     </Button>
@@ -265,6 +291,24 @@ const TeacherAssignments = () => {
               </MenuItem>
             ))}
           </TextField>
+          <TextField
+            fullWidth
+            label="Maximum Files Allowed"
+            type="number"
+            margin="normal"
+            InputProps={{ inputProps: { min: 0, max: 10 } }}
+            value={formData.maxFiles}
+            onChange={(e) => setFormData({ ...formData, maxFiles: e.target.value })}
+          />
+          <TextField
+            fullWidth
+            label="Maximum Links Allowed"
+            type="number"
+            margin="normal"
+            InputProps={{ inputProps: { min: 0, max: 10 } }}
+            value={formData.maxLinks}
+            onChange={(e) => setFormData({ ...formData, maxLinks: e.target.value })}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
@@ -283,26 +327,30 @@ const TeacherAssignments = () => {
       >
         <DialogTitle>Review Assignment</DialogTitle>
         <DialogContent>
-          {selectedAssignment?.submissionContent && (
+          {selectedAssignment?.submissions && (
             <Box mb={2}>
-              <Typography variant="subtitle1">Student Submission:</Typography>
-              {selectedAssignment.submissionType === 'file' ? (
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => handleDownloadSubmission(selectedAssignment._id)}
-                >
-                  Download File
-                </Button>
-              ) : (
-                <Link
-                  href={selectedAssignment.submissionContent}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View Submission Link
-                </Link>
-              )}
+              <Typography variant="subtitle1">Student Submissions:</Typography>
+              {selectedAssignment.submissions.map((submission, index) => (
+                <Box key={index} mb={1}>
+                  {submission.type === 'file' ? (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => handleDownloadSubmission(selectedAssignment, index)}
+                    >
+                      Download File: {submission.originalName}
+                    </Button>
+                  ) : (
+                    <Link
+                      href={submission.content}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Link {index + 1}
+                    </Link>
+                  )}
+                </Box>
+              ))}
             </Box>
           )}
           <TextField

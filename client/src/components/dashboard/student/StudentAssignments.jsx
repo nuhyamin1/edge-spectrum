@@ -12,7 +12,9 @@ import {
   TextField,
   Typography,
   Link,
+  IconButton,
 } from '@mui/material';
+import { Add as AddIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -21,9 +23,8 @@ const StudentAssignments = () => {
   const [assignments, setAssignments] = useState([]);
   const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
-  const [submissionType, setSubmissionType] = useState('file');
-  const [submissionFile, setSubmissionFile] = useState(null);
-  const [submissionLink, setSubmissionLink] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [links, setLinks] = useState(['']); // Start with one empty link field
 
   useEffect(() => {
     fetchAssignments();
@@ -38,57 +39,67 @@ const StudentAssignments = () => {
     }
   };
 
-  const handleSubmitAssignment = async () => {
+  const handleOpenSubmit = (assignment) => {
+    setSelectedAssignment(assignment);
+    setSelectedFiles([]);
+    setLinks(['']);
+    setOpenSubmitDialog(true);
+  };
+
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length > selectedAssignment.maxFiles) {
+      toast.error(`Maximum ${selectedAssignment.maxFiles} files allowed`);
+      return;
+    }
+    setSelectedFiles(files);
+  };
+
+  const handleAddLink = () => {
+    if (links.length < selectedAssignment.maxLinks) {
+      setLinks([...links, '']);
+    }
+  };
+
+  const handleRemoveLink = (index) => {
+    const newLinks = links.filter((_, i) => i !== index);
+    setLinks(newLinks);
+  };
+
+  const handleLinkChange = (index, value) => {
+    const newLinks = [...links];
+    newLinks[index] = value;
+    setLinks(newLinks);
+  };
+
+  const handleSubmit = async () => {
     try {
       const formData = new FormData();
-      if (submissionType === 'file') {
-        formData.append('file', submissionFile);
-      } else {
-        formData.append('link', submissionLink);
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      // Filter out empty links
+      const validLinks = links.filter(link => link.trim() !== '');
+      if (validLinks.length > selectedAssignment.maxLinks) {
+        toast.error(`Maximum ${selectedAssignment.maxLinks} links allowed`);
+        return;
       }
+      
+      formData.append('links', JSON.stringify(validLinks));
 
-      await api.post(
-        `/assignments/${selectedAssignment._id}/submit`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      await api.post(`/assignments/${selectedAssignment._id}/submit`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       setOpenSubmitDialog(false);
       fetchAssignments();
       toast.success('Assignment submitted successfully');
     } catch (error) {
-      toast.error('Error submitting assignment');
+      toast.error(error.response?.data?.message || 'Error submitting assignment');
     }
-  };
-
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const allowedTypes = ['.pdf', '.docx', '.ppt', '.pptx'];
-      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-      
-      if (allowedTypes.includes(fileExtension)) {
-        if (file.size <= 10 * 1024 * 1024) { // 10MB limit
-          setSubmissionFile(file);
-        } else {
-          toast.error('File size must be less than 10MB');
-        }
-      } else {
-        toast.error('Invalid file type. Only PDF, DOCX, and PPT files are allowed.');
-      }
-    }
-  };
-
-  const handleOpenSubmit = (assignment) => {
-    setSelectedAssignment(assignment);
-    setSubmissionType('file');
-    setSubmissionFile(null);
-    setSubmissionLink('');
-    setOpenSubmitDialog(true);
   };
 
   return (
@@ -183,52 +194,63 @@ const StudentAssignments = () => {
         <DialogTitle>Submit Assignment</DialogTitle>
         <DialogContent>
           <Box mb={2}>
-            <Button
-              variant={submissionType === 'file' ? 'contained' : 'outlined'}
-              onClick={() => setSubmissionType('file')}
-              sx={{ mr: 1 }}
-            >
-              Upload File
-            </Button>
-            <Button
-              variant={submissionType === 'link' ? 'contained' : 'outlined'}
-              onClick={() => setSubmissionType('link')}
-            >
-              Submit Link
-            </Button>
+            <Typography variant="body2" color="textSecondary">
+              Maximum files allowed: {selectedAssignment?.maxFiles}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Maximum links allowed: {selectedAssignment?.maxLinks}
+            </Typography>
           </Box>
+          
+          <input
+            type="file"
+            multiple
+            onChange={handleFileChange}
+            accept=".pdf,.docx,.ppt,.pptx"
+            style={{ marginBottom: '1rem' }}
+          />
+          
+          {selectedFiles.map((file, index) => (
+            <Typography key={index} variant="body2">
+              Selected file {index + 1}: {file.name}
+            </Typography>
+          ))}
 
-          {submissionType === 'file' ? (
-            <TextField
-              type="file"
-              fullWidth
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              onChange={handleFileChange}
-              inputProps={{
-                accept: '.pdf,.docx,.ppt,.pptx'
-              }}
-            />
-          ) : (
-            <TextField
-              fullWidth
-              label="Submission Link"
-              margin="normal"
-              value={submissionLink}
-              onChange={(e) => setSubmissionLink(e.target.value)}
-              placeholder="https://..."
-            />
-          )}
+          <Box mt={2}>
+            <Typography variant="subtitle1">Links:</Typography>
+            {links.map((link, index) => (
+              <Box key={index} display="flex" alignItems="center" mt={1}>
+                <TextField
+                  fullWidth
+                  label={`Link ${index + 1}`}
+                  value={link}
+                  onChange={(e) => handleLinkChange(index, e.target.value)}
+                />
+                <IconButton 
+                  onClick={() => handleRemoveLink(index)}
+                  disabled={links.length === 1}
+                >
+                  <ClearIcon />
+                </IconButton>
+              </Box>
+            ))}
+            {links.length < selectedAssignment?.maxLinks && (
+              <Button
+                startIcon={<AddIcon />}
+                onClick={handleAddLink}
+                sx={{ mt: 1 }}
+              >
+                Add Link
+              </Button>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenSubmitDialog(false)}>Cancel</Button>
           <Button
-            onClick={handleSubmitAssignment}
+            onClick={handleSubmit}
             color="primary"
-            disabled={
-              (submissionType === 'file' && !submissionFile) ||
-              (submissionType === 'link' && !submissionLink)
-            }
+            disabled={selectedFiles.length === 0 && links.length === 1}
           >
             Submit
           </Button>

@@ -23,30 +23,39 @@ const assignmentSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  maxFiles: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 10
+  },
+  maxLinks: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 10
+  },
   status: {
     type: String,
     enum: ['pending', 'submitted', 'accepted', 'rejected'],
     default: 'pending'
   },
-  submissionType: {
-    type: String,
-    enum: ['file', 'link'],
-    required: function() {
-      // Only required if status is 'submitted'
-      return this.status === 'submitted';
+  submissions: [{
+    type: {
+      type: String,
+      enum: ['file', 'link'],
+      required: true
+    },
+    content: {
+      type: String,  // File path or link URL
+      required: true
+    },
+    originalName: String, // For files only
+    submittedAt: {
+      type: Date,
+      default: Date.now
     }
-  },
-  submissionContent: {
-    type: String,  // File path or link URL
-    required: function() {
-      // Only required if status is 'submitted'
-      return this.status === 'submitted';
-    }
-  },
-  fileOriginalName: {
-    type: String,
-    required: false
-  },
+  }],
   mark: {
     type: Number,
     min: 0,
