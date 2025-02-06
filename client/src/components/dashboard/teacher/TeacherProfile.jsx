@@ -71,7 +71,7 @@ export default function TeacherProfile() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6">Teacher Profile</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">Teacher Profile</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex flex-col items-center mb-6">
