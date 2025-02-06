@@ -116,19 +116,25 @@ const StudentAssignments = () => {
                   Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
                 </Typography>
                 
-                {assignment.status === 'pending' && (
+                {assignment.status !== 'accepted' && (
                   <Box mt={2}>
                     <Button
                       variant="contained"
                       color="primary"
                       onClick={() => handleOpenSubmit(assignment)}
+                      disabled={assignment.status === 'submitted'}
                     >
-                      Submit Assignment
+                      {assignment.status === 'rejected' ? 'Resubmit Assignment' : 'Submit Assignment'}
                     </Button>
+                    {assignment.status === 'submitted' && (
+                      <Typography variant="body2" color="textSecondary" mt={1}>
+                        Submission received - waiting for teacher review
+                      </Typography>
+                    )}
                   </Box>
                 )}
 
-                {assignment.status !== 'pending' && (
+                {assignment.status !== 'accepted' && (
                   <Box mt={2}>
                     {assignment.mark && (
                       <Typography variant="body2">

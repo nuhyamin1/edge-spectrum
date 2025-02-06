@@ -134,6 +134,7 @@ router.post('/:id/submit', auth, upload.single('file'), async (req, res) => {
     assignment.fileOriginalName = req.file ? req.file.originalname : null;
     assignment.status = 'submitted';
     assignment.submittedAt = new Date();
+    assignment.submissionAttempts += 1;
 
     await assignment.save();
     res.json(assignment);
@@ -258,6 +259,37 @@ router.get('/:id/download', auth, async (req, res) => {
         res.status(500).json({ message: 'Error downloading file' });
       }
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete assignment (Teacher only)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: 'Only teachers can delete assignments' });
+    }
+
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    if (assignment.teacherId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You can only delete your own assignments' });
+    }
+
+    // Delete associated file if exists
+    if (assignment.submissionType === 'file' && assignment.submissionContent) {
+      const filePath = path.join(__dirname, '../../', assignment.submissionContent);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    await assignment.deleteOne();
+    res.json({ message: 'Assignment deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

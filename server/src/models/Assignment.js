@@ -64,6 +64,10 @@ const assignmentSchema = new mongoose.Schema({
   submittedAt: {
     type: Date,
     default: null
+  },
+  submissionAttempts: {
+    type: Number,
+    default: 0
   }
 }, { timestamps: true });
 

@@ -15,7 +15,7 @@ import {
   IconButton,
   Link,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -153,6 +153,18 @@ const TeacherAssignments = () => {
     }
   };
 
+  const handleDeleteAssignment = async (assignmentId) => {
+    try {
+      if (window.confirm('Are you sure you want to delete this assignment?')) {
+        await api.delete(`/assignments/${assignmentId}`);
+        fetchAssignments();
+        toast.success('Assignment deleted successfully');
+      }
+    } catch (error) {
+      toast.error('Error deleting assignment');
+    }
+  };
+
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -172,7 +184,15 @@ const TeacherAssignments = () => {
           <Grid item xs={12} md={6} lg={4} key={assignment._id}>
             <Card>
               <CardContent>
-                <Typography variant="h6">{assignment.title}</Typography>
+                <Box display="flex" justifyContent="space-between">
+                  <Typography variant="h6">{assignment.title}</Typography>
+                  <IconButton 
+                    onClick={() => handleDeleteAssignment(assignment._id)}
+                    color="error"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
                 <Typography color="textSecondary" gutterBottom>
                   Student: {assignment.studentId.name}
                 </Typography>
@@ -295,6 +315,7 @@ const TeacherAssignments = () => {
           >
             <MenuItem value="accepted">Accept</MenuItem>
             <MenuItem value="rejected">Reject</MenuItem>
+            <MenuItem value="pending">Reset to Pending</MenuItem>
           </TextField>
           <TextField
             fullWidth
