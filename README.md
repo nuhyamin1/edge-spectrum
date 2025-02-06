@@ -113,13 +113,15 @@ A modern virtual learning platform that connects teachers and students through i
 - Implemented features:
   - Teachers can:
     - Create assignments with title, description, due date
-    - Select students from a dropdown menu
+    - Assign to individual student or all students at once
     - Review submitted assignments
     - Accept/Reject assignments with feedback
     - Grade assignments (0-100)
+    - Download submitted files
   - Students can:
     - View assigned assignments
-    - Submit assignments (supports PDF, DOCX, PPT files, or links)
+    - Submit multiple files (PDF, DOCX, PPT files)
+    - Submit multiple links
     - View assignment status (pending, submitted, accepted, rejected)
     - View grades and feedback
 - Technical improvements:
@@ -128,6 +130,8 @@ A modern virtual learning platform that connects teachers and students through i
   - Implemented secure file upload system
   - Added role-based access control for assignments
   - Enhanced error handling and user feedback
+  - Added multi-file download functionality for teachers
+  - Implemented bulk assignment creation for all students
 
 ### Material Management Enhancement (January 21, 2025)
 - Added comprehensive material management system
@@ -194,6 +198,9 @@ A modern virtual learning platform that connects teachers and students through i
   - Profile picture display in student profile page
   - Profile picture display in session and classroom views
   - Consistent enrolled students list layout
+  - Assignment management with multi-file support
+  - Bulk assignment creation
+  - Assignment file downloads
 - In Progress:
   - Image compression for better performance
   - Profile picture update confirmation
@@ -201,6 +208,13 @@ A modern virtual learning platform that connects teachers and students through i
   - Material search and filtering
 
 ## Next Steps
+- Add assignment filtering and search functionality
+- Implement assignment statistics and analytics
+- Add batch download for multiple submissions
+- Add assignment templates for teachers
+- Implement assignment categories/tags
+- Add deadline notifications
+- Add assignment progress tracking
 - Fix enrolled students' profile picture display
 - Update session population to include complete student profile data
 - Add image compression for better performance
@@ -270,111 +284,4 @@ A modern virtual learning platform that connects teachers and students through i
 ## Project Structure
 
 ```
-learning_platform
-├── .gitignore
-├── README.md
-├── client
-│   ├── .gitignore
-│   ├── README.md
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── postcss.config.js
-│   ├── public
-│   │   ├── favicon.ico
-│   │   ├── index.html
-│   │   ├── logo192.png
-│   │   ├── logo512.png
-│   │   ├── manifest.json
-│   │   └── robots.txt
-│   ├── src
-│   │   ├── App.css
-│   │   ├── App.js
-│   │   ├── App.test.js
-│   │   ├── components
-│   │   │   ├── auth
-│   │   │   │   ├── EmailVerification.js
-│   │   │   │   ├── Login.js
-│   │   │   │   └── Register.js
-│   │   │   └── dashboard
-│   │   │       ├── Layout.jsx
-│   │   │       ├── MaterialView.css
-│   │   │       ├── MaterialView.jsx
-│   │   │       ├── SessionView.jsx
-│   │   │       ├── SessionsSection.jsx
-│   │   │       ├── student
-│   │   │       │   ├── AvailableSessions.jsx
-│   │   │       │   ├── MainPage.jsx
-│   │   │       │   ├── StudentAssignments.jsx
-│   │   │       │   ├── StudentClassroom.jsx
-│   │   │       │   ├── StudentDashboard.jsx
-│   │   │       │   └── StudentProfile.jsx
-│   │   │       └── teacher
-│   │   │           ├── Classroom.jsx
-│   │   │           ├── CreateMaterial.jsx
-│   │   │           ├── CreateSession.jsx
-│   │   │           ├── EditMaterial.jsx
-│   │   │           ├── EditSession.jsx
-│   │   │           ├── MainPage.jsx
-│   │   │           ├── QuillEditor.css
-│   │   │           ├── SessionList.jsx
-│   │   │           ├── TeacherAssignments.jsx
-│   │   │           └── TeacherProfile.jsx
-│   │   ├── context
-│   │   │   └── AuthContext.js
-│   │   ├── index.css
-│   │   ├── index.js
-│   │   ├── logo.svg
-│   │   ├── reportWebVitals.js
-│   │   ├── routes
-│   │   ├── setupTests.js
-│   │   └── utils
-│   │       └── axios.js
-│   └── tailwind.config.js
-├── package-lock.json
-├── package.json
-├── public
-│   └── uploads
-│       └── materials
-└── server
-    ├── controllers
-    │   ├── authController.js
-    │   └── sessionController.js
-    ├── middleware
-    │   ├── auth.js
-    │   └── isTeacher.js
-    ├── models
-    │   ├── Material.js
-    │   ├── Session.js
-    │   └── User.js
-    ├── public
-    │   └── uploads
-    │       └── materials
-    ├── routes
-    │   ├── assignments.js
-    │   ├── auth.js
-    │   ├── materials.js
-    │   ├── sessions.js
-    │   ├── sse.js
-    │   ├── upload.js
-    │   └── users.js
-    ├── scripts
-    │   ├── fixDatabase.js
-    │   └── updateSessionStatus.js
-    ├── server.js
-    ├── services
-    │   ├── sessionEvents.js
-    │   └── socket.js
-    ├── src
-    │   ├── middleware
-    │   │   └── isTeacher.js
-    │   ├── models
-    │   │   ├── Assignment.js
-    │   │   ├── Session.js
-    │   │   └── User.js
-    │   └── routes
-    │       └── sessions.js
-    ├── uploads
-    │   ├── assignments
-    │   └── profile-pictures
-    └── utils
-        └── upload.js
+
