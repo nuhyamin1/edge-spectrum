@@ -18,6 +18,53 @@ import { Add as AddIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
 
+// Add these styles at the top of the file
+const styles = {
+  submissionItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    mb: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 1,
+    p: 1
+  },
+  fileName: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    mr: 1
+  },
+  linkItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    mb: 1,
+    backgroundColor: '#f0f7ff',
+    borderRadius: 1,
+    p: 1
+  },
+  link: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#1976d2',
+    textDecoration: 'none',
+    '&:hover': {
+      textDecoration: 'underline'
+    }
+  },
+  fileInput: {
+    mb: 2,
+    p: 2,
+    border: '1px dashed #ccc',
+    borderRadius: 1,
+    backgroundColor: '#fafafa'
+  }
+};
+
 const StudentAssignments = () => {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState([]);
@@ -178,6 +225,39 @@ const StudentAssignments = () => {
                     )}
                   </Box>
                 )}
+
+                {assignment.status === 'submitted' && (
+                  <Box mt={2}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Your Submissions:
+                    </Typography>
+                    {assignment.submissions.map((submission, index) => (
+                      <Box key={index}>
+                        {submission.type === 'file' ? (
+                          <Box sx={styles.submissionItem}>
+                            <Typography variant="body2" sx={styles.fileName}>
+                              {submission.originalName}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Box sx={styles.linkItem}>
+                            <Typography variant="body2" sx={styles.fileName}>
+                              Link {index + 1}
+                            </Typography>
+                            <Link
+                              href={submission.content}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={styles.link}
+                            >
+                              {submission.content}
+                            </Link>
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -194,34 +274,47 @@ const StudentAssignments = () => {
         <DialogTitle>Submit Assignment</DialogTitle>
         <DialogContent>
           <Box mb={2}>
-            <Typography variant="body2" color="textSecondary">
+            <Typography variant="body2" color="textSecondary" gutterBottom>
               Maximum files allowed: {selectedAssignment?.maxFiles}
             </Typography>
-            <Typography variant="body2" color="textSecondary">
+            <Typography variant="body2" color="textSecondary" gutterBottom>
               Maximum links allowed: {selectedAssignment?.maxLinks}
             </Typography>
           </Box>
           
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            accept=".pdf,.docx,.ppt,.pptx"
-            style={{ marginBottom: '1rem' }}
-          />
+          <Box sx={styles.fileInput}>
+            <input
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              accept=".pdf,.docx,.ppt,.pptx"
+            />
+          </Box>
           
           {selectedFiles.map((file, index) => (
-            <Typography key={index} variant="body2">
-              Selected file {index + 1}: {file.name}
-            </Typography>
+            <Box key={index} sx={styles.submissionItem}>
+              <Typography variant="body2" sx={styles.fileName}>
+                {file.name}
+              </Typography>
+              <IconButton 
+                size="small"
+                onClick={() => {
+                  const newFiles = selectedFiles.filter((_, i) => i !== index);
+                  setSelectedFiles(newFiles);
+                }}
+              >
+                <ClearIcon />
+              </IconButton>
+            </Box>
           ))}
 
           <Box mt={2}>
-            <Typography variant="subtitle1">Links:</Typography>
+            <Typography variant="subtitle1" gutterBottom>Links:</Typography>
             {links.map((link, index) => (
-              <Box key={index} display="flex" alignItems="center" mt={1}>
+              <Box key={index} sx={styles.linkItem}>
                 <TextField
                   fullWidth
+                  size="small"
                   label={`Link ${index + 1}`}
                   value={link}
                   onChange={(e) => handleLinkChange(index, e.target.value)}
@@ -229,6 +322,7 @@ const StudentAssignments = () => {
                 <IconButton 
                   onClick={() => handleRemoveLink(index)}
                   disabled={links.length === 1}
+                  size="small"
                 >
                   <ClearIcon />
                 </IconButton>
@@ -247,10 +341,10 @@ const StudentAssignments = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenSubmitDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleSubmit}
+          <Button 
+            onClick={handleSubmit} 
             color="primary"
-            disabled={selectedFiles.length === 0 && links.length === 1}
+            disabled={selectedFiles.length === 0 && links.every(link => !link.trim())}
           >
             Submit
           </Button>

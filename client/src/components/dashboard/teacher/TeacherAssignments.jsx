@@ -19,6 +19,45 @@ import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/ico
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
 
+const styles = {
+  submissionItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    mb: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 1,
+    p: 1
+  },
+  fileName: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    mr: 1
+  },
+  linkItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    mb: 1,
+    backgroundColor: '#f0f7ff',
+    borderRadius: 1,
+    p: 1
+  },
+  link: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#1976d2',
+    textDecoration: 'none',
+    '&:hover': {
+      textDecoration: 'underline'
+    }
+  }
+};
+
 const TeacherAssignments = () => {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState([]);
@@ -210,25 +249,39 @@ const TeacherAssignments = () => {
                 </Typography>
                 {assignment.status === 'submitted' && (
                   <Box mt={2}>
-                    <Typography variant="subtitle2">Submissions:</Typography>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Submissions:
+                    </Typography>
                     {assignment.submissions.map((submission, index) => (
-                      <Box key={index} mt={1}>
+                      <Box key={index}>
                         {submission.type === 'file' ? (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleDownloadSubmission(assignment, index)}
-                          >
-                            Download: {submission.originalName}
-                          </Button>
+                          <Box sx={styles.submissionItem}>
+                            <Typography variant="body2" sx={styles.fileName}>
+                              {submission.originalName}
+                            </Typography>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => handleDownloadSubmission(assignment, index)}
+                              sx={{ minWidth: 'auto' }}
+                            >
+                              Download
+                            </Button>
+                          </Box>
                         ) : (
-                          <Link
-                            href={submission.content}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Link {index + 1}
-                          </Link>
+                          <Box sx={styles.linkItem}>
+                            <Typography variant="body2" sx={styles.fileName}>
+                              Link {index + 1}
+                            </Typography>
+                            <Link
+                              href={submission.content}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={styles.link}
+                            >
+                              {submission.content}
+                            </Link>
+                          </Box>
                         )}
                       </Box>
                     ))}
@@ -237,6 +290,7 @@ const TeacherAssignments = () => {
                       color="primary"
                       onClick={() => handleOpenReview(assignment)}
                       sx={{ mt: 2 }}
+                      fullWidth
                     >
                       Review Submission
                     </Button>
@@ -329,25 +383,38 @@ const TeacherAssignments = () => {
         <DialogContent>
           {selectedAssignment?.submissions && (
             <Box mb={2}>
-              <Typography variant="subtitle1">Student Submissions:</Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                Student Submissions:
+              </Typography>
               {selectedAssignment.submissions.map((submission, index) => (
-                <Box key={index} mb={1}>
+                <Box key={index}>
                   {submission.type === 'file' ? (
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={() => handleDownloadSubmission(selectedAssignment, index)}
-                    >
-                      Download File: {submission.originalName}
-                    </Button>
+                    <Box sx={styles.submissionItem}>
+                      <Typography variant="body2" sx={styles.fileName}>
+                        {submission.originalName}
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleDownloadSubmission(selectedAssignment, index)}
+                      >
+                        Download
+                      </Button>
+                    </Box>
                   ) : (
-                    <Link
-                      href={submission.content}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View Link {index + 1}
-                    </Link>
+                    <Box sx={styles.linkItem}>
+                      <Typography variant="body2" sx={styles.fileName}>
+                        Link {index + 1}
+                      </Typography>
+                      <Link
+                        href={submission.content}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={styles.link}
+                      >
+                        {submission.content}
+                      </Link>
+                    </Box>
                   )}
                 </Box>
               ))}
