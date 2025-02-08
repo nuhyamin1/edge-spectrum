@@ -21,7 +21,8 @@ import TeacherProfile from './components/dashboard/teacher/TeacherProfile';
 import StudentProfile from './components/dashboard/student/StudentProfile';
 import TeacherAssignments from './components/dashboard/teacher/TeacherAssignments';
 import StudentAssignments from './components/dashboard/student/StudentAssignments';
-import Layout from './components/dashboard/Layout'; // Import the Layout component
+import AssignmentDetails from './components/dashboard/teacher/AssignmentDetails';
+import Layout from './components/dashboard/Layout'; 
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
@@ -181,6 +182,18 @@ const AppRoutes = () => {
           <ProtectedRoute allowedRoles={['teacher', 'student']}>
             <Layout userType={user?.role}>
               {user?.role === 'teacher' ? <TeacherAssignments /> : <StudentAssignments />}
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Assignment Details Route */}
+      <Route
+        path="/teacher/assignments/:id"
+        element={
+          <ProtectedRoute allowedRoles={['teacher']}>
+            <Layout userType="teacher">
+              <AssignmentDetails />
             </Layout>
           </ProtectedRoute>
         }

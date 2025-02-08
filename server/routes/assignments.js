@@ -58,6 +58,8 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid date format' });
     }
 
+    let assignedStudents = [];
+
     if (assignToAll) {
       // Get all students
       const students = await User.find({ role: 'student' });
@@ -66,23 +68,10 @@ router.post('/', auth, async (req, res) => {
         return res.status(400).json({ message: 'No students found in the system' });
       }
       
-      // Create assignments for all students
-      const assignmentPromises = students.map(student => {
-        const assignment = new Assignment({
-          title,
-          description,
-          dueDate: parsedDate,
-          teacherId: req.user._id,
-          studentId: student._id,
-          maxFiles: parseInt(maxFiles),
-          maxLinks: parseInt(maxLinks),
-          status: 'pending'
-        });
-        return assignment.save();
-      });
-
-      await Promise.all(assignmentPromises);
-      res.status(201).json({ message: 'Assignments created for all students' });
+      assignedStudents = students.map(student => ({
+        studentId: student._id,
+        status: 'pending'
+      }));
     } else {
       // Validate student exists for individual assignment
       if (!studentId) {
@@ -95,24 +84,25 @@ router.post('/', auth, async (req, res) => {
         return res.status(400).json({ message: 'Invalid student ID' });
       }
 
-      // Create assignment for individual student
-      const assignment = new Assignment({
-        title,
-        description,
-        dueDate: parsedDate,
-        teacherId: req.user._id,
-        studentId,
-        maxFiles: parseInt(maxFiles),
-        maxLinks: parseInt(maxLinks),
+      assignedStudents = [{
+        studentId: student._id,
         status: 'pending'
-      });
-
-      console.log('Saving assignment:', assignment);
-      await assignment.save();
-      console.log('Assignment saved successfully');
-      
-      res.status(201).json(assignment);
+      }];
     }
+
+    // Create one assignment with all assigned students
+    const assignment = new Assignment({
+      title,
+      description,
+      dueDate: parsedDate,
+      teacherId: req.user._id,
+      assignedStudents,
+      maxFiles: parseInt(maxFiles),
+      maxLinks: parseInt(maxLinks)
+    });
+
+    await assignment.save();
+    res.status(201).json(assignment);
   } catch (error) {
     console.error('Assignment creation error:', error);
     if (error.name === 'ValidationError') {
@@ -124,14 +114,7 @@ router.post('/', auth, async (req, res) => {
         }, {})
       });
     }
-    res.status(400).json({ 
-      message: 'Error creating assignment',
-      error: error.message,
-      details: error.errors ? Object.keys(error.errors).map(key => ({
-        field: key,
-        message: error.errors[key].message
-      })) : null
-    });
+    res.status(400).json({ message: 'Error creating assignment' });
   }
 });
 
@@ -147,8 +130,9 @@ router.post('/:id/submit', auth, async (req, res) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    if (assignment.studentId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'You can only submit your own assignments' });
+    const assignedStudent = assignment.assignedStudents.find(student => student.studentId.toString() === req.user._id.toString());
+    if (!assignedStudent) {
+      return res.status(403).json({ message: 'You are not assigned to this assignment' });
     }
 
     // Handle file uploads
@@ -187,10 +171,13 @@ router.post('/:id/submit', auth, async (req, res) => {
         });
       });
 
-      assignment.submissions = submissions;
-      assignment.status = 'submitted';
-      assignment.submittedAt = new Date();
-      assignment.submissionAttempts += 1;
+      assignedStudent.submissions = submissions;
+      assignedStudent.status = 'submitted';
+      assignedStudent.submittedAt = new Date();
+      assignedStudent.submissionAttempts += 1;
+      assignedStudent.mark = null;
+      assignedStudent.feedback = '';
+      assignedStudent.rejectionReason = '';
 
       await assignment.save();
       res.json(assignment);
@@ -218,10 +205,15 @@ router.post('/:id/review', auth, async (req, res) => {
 
     const { status, mark, feedback, rejectionReason } = req.body;
     
-    assignment.status = status;
-    assignment.mark = mark;
-    assignment.feedback = feedback;
-    assignment.rejectionReason = rejectionReason;
+    const assignedStudent = assignment.assignedStudents.find(student => student.studentId.toString() === req.body.studentId);
+    if (!assignedStudent) {
+      return res.status(404).json({ message: 'Student not found in this assignment' });
+    }
+
+    assignedStudent.status = status;
+    assignedStudent.mark = mark;
+    assignedStudent.feedback = feedback;
+    assignedStudent.rejectionReason = rejectionReason;
 
     await assignment.save();
     res.json(assignment);
@@ -238,7 +230,7 @@ router.get('/teacher', auth, async (req, res) => {
     }
 
     const assignments = await Assignment.find({ teacherId: req.user._id })
-      .populate('studentId', 'name email')
+      .populate('assignedStudents.studentId', 'name email')
       .sort({ createdAt: -1 });
     res.json(assignments);
   } catch (error) {
@@ -253,7 +245,7 @@ router.get('/student', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    const assignments = await Assignment.find({ studentId: req.user._id })
+    const assignments = await Assignment.find({ 'assignedStudents.studentId': req.user._id })
       .populate('teacherId', 'name email')
       .sort({ createdAt: -1 });
     res.json(assignments);
@@ -267,14 +259,14 @@ router.get('/:id', auth, async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id)
       .populate('teacherId', 'name email')
-      .populate('studentId', 'name email');
+      .populate('assignedStudents.studentId', 'name email');
     
     if (!assignment) {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
     // Check if user has access to this assignment
-    if (req.user.role === 'student' && assignment.studentId._id.toString() !== req.user._id.toString()) {
+    if (req.user.role === 'student' && !assignment.assignedStudents.find(student => student.studentId.toString() === req.user._id.toString())) {
       return res.status(403).json({ message: 'Access denied' });
     }
     if (req.user.role === 'teacher' && assignment.teacherId._id.toString() !== req.user._id.toString()) {
@@ -284,6 +276,59 @@ router.get('/:id', auth, async (req, res) => {
     res.json(assignment);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Get assignment details with student submissions (Teacher only)
+router.get('/:id/details', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: 'Only teachers can view assignment details' });
+    }
+
+    const assignment = await Assignment.findOne({
+      _id: req.params.id,
+      teacherId: req.user._id
+    }).populate([
+      {
+        path: 'assignedStudents.studentId',
+        select: 'name email profilePicture'
+      },
+      {
+        path: 'teacherId',
+        select: 'name email'
+      }
+    ]);
+
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    // Format the response
+    const response = {
+      _id: assignment._id,
+      title: assignment.title,
+      description: assignment.description,
+      dueDate: assignment.dueDate,
+      maxFiles: assignment.maxFiles,
+      maxLinks: assignment.maxLinks,
+      teacherId: assignment.teacherId,
+      submissions: assignment.assignedStudents.map(student => ({
+        _id: student.studentId,
+        student: student.studentId,
+        status: student.status,
+        mark: student.mark,
+        feedback: student.feedback,
+        rejectionReason: student.rejectionReason,
+        submissions: student.submissions,
+        submittedAt: student.submittedAt
+      }))
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching assignment details:', error);
+    res.status(500).json({ message: 'Error fetching assignment details' });
   }
 });
 
@@ -300,17 +345,19 @@ router.get('/:id/download', auth, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized access' });
     }
 
-    if (assignment.submissionType !== 'file' || !assignment.submissionContent) {
+    const assignedStudent = assignment.assignedStudents.find(student => student.submissions && student.submissions.length > 0);
+    if (!assignedStudent) {
       return res.status(400).json({ message: 'No file submission available' });
     }
 
-    const filePath = path.join(__dirname, '../../', assignment.submissionContent);
+    const submission = assignedStudent.submissions[0];
+    const filePath = path.join(__dirname, '../../', submission.content);
     
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: 'File not found' });
     }
 
-    res.download(filePath, assignment.fileOriginalName, (err) => {
+    res.download(filePath, submission.originalName, (err) => {
       if (err) {
         console.error('Download error:', err);
         res.status(500).json({ message: 'Error downloading file' });
@@ -329,7 +376,12 @@ router.get('/:id/download/:submissionIndex', auth, async (req, res) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    const submission = assignment.submissions[req.params.submissionIndex];
+    const assignedStudent = assignment.assignedStudents.find(student => student.submissions && student.submissions.length > 0);
+    if (!assignedStudent) {
+      return res.status(404).json({ message: 'No file submission available' });
+    }
+
+    const submission = assignedStudent.submissions[req.params.submissionIndex];
     if (!submission || submission.type !== 'file') {
       return res.status(404).json({ message: 'File not found' });
     }
@@ -361,13 +413,17 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'You can only delete your own assignments' });
     }
 
-    // Delete associated file if exists
-    if (assignment.submissionType === 'file' && assignment.submissionContent) {
-      const filePath = path.join(__dirname, '../../', assignment.submissionContent);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
+    // Delete associated files if exists
+    assignment.assignedStudents.forEach(student => {
+      student.submissions.forEach(submission => {
+        if (submission.type === 'file' && submission.content) {
+          const filePath = path.join(__dirname, '../../', submission.content);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+      });
+    });
 
     await assignment.deleteOne();
     res.json({ message: 'Assignment deleted successfully' });

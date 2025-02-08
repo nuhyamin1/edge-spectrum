@@ -1,5 +1,44 @@
 const mongoose = require('mongoose');
 
+const submissionSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['file', 'link'],
+    required: true
+  },
+  content: {
+    type: String,
+    required: true
+  },
+  originalName: String // For files only
+});
+
+const assignedStudentSchema = new mongoose.Schema({
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'submitted', 'accepted', 'rejected'],
+    default: 'pending'
+  },
+  submissions: [submissionSchema],
+  mark: {
+    type: Number,
+    min: 0,
+    max: 100
+  },
+  feedback: String,
+  rejectionReason: String,
+  submittedAt: Date,
+  submissionAttempts: {
+    type: Number,
+    default: 0
+  }
+});
+
 const assignmentSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -18,65 +57,20 @@ const assignmentSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  studentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+  assignedStudents: [assignedStudentSchema],
   maxFiles: {
     type: Number,
     required: true,
-    min: 0,
-    max: 10
+    min: 1
   },
   maxLinks: {
     type: Number,
     required: true,
-    min: 0,
-    max: 10
+    min: 1
   },
-  status: {
-    type: String,
-    enum: ['pending', 'submitted', 'accepted', 'rejected'],
-    default: 'pending'
-  },
-  submissions: [{
-    type: {
-      type: String,
-      enum: ['file', 'link'],
-      required: true
-    },
-    content: {
-      type: String,  // File path or link URL
-      required: true
-    },
-    originalName: String, // For files only
-    submittedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  mark: {
-    type: Number,
-    min: 0,
-    max: 100,
-    required: false
-  },
-  feedback: {
-    type: String,
-    required: false
-  },
-  rejectionReason: {
-    type: String,
-    required: false
-  },
-  submittedAt: {
+  createdAt: {
     type: Date,
-    default: null
-  },
-  submissionAttempts: {
-    type: Number,
-    default: 0
+    default: Date.now
   }
 }, { timestamps: true });
 

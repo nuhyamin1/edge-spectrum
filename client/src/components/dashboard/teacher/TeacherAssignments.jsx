@@ -12,14 +12,42 @@ import {
   TextField,
   Typography,
   MenuItem,
+  Chip,
   IconButton,
   Link,
 } from '@mui/material';
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const styles = {
+  card: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  cardContent: {
+    flex: 1,
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease-in-out',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+    },
+  },
+  statsContainer: {
+    display: 'flex',
+    gap: 2,
+    mt: 2,
+  },
+  statChip: {
+    borderRadius: '16px',
+  },
   submissionItem: {
     display: 'flex',
     alignItems: 'center',
@@ -60,11 +88,13 @@ const styles = {
 
 const TeacherAssignments = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [students, setStudents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [openReviewDialog, setOpenReviewDialog] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -120,7 +150,7 @@ const TeacherAssignments = () => {
         assignToAll: assignToAll
       };
 
-      const response = await api.post('/assignments', assignment);
+      await api.post('/assignments', assignment);
       setOpenDialog(false);
       setFormData({
         title: '',
@@ -134,31 +164,29 @@ const TeacherAssignments = () => {
       fetchAssignments();
       toast.success('Assignment created successfully');
     } catch (error) {
-      console.error('Create assignment error:', error.response?.data || error);
-      
-      let errorMessage = 'Error creating assignment';
-      if (error.response?.data) {
-        if (error.response.data.errors) {
-          // Handle validation errors
-          const errors = error.response.data.errors;
-          errorMessage = Object.entries(errors)
-            .map(([field, message]) => `${field}: ${message}`)
-            .join('\n');
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
-        }
-      }
-      
-      toast.error(errorMessage, {
-        autoClose: 5000, // Give more time to read the error
-        style: { whiteSpace: 'pre-line' } // Preserve line breaks in the error message
-      });
+      toast.error(error.response?.data?.message || 'Error creating assignment');
     }
+  };
+
+  const handleOpenReview = (assignment, student, event) => {
+    event.stopPropagation();
+    setSelectedAssignment(assignment);
+    setSelectedStudent(student);
+    setReviewData({
+      status: student.status || '',
+      mark: student.mark || '',
+      feedback: student.feedback || '',
+      rejectionReason: student.rejectionReason || '',
+    });
+    setOpenReviewDialog(true);
   };
 
   const handleReviewAssignment = async () => {
     try {
-      await api.post(`/assignments/${selectedAssignment._id}/review`, reviewData);
+      await api.post(`/assignments/${selectedAssignment._id.toString()}/review`, {
+        ...reviewData,
+        studentId: selectedStudent.studentId._id
+      });
       setOpenReviewDialog(false);
       fetchAssignments();
       toast.success('Assignment reviewed successfully');
@@ -167,25 +195,15 @@ const TeacherAssignments = () => {
     }
   };
 
-  const handleOpenReview = (assignment) => {
-    setSelectedAssignment(assignment);
-    setReviewData({
-      status: assignment.status,
-      mark: assignment.mark || '',
-      feedback: assignment.feedback || '',
-      rejectionReason: assignment.rejectionReason || '',
-    });
-    setOpenReviewDialog(true);
-  };
-
-  const handleDownloadSubmission = async (assignment, submissionIndex) => {
+  const handleDownloadSubmission = async (assignment, student, submissionIndex, event) => {
+    event.stopPropagation();
     try {
       const response = await api.get(
         `/assignments/${assignment._id}/download/${submissionIndex}`,
         { responseType: 'blob' }
       );
       
-      const submission = assignment.submissions[submissionIndex];
+      const submission = student.submissions[submissionIndex];
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -198,7 +216,8 @@ const TeacherAssignments = () => {
     }
   };
 
-  const handleDeleteAssignment = async (assignmentId) => {
+  const handleDeleteAssignment = async (assignmentId, event) => {
+    event.stopPropagation();
     try {
       if (window.confirm('Are you sure you want to delete this assignment?')) {
         await api.delete(`/assignments/${assignmentId}`);
@@ -210,13 +229,23 @@ const TeacherAssignments = () => {
     }
   };
 
+  const getSubmissionStats = (assignment) => {
+    const students = assignment.assignedStudents || [];
+    const total = students.length;
+    const pending = students.filter(s => !s.submissions || s.submissions.length === 0 || s.status === 'pending').length;
+    const submitted = students.filter(s => s.status === 'submitted').length;
+    const accepted = students.filter(s => s.status === 'accepted').length;
+    const rejected = students.filter(s => s.status === 'rejected').length;
+
+    return { total, pending, submitted, accepted, rejected };
+  };
+
   return (
     <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Assignments</Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => setOpenDialog(true)}
         >
@@ -225,182 +254,221 @@ const TeacherAssignments = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {assignments.map((assignment) => (
-          <Grid item xs={12} md={6} lg={4} key={assignment._id}>
-            <Card>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="h6">{assignment.title}</Typography>
-                  <IconButton 
-                    onClick={() => handleDeleteAssignment(assignment._id)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-                <Typography color="textSecondary" gutterBottom>
-                  Student: {assignment.studentId.name}
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  {assignment.description}
-                </Typography>
-                <Typography variant="body2">
-                  Status: {assignment.status}
-                </Typography>
-                <Typography variant="body2">
-                  Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
-                </Typography>
-                {assignment.status === 'submitted' && (
-                  <Box mt={2}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Submissions:
+        {assignments.map((assignment) => {
+          const stats = getSubmissionStats(assignment);
+          return (
+            <Grid item xs={12} sm={6} md={4} key={assignment._id}>
+              <Card sx={styles.card}>
+                <CardContent>
+                  <Box sx={styles.cardHeader}>
+                    <Typography variant="h6" gutterBottom>
+                      {assignment.title}
                     </Typography>
-                    {assignment.submissions.map((submission, index) => (
-                      <Box key={index}>
-                        {submission.type === 'file' ? (
-                          <Box sx={styles.submissionItem}>
-                            <Typography variant="body2" sx={styles.fileName}>
-                              {submission.originalName}
-                            </Typography>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => handleDownloadSubmission(assignment, index)}
-                              sx={{ minWidth: 'auto' }}
-                            >
-                              Download
-                            </Button>
-                          </Box>
-                        ) : (
-                          <Box sx={styles.linkItem}>
-                            <Typography variant="body2" sx={styles.fileName}>
-                              Link {index + 1}
-                            </Typography>
-                            <Link
-                              href={submission.content}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              sx={styles.link}
-                            >
-                              {submission.content}
-                            </Link>
-                          </Box>
-                        )}
-                      </Box>
-                    ))}
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => handleOpenReview(assignment)}
-                      sx={{ mt: 2 }}
-                      fullWidth
+                    <IconButton
+                      color="error"
+                      onClick={(e) => handleDeleteAssignment(assignment._id, e)}
+                      size="small"
                     >
-                      Review Submission
-                    </Button>
+                      <DeleteIcon />
+                    </IconButton>
                   </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+                  <Box
+                    sx={styles.cardContent}
+                    onClick={() => navigate(`/teacher/assignments/${assignment._id}`)}
+                  >
+                    <Typography color="textSecondary" gutterBottom>
+                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="textSecondary"
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        mb: 2,
+                      }}
+                    >
+                      {assignment.description}
+                    </Typography>
+                    
+                    <Box sx={styles.statsContainer}>
+                      <Chip
+                        label={`Total: ${stats.total}`}
+                        size="small"
+                        sx={styles.statChip}
+                      />
+                      {stats.submitted > 0 && (
+                        <Chip
+                          label={`Submitted: ${stats.submitted}`}
+                          size="small"
+                          color="primary"
+                          sx={styles.statChip}
+                        />
+                      )}
+                      {stats.accepted > 0 && (
+                        <Chip
+                          label={`Accepted: ${stats.accepted}`}
+                          size="small"
+                          color="success"
+                          sx={styles.statChip}
+                        />
+                      )}
+                      {stats.rejected > 0 && (
+                        <Chip
+                          label={`Rejected: ${stats.rejected}`}
+                          size="small"
+                          color="error"
+                          sx={styles.statChip}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+
+                  {assignment.assignedStudents?.map((student) => (
+                    student.status === 'submitted' && (
+                      <Box key={student.studentId._id} mt={2}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          {student.studentId.name}'s Submission:
+                        </Typography>
+                        {student.submissions?.map((submission, index) => (
+                          <Box key={index}>
+                            {submission.type === 'file' ? (
+                              <Box sx={styles.submissionItem}>
+                                <Typography variant="body2" sx={styles.fileName}>
+                                  {submission.originalName}
+                                </Typography>
+                                <Button
+                                  size="small"
+                                  variant="contained"
+                                  onClick={(e) => handleDownloadSubmission(assignment, student, index, e)}
+                                >
+                                  Download
+                                </Button>
+                              </Box>
+                            ) : (
+                              <Box sx={styles.linkItem}>
+                                <Typography variant="body2" sx={styles.fileName}>
+                                  Link {index + 1}
+                                </Typography>
+                                <Link
+                                  href={submission.content}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  sx={styles.link}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {submission.content}
+                                </Link>
+                              </Box>
+                            )}
+                          </Box>
+                        ))}
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={(e) => handleOpenReview(assignment, student, e)}
+                          sx={{ mt: 1 }}
+                          fullWidth
+                        >
+                          Review Submission
+                        </Button>
+                      </Box>
+                    )
+                  ))}
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
       </Grid>
 
-      {/* Create Assignment Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Create New Assignment</DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            label="Title"
-            margin="normal"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          />
-          <TextField
-            fullWidth
-            label="Description"
-            margin="normal"
-            multiline
-            rows={4}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          />
-          <TextField
-            fullWidth
-            label="Due Date"
-            type="datetime-local"
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            value={formData.dueDate}
-            onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-          />
-          <Box sx={{ mb: 2, mt: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              Assignment Target:
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                variant={assignToAll ? "contained" : "outlined"}
-                onClick={() => {
-                  setAssignToAll(true);
-                  setFormData({ ...formData, studentId: '' });
-                }}
-              >
-                All Students
-              </Button>
-              <Button
-                variant={!assignToAll ? "contained" : "outlined"}
-                onClick={() => setAssignToAll(false)}
-              >
-                Individual Student
-              </Button>
-            </Box>
-          </Box>
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              sx={{ mb: 2 }}
+            />
 
-          {!assignToAll && (
+            <TextField
+              fullWidth
+              label="Description"
+              multiline
+              rows={4}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+
+            <TextField
+              fullWidth
+              label="Due Date"
+              type="datetime-local"
+              value={formData.dueDate}
+              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+              sx={{ mb: 2 }}
+              InputLabelProps={{ shrink: true }}
+            />
+
             <TextField
               select
               fullWidth
-              label="Select Student"
-              margin="normal"
-              value={formData.studentId}
-              onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
+              label="Assign To"
+              value={assignToAll ? 'all' : formData.studentId}
+              onChange={(e) => {
+                if (e.target.value === 'all') {
+                  setAssignToAll(true);
+                  setFormData({ ...formData, studentId: '' });
+                } else {
+                  setAssignToAll(false);
+                  setFormData({ ...formData, studentId: e.target.value });
+                }
+              }}
+              sx={{ mb: 2 }}
             >
+              <MenuItem value="all">All Students</MenuItem>
               {students.map((student) => (
                 <MenuItem key={student._id} value={student._id}>
-                  {student.name} ({student.email})
+                  {student.name}
                 </MenuItem>
               ))}
             </TextField>
-          )}
-          <TextField
-            fullWidth
-            label="Maximum Files Allowed"
-            type="number"
-            margin="normal"
-            InputProps={{ inputProps: { min: 0, max: 10 } }}
-            value={formData.maxFiles}
-            onChange={(e) => setFormData({ ...formData, maxFiles: e.target.value })}
-          />
-          <TextField
-            fullWidth
-            label="Maximum Links Allowed"
-            type="number"
-            margin="normal"
-            InputProps={{ inputProps: { min: 0, max: 10 } }}
-            value={formData.maxLinks}
-            onChange={(e) => setFormData({ ...formData, maxLinks: e.target.value })}
-          />
+
+            <TextField
+              fullWidth
+              label="Maximum Files"
+              type="number"
+              value={formData.maxFiles}
+              onChange={(e) => setFormData({ ...formData, maxFiles: e.target.value })}
+              sx={{ mb: 2 }}
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+
+            <TextField
+              fullWidth
+              label="Maximum Links"
+              type="number"
+              value={formData.maxLinks}
+              onChange={(e) => setFormData({ ...formData, maxLinks: e.target.value })}
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleCreateAssignment} color="primary">
+          <Button onClick={handleCreateAssignment} variant="contained" color="primary">
             Create
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Review Assignment Dialog */}
       <Dialog
         open={openReviewDialog}
         onClose={() => setOpenReviewDialog(false)}
@@ -409,92 +477,91 @@ const TeacherAssignments = () => {
       >
         <DialogTitle>Review Assignment</DialogTitle>
         <DialogContent>
-          {selectedAssignment?.submissions && (
-            <Box mb={2}>
-              <Typography variant="subtitle1" gutterBottom>
-                Student Submissions:
-              </Typography>
-              {selectedAssignment.submissions.map((submission, index) => (
-                <Box key={index}>
-                  {submission.type === 'file' ? (
-                    <Box sx={styles.submissionItem}>
-                      <Typography variant="body2" sx={styles.fileName}>
-                        {submission.originalName}
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => handleDownloadSubmission(selectedAssignment, index)}
-                      >
-                        Download
-                      </Button>
-                    </Box>
-                  ) : (
-                    <Box sx={styles.linkItem}>
-                      <Typography variant="body2" sx={styles.fileName}>
-                        Link {index + 1}
-                      </Typography>
-                      <Link
-                        href={submission.content}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={styles.link}
-                      >
-                        {submission.content}
-                      </Link>
-                    </Box>
-                  )}
-                </Box>
-              ))}
-            </Box>
-          )}
-          <TextField
-            select
-            fullWidth
-            label="Status"
-            margin="normal"
-            value={reviewData.status}
-            onChange={(e) => setReviewData({ ...reviewData, status: e.target.value })}
-          >
-            <MenuItem value="accepted">Accept</MenuItem>
-            <MenuItem value="rejected">Reject</MenuItem>
-            <MenuItem value="pending">Reset to Pending</MenuItem>
-          </TextField>
-          <TextField
-            fullWidth
-            label="Mark (0-100)"
-            type="number"
-            margin="normal"
-            value={reviewData.mark}
-            onChange={(e) => setReviewData({ ...reviewData, mark: e.target.value })}
-            inputProps={{ min: 0, max: 100 }}
-          />
-          <TextField
-            fullWidth
-            label="Feedback"
-            margin="normal"
-            multiline
-            rows={4}
-            value={reviewData.feedback}
-            onChange={(e) => setReviewData({ ...reviewData, feedback: e.target.value })}
-          />
-          {reviewData.status === 'rejected' && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Student: {selectedStudent?.studentId.name}
+            </Typography>
+            
+            {selectedStudent?.submissions?.map((submission, index) => (
+              <Box key={index} mb={2}>
+                {submission.type === 'file' ? (
+                  <Box sx={styles.submissionItem}>
+                    <Typography variant="body2" sx={styles.fileName}>
+                      {submission.originalName}
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={(e) => handleDownloadSubmission(selectedAssignment, selectedStudent, index, e)}
+                    >
+                      Download
+                    </Button>
+                  </Box>
+                ) : (
+                  <Box sx={styles.linkItem}>
+                    <Typography variant="body2" sx={styles.fileName}>
+                      Link {index + 1}
+                    </Typography>
+                    <Link
+                      href={submission.content}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={styles.link}
+                    >
+                      {submission.content}
+                    </Link>
+                  </Box>
+                )}
+              </Box>
+            ))}
+
+            <TextField
+              select
+              fullWidth
+              label="Status"
+              value={reviewData.status}
+              onChange={(e) => setReviewData({ ...reviewData, status: e.target.value })}
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="accepted">Accept</MenuItem>
+              <MenuItem value="rejected">Reject</MenuItem>
+            </TextField>
+
             <TextField
               fullWidth
-              label="Rejection Reason"
-              margin="normal"
+              label="Mark (0-100)"
+              type="number"
+              value={reviewData.mark}
+              onChange={(e) => setReviewData({ ...reviewData, mark: e.target.value })}
+              sx={{ mb: 2 }}
+              InputProps={{ inputProps: { min: 0, max: 100 } }}
+            />
+
+            <TextField
+              fullWidth
+              label="Feedback"
               multiline
               rows={4}
-              value={reviewData.rejectionReason}
-              onChange={(e) =>
-                setReviewData({ ...reviewData, rejectionReason: e.target.value })
-              }
+              value={reviewData.feedback}
+              onChange={(e) => setReviewData({ ...reviewData, feedback: e.target.value })}
+              sx={{ mb: 2 }}
             />
-          )}
+
+            {reviewData.status === 'rejected' && (
+              <TextField
+                fullWidth
+                label="Rejection Reason"
+                multiline
+                rows={2}
+                value={reviewData.rejectionReason}
+                onChange={(e) => setReviewData({ ...reviewData, rejectionReason: e.target.value })}
+              />
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenReviewDialog(false)}>Cancel</Button>
-          <Button onClick={handleReviewAssignment} color="primary">
+          <Button onClick={handleReviewAssignment} variant="contained" color="primary">
             Submit Review
           </Button>
         </DialogActions>
