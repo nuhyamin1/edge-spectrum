@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
-  CardContent,
   Typography,
   Avatar,
   Grid,
@@ -13,6 +12,7 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+  Link,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../../../context/AuthContext';
@@ -64,6 +64,44 @@ const styles = {
     backgroundColor: '#fbe9e7',
     color: '#d32f2f',
   },
+  submissionItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    mb: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 1,
+    p: 1,
+  },
+  fileName: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  linkItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+    mb: 1,
+    backgroundColor: '#f0f7ff',
+    borderRadius: 1,
+    p: 1,
+  },
+  link: {
+    color: '#1976d2',
+    textDecoration: 'none',
+    '&:hover': {
+      textDecoration: 'underline',
+    },
+  },
+  submissionsSection: {
+    mt: 3,
+    mb: 3,
+    p: 2,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 1,
+  },
 };
 
 const AssignmentDetails = () => {
@@ -107,7 +145,10 @@ const AssignmentDetails = () => {
 
   const handleReviewAssignment = async () => {
     try {
-      await api.post(`/assignments/${selectedSubmission._id}/review`, reviewData);
+      await api.post(`/assignments/${id}/review`, {
+        ...reviewData,
+        studentId: selectedSubmission.student._id
+      });
       setOpenReviewDialog(false);
       fetchAssignmentDetails();
       toast.success('Assignment reviewed successfully');
@@ -116,14 +157,14 @@ const AssignmentDetails = () => {
     }
   };
 
-  const handleDownloadSubmission = async (submission, submissionIndex) => {
+  const handleDownloadSubmission = async (submissionIndex) => {
     try {
       const response = await api.get(
-        `/assignments/${submission._id}/download/${submissionIndex}`,
+        `/assignments/${id}/download/${submissionIndex}`,
         { responseType: 'blob' }
       );
       
-      const file = submission.submissions[submissionIndex];
+      const file = selectedSubmission.submissions[submissionIndex];
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -163,13 +204,16 @@ const AssignmentDetails = () => {
           <Typography variant="body1" color="textSecondary">
             Due: {new Date(assignment.dueDate).toLocaleDateString()}
           </Typography>
+          <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
+            {assignment.description}
+          </Typography>
         </Box>
         <Button variant="outlined" onClick={() => navigate('/teacher/assignments')}>
           Back to Assignments
         </Button>
       </Box>
 
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
         Student Submissions
       </Typography>
 
@@ -206,8 +250,9 @@ const AssignmentDetails = () => {
                   variant="contained"
                   onClick={() => handleOpenReview(submission)}
                   sx={{ ml: 2 }}
+                  disabled={!submission.submissions || submission.submissions.length === 0}
                 >
-                  Review
+                  {submission.submissions && submission.submissions.length > 0 ? 'Review' : 'No Submission'}
                 </Button>
               </Box>
             </Card>
@@ -221,63 +266,107 @@ const AssignmentDetails = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Review Assignment</DialogTitle>
+        <DialogTitle>
+          Review {selectedSubmission?.student.name}'s Submission
+        </DialogTitle>
         <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <TextField
-              select
-              fullWidth
-              label="Status"
-              value={reviewData.status}
-              onChange={(e) =>
-                setReviewData({ ...reviewData, status: e.target.value })
-              }
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="accepted">Accept</MenuItem>
-              <MenuItem value="rejected">Reject</MenuItem>
-            </TextField>
+          {selectedSubmission && (
+            <>
+              <Box sx={styles.submissionsSection}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Submitted Files and Links:
+                </Typography>
+                {selectedSubmission.submissions?.map((submission, index) => (
+                  <Box key={index}>
+                    {submission.type === 'file' ? (
+                      <Box sx={styles.submissionItem}>
+                        <Typography variant="body2" sx={styles.fileName}>
+                          {submission.originalName}
+                        </Typography>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          onClick={() => handleDownloadSubmission(index)}
+                        >
+                          Download
+                        </Button>
+                      </Box>
+                    ) : (
+                      <Box sx={styles.linkItem}>
+                        <Typography variant="body2" sx={styles.fileName}>
+                          Link {index + 1}
+                        </Typography>
+                        <Link
+                          href={submission.content}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          sx={styles.link}
+                        >
+                          {submission.content}
+                        </Link>
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </Box>
 
-            <TextField
-              fullWidth
-              label="Mark (0-100)"
-              type="number"
-              value={reviewData.mark}
-              onChange={(e) =>
-                setReviewData({ ...reviewData, mark: e.target.value })
-              }
-              sx={{ mb: 2 }}
-              InputProps={{ inputProps: { min: 0, max: 100 } }}
-            />
+              <Box sx={{ mt: 3 }}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Status"
+                  value={reviewData.status}
+                  onChange={(e) =>
+                    setReviewData({ ...reviewData, status: e.target.value })
+                  }
+                  sx={{ mb: 2 }}
+                >
+                  <MenuItem value="accepted">Accept</MenuItem>
+                  <MenuItem value="rejected">Reject</MenuItem>
+                </TextField>
 
-            <TextField
-              fullWidth
-              label="Feedback"
-              multiline
-              rows={4}
-              value={reviewData.feedback}
-              onChange={(e) =>
-                setReviewData({ ...reviewData, feedback: e.target.value })
-              }
-              sx={{ mb: 2 }}
-            />
+                <TextField
+                  fullWidth
+                  label="Mark (0-100)"
+                  type="number"
+                  value={reviewData.mark}
+                  onChange={(e) =>
+                    setReviewData({ ...reviewData, mark: e.target.value })
+                  }
+                  sx={{ mb: 2 }}
+                  InputProps={{ inputProps: { min: 0, max: 100 } }}
+                />
 
-            {reviewData.status === 'rejected' && (
-              <TextField
-                fullWidth
-                label="Rejection Reason"
-                multiline
-                rows={2}
-                value={reviewData.rejectionReason}
-                onChange={(e) =>
-                  setReviewData({
-                    ...reviewData,
-                    rejectionReason: e.target.value,
-                  })
-                }
-              />
-            )}
-          </Box>
+                <TextField
+                  fullWidth
+                  label="Feedback"
+                  multiline
+                  rows={4}
+                  value={reviewData.feedback}
+                  onChange={(e) =>
+                    setReviewData({ ...reviewData, feedback: e.target.value })
+                  }
+                  sx={{ mb: 2 }}
+                />
+
+                {reviewData.status === 'rejected' && (
+                  <TextField
+                    fullWidth
+                    label="Rejection Reason"
+                    multiline
+                    rows={2}
+                    value={reviewData.rejectionReason}
+                    onChange={(e) =>
+                      setReviewData({
+                        ...reviewData,
+                        rejectionReason: e.target.value,
+                      })
+                    }
+                  />
+                )}
+              </Box>
+            </>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenReviewDialog(false)}>Cancel</Button>

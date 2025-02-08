@@ -272,10 +272,7 @@ const TeacherAssignments = () => {
                       <DeleteIcon />
                     </IconButton>
                   </Box>
-                  <Box
-                    sx={styles.cardContent}
-                    onClick={() => navigate(`/teacher/assignments/${assignment._id}`)}
-                  >
+                  <Box sx={styles.cardContent} onClick={() => navigate(`/teacher/assignments/${assignment._id}`)}>
                     <Typography color="textSecondary" gutterBottom>
                       Due: {new Date(assignment.dueDate).toLocaleDateString()}
                     </Typography>
@@ -326,58 +323,6 @@ const TeacherAssignments = () => {
                       )}
                     </Box>
                   </Box>
-
-                  {assignment.assignedStudents?.map((student) => (
-                    student.status === 'submitted' && (
-                      <Box key={student.studentId._id} mt={2}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          {student.studentId.name}'s Submission:
-                        </Typography>
-                        {student.submissions?.map((submission, index) => (
-                          <Box key={index}>
-                            {submission.type === 'file' ? (
-                              <Box sx={styles.submissionItem}>
-                                <Typography variant="body2" sx={styles.fileName}>
-                                  {submission.originalName}
-                                </Typography>
-                                <Button
-                                  size="small"
-                                  variant="contained"
-                                  onClick={(e) => handleDownloadSubmission(assignment, student, index, e)}
-                                >
-                                  Download
-                                </Button>
-                              </Box>
-                            ) : (
-                              <Box sx={styles.linkItem}>
-                                <Typography variant="body2" sx={styles.fileName}>
-                                  Link {index + 1}
-                                </Typography>
-                                <Link
-                                  href={submission.content}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  sx={styles.link}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {submission.content}
-                                </Link>
-                              </Box>
-                            )}
-                          </Box>
-                        ))}
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={(e) => handleOpenReview(assignment, student, e)}
-                          sx={{ mt: 1 }}
-                          fullWidth
-                        >
-                          Review Submission
-                        </Button>
-                      </Box>
-                    )
-                  ))}
                 </CardContent>
               </Card>
             </Grid>
