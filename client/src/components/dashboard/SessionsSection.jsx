@@ -79,6 +79,10 @@ const SessionsSection = ({ title, sessions, type }) => {
                 <ClockIcon className="w-4 h-4 mr-1" />
                 {session.duration} mins
               </div>
+              <div className="flex items-center">
+                <ClockIcon className="w-4 h-4 mr-1" />
+                {session.gracePeriod || 5} mins grace
+              </div>
               {session.enrolledStudents && (
                 <div className="flex items-center">
                   <UserGroupIcon className="w-4 h-4 mr-1" />

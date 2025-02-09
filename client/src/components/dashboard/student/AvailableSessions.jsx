@@ -318,6 +318,11 @@ const AvailableSessions = () => {
                         {session.subject} • Taught by {session.teacher?.name || 'Unknown Teacher'}
                       </p>
                       <p className="text-sm text-gray-500 mt-2">{session.description}</p>
+                      <div className="mt-2 text-sm text-gray-600">
+                        <span>Duration: {session.duration} mins</span>
+                        <span className="mx-2">•</span>
+                        <span>Grace Period: {session.gracePeriod || 5} mins</span>
+                      </div>
                       {session.materials && (
                         <a 
                           href={session.materials} 

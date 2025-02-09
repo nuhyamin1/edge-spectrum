@@ -108,6 +108,27 @@ A modern virtual learning platform that connects teachers and students through i
 
 ## Recent Updates
 
+### Assignment Management Enhancement (February 9, 2025)
+- Improved assignment management interface:
+  - Streamlined assignment cards showing only essential information
+  - Dedicated assignment details page with student list
+  - Enhanced review system with separate review dialog
+  - File and link submission support
+  - Download functionality for submitted files
+  - Direct access to submitted links
+- Assignment review improvements:
+  - Clear status indicators (pending, submitted, accepted, rejected)
+  - Individual student review system
+  - Grade input (0-100)
+  - Feedback and rejection reason fields
+  - Submission preview before review
+- User experience enhancements:
+  - Intuitive navigation between assignments
+  - Clear submission status for each student
+  - Disabled review buttons for pending submissions
+  - Real-time status updates after review
+  - Easy access to all student submissions
+
 ### Assignment Management System (February 5, 2025)
 - Added comprehensive assignment management system for teachers and students
 - Implemented features:
@@ -284,4 +305,3 @@ A modern virtual learning platform that connects teachers and students through i
 ## Project Structure
 
 ```
-
