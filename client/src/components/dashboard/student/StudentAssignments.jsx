@@ -204,10 +204,9 @@ const StudentAssignments = () => {
     }
   };
 
-  const getAssignmentStatus = (assignment) => {
+  const getAssignmentDetails = (assignment) => {
     if (!assignment || !assignment.assignedStudents) {
-      console.log('Invalid assignment:', assignment);
-      return 'pending';
+      return null;
     }
     
     const studentSubmission = assignment.assignedStudents.find(
@@ -216,8 +215,7 @@ const StudentAssignments = () => {
                 student?.studentId?.toString() === user?.id?.toString()
     );
     
-    console.log('Student submission found:', studentSubmission);
-    return studentSubmission?.status || 'pending';
+    return studentSubmission;
   };
 
   if (loading) {
@@ -248,8 +246,12 @@ const StudentAssignments = () => {
         </Typography>
       ) : (
         <Grid container spacing={3}>
-          {assignments.map((assignment) => (
-            assignment ? (
+          {assignments.map((assignment) => {
+            if (!assignment) return null;
+            const assignmentDetails = getAssignmentDetails(assignment);
+            const status = assignmentDetails?.status || 'pending';
+
+            return (
               <Grid item xs={12} md={6} lg={4} key={assignment._id || 'unknown'}>
                 <Card>
                   <CardContent>
@@ -277,32 +279,68 @@ const StudentAssignments = () => {
                       <Typography
                         sx={{
                           ...styles.status,
-                          ...getStatusStyle(getAssignmentStatus(assignment)),
+                          ...getStatusStyle(status),
                         }}
                       >
-                        Status: {getAssignmentStatus(assignment)}
+                        Status: {status}
                       </Typography>
                     </Box>
 
-                    {getAssignmentStatus(assignment) !== 'accepted' && (
+                    {/* Display mark if available */}
+                    {assignmentDetails?.mark !== undefined && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="body1" color="primary">
+                          Mark: {assignmentDetails.mark}/100
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* Display feedback if available */}
+                    {assignmentDetails?.feedback && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2" color="textSecondary">
+                          Feedback:
+                        </Typography>
+                        <Typography variant="body2" sx={{ pl: 1 }}>
+                          {assignmentDetails.feedback}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* Display rejection reason if status is rejected */}
+                    {status === 'rejected' && assignmentDetails?.rejectionReason && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2" color="error">
+                          Reason for Rejection:
+                        </Typography>
+                        <Typography variant="body2" sx={{ pl: 1 }}>
+                          {assignmentDetails.rejectionReason}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {status !== 'accepted' && (
                       <Box mt={2}>
                         <Button
                           variant="contained"
                           color="primary"
                           onClick={() => handleOpenSubmit(assignment)}
-                          disabled={getAssignmentStatus(assignment) === 'submitted'}
+                          disabled={status === 'submitted'}
                         >
-                          {getAssignmentStatus(assignment) === 'rejected' 
-                            ? 'Resubmit Assignment' 
-                            : 'Submit Assignment'}
+                          {status === 'rejected' ? 'Resubmit Assignment' : 'Submit Assignment'}
                         </Button>
+                        {status === 'submitted' && (
+                          <Typography variant="body2" color="textSecondary" mt={1}>
+                            Submission received - waiting for teacher review
+                          </Typography>
+                        )}
                       </Box>
                     )}
                   </CardContent>
                 </Card>
               </Grid>
-            ) : null
-          ))}
+            );
+          })}
         </Grid>
       )}
 

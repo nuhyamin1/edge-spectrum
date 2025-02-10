@@ -65,16 +65,36 @@ A modern virtual learning platform that connects teachers and students through i
 ### Assignment Management
 - Teachers can create and manage assignments
 - Assignment features:
-  - Create assignments with title, description, due date
-  - Select students from a dropdown menu
-  - Review submitted assignments
-  - Accept/Reject assignments with feedback
-  - Grade assignments (0-100)
-- Student features:
-  - View assigned assignments
-  - Submit assignments (supports PDF, DOCX, PPT files, or links)
-  - View assignment status (pending, submitted, accepted, rejected)
-  - View grades and feedback
+  - Title and description
+  - Due date setting
+  - File and link submission options
+  - Maximum file and link limits
+  - Assignment status tracking
+- Student assignment submission:
+  - Multiple file upload support
+  - External link submission
+  - Submission status tracking
+  - Resubmission capability for rejected assignments
+- Teacher review system:
+  - Accept/Reject submissions
+  - Numerical marking (0-100)
+  - Detailed feedback provision
+  - Rejection reason when applicable
+- Assignment status management:
+  - Status indicators (pending, submitted, accepted, rejected)
+  - Color-coded status display
+  - Real-time status updates
+- Assignment details display:
+  - Assignment information
+  - Submission status
+  - Mark display
+  - Teacher feedback
+  - Rejection reasons (if applicable)
+  - Due date information
+- Role-specific views:
+  - Teacher view with review capabilities
+  - Student view with submission options
+  - Real-time updates for both views
 
 ### Teacher Features
 - Create and edit learning sessions
