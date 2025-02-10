@@ -128,7 +128,7 @@ const AssignmentDetails = () => {
       setAssignment(response.data);
     } catch (error) {
       toast.error('Error fetching assignment details');
-      navigate('/teacher/assignments');
+      navigate('/dashboard/assignments');
     }
   };
 
@@ -208,7 +208,7 @@ const AssignmentDetails = () => {
             {assignment.description}
           </Typography>
         </Box>
-        <Button variant="outlined" onClick={() => navigate('/teacher/assignments')}>
+        <Button variant="outlined" onClick={() => navigate('/dashboard/assignments')}>
           Back to Assignments
         </Button>
       </Box>
