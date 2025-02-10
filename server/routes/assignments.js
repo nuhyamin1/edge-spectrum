@@ -194,30 +194,33 @@ router.post('/:id/review', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only teachers can review assignments' });
     }
 
-    const assignment = await Assignment.findById(req.params.id);
-    if (!assignment) {
-      return res.status(404).json({ message: 'Assignment not found' });
-    }
-
-    if (assignment.teacherId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'You can only review your own assignments' });
-    }
-
-    const { status, mark, feedback, rejectionReason } = req.body;
+    const { status, mark, feedback, rejectionReason, studentId } = req.body;
     
-    const assignedStudent = assignment.assignedStudents.find(student => student.studentId.toString() === req.body.studentId);
-    if (!assignedStudent) {
-      return res.status(404).json({ message: 'Student not found in this assignment' });
+    // Update using findOneAndUpdate to ensure atomic operation
+    const updatedAssignment = await Assignment.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        'assignedStudents.studentId': studentId
+      },
+      {
+        $set: {
+          'assignedStudents.$.status': status,
+          'assignedStudents.$.mark': mark,
+          'assignedStudents.$.feedback': feedback,
+          'assignedStudents.$.rejectionReason': rejectionReason
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedAssignment) {
+      return res.status(404).json({ message: 'Assignment or student not found' });
     }
 
-    assignedStudent.status = status;
-    assignedStudent.mark = mark;
-    assignedStudent.feedback = feedback;
-    assignedStudent.rejectionReason = rejectionReason;
-
-    await assignment.save();
-    res.json(assignment);
+    console.log('Server: Updated assignment:', JSON.stringify(updatedAssignment, null, 2));
+    res.json(updatedAssignment);
   } catch (error) {
+    console.error('Review error:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -245,11 +248,17 @@ router.get('/student', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    const assignments = await Assignment.find({ 'assignedStudents.studentId': req.user._id })
-      .populate('teacherId', 'name email')
-      .sort({ createdAt: -1 });
+    const assignments = await Assignment.find({
+      'assignedStudents.studentId': req.user._id
+    }).populate('teacherId', 'name email');
+
+    // Log the assignments before sending
+    console.log('Server: Found assignments for student:', req.user._id);
+    console.log('Server: Assignments data:', JSON.stringify(assignments, null, 2));
+
     res.json(assignments);
   } catch (error) {
+    console.error('Server error:', error);
     res.status(500).json({ message: error.message });
   }
 });

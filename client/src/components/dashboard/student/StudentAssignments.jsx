@@ -62,12 +62,37 @@ const styles = {
     border: '1px dashed #ccc',
     borderRadius: 1,
     backgroundColor: '#fafafa'
-  }
+  },
+  status: {
+    px: 2,
+    py: 0.5,
+    borderRadius: 1,
+    display: 'inline-block',
+    typography: 'body2',
+  },
+  pending: {
+    backgroundColor: '#fff3e0',
+    color: '#ed6c02',
+  },
+  submitted: {
+    backgroundColor: '#e3f2fd',
+    color: '#1976d2',
+  },
+  accepted: {
+    backgroundColor: '#e8f5e9',
+    color: '#2e7d32',
+  },
+  rejected: {
+    backgroundColor: '#fbe9e7',
+    color: '#d32f2f',
+  },
 };
 
 const StudentAssignments = () => {
-  const { user } = useAuth();
+  const { user, api } = useAuth();
   const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -79,10 +104,25 @@ const StudentAssignments = () => {
 
   const fetchAssignments = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await api.get('/assignments/student');
-      setAssignments(response.data);
+      
+      console.log('Response from server:', response);
+      console.log('Assignments data:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        setAssignments(response.data);
+      } else {
+        console.error('Invalid assignments data:', response.data);
+        setAssignments([]);
+      }
     } catch (error) {
-      toast.error('Error fetching assignments');
+      console.error('Error fetching assignments:', error);
+      setError('Failed to load assignments');
+      setAssignments([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,120 +189,122 @@ const StudentAssignments = () => {
     }
   };
 
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'pending':
+        return styles.pending;
+      case 'submitted':
+        return styles.submitted;
+      case 'accepted':
+        return styles.accepted;
+      case 'rejected':
+        return styles.rejected;
+      default:
+        return {};
+    }
+  };
+
+  const getAssignmentStatus = (assignment) => {
+    if (!assignment || !assignment.assignedStudents) {
+      console.log('Invalid assignment:', assignment);
+      return 'pending';
+    }
+    
+    const studentSubmission = assignment.assignedStudents.find(
+      student => student?.studentId === user?.id || 
+                student?.studentId?._id === user?.id ||
+                student?.studentId?.toString() === user?.id?.toString()
+    );
+    
+    console.log('Student submission found:', studentSubmission);
+    return studentSubmission?.status || 'pending';
+  };
+
+  if (loading) {
+    return (
+      <Box p={3}>
+        <Typography>Loading assignments...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={3}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box p={3}>
       <Typography variant="h4" gutterBottom>
         My Assignments
       </Typography>
 
-      <Grid container spacing={3}>
-        {assignments.map((assignment) => (
-          <Grid item xs={12} md={6} lg={4} key={assignment._id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">{assignment.title}</Typography>
-                <Typography color="textSecondary" gutterBottom>
-                  Teacher: {assignment.teacherId.name}
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  {assignment.description}
-                </Typography>
-                <Typography variant="body2">
-                  Status: {assignment.status}
-                </Typography>
-                <Typography variant="body2">
-                  Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
-                </Typography>
-                
-                {assignment.status !== 'accepted' && (
-                  <Box mt={2}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => handleOpenSubmit(assignment)}
-                      disabled={assignment.status === 'submitted'}
-                    >
-                      {assignment.status === 'rejected' ? 'Resubmit Assignment' : 'Submit Assignment'}
-                    </Button>
-                    {assignment.status === 'submitted' && (
-                      <Typography variant="body2" color="textSecondary" mt={1}>
-                        Submission received - waiting for teacher review
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-
-                {assignment.status !== 'accepted' && (
-                  <Box mt={2}>
-                    {assignment.mark && (
-                      <Typography variant="body2">
-                        Mark: {assignment.mark}/100
-                      </Typography>
-                    )}
-                    {assignment.feedback && (
-                      <Typography variant="body2">
-                        Feedback: {assignment.feedback}
-                      </Typography>
-                    )}
-                    {assignment.rejectionReason && (
-                      <Typography variant="body2" color="error">
-                        Rejection Reason: {assignment.rejectionReason}
-                      </Typography>
-                    )}
-                    {assignment.submissionContent && (
-                      <Typography variant="body2">
-                        Submission: {' '}
-                        {assignment.submissionType === 'file' ? (
-                          <Link href={assignment.submissionContent} target="_blank">
-                            {assignment.fileOriginalName}
-                          </Link>
-                        ) : (
-                          <Link href={assignment.submissionContent} target="_blank">
-                            View Link
-                          </Link>
-                        )}
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-
-                {assignment.status === 'submitted' && (
-                  <Box mt={2}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Your Submissions:
+      {!assignments || assignments.length === 0 ? (
+        <Typography variant="body1" color="textSecondary">
+          No assignments found.
+        </Typography>
+      ) : (
+        <Grid container spacing={3}>
+          {assignments.map((assignment) => (
+            assignment ? (
+              <Grid item xs={12} md={6} lg={4} key={assignment._id || 'unknown'}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      {assignment.title || 'Untitled Assignment'}
                     </Typography>
-                    {assignment.submissions.map((submission, index) => (
-                      <Box key={index}>
-                        {submission.type === 'file' ? (
-                          <Box sx={styles.submissionItem}>
-                            <Typography variant="body2" sx={styles.fileName}>
-                              {submission.originalName}
-                            </Typography>
-                          </Box>
-                        ) : (
-                          <Box sx={styles.linkItem}>
-                            <Typography variant="body2" sx={styles.fileName}>
-                              Link {index + 1}
-                            </Typography>
-                            <Link
-                              href={submission.content}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              sx={styles.link}
-                            >
-                              {submission.content}
-                            </Link>
-                          </Box>
-                        )}
+                    
+                    {assignment.teacherId && (
+                      <Typography variant="body2" color="textSecondary">
+                        Teacher: {assignment.teacherId.name || 'Unknown Teacher'}
+                      </Typography>
+                    )}
+                    
+                    <Typography variant="body2">
+                      {assignment.description || 'No description provided'}
+                    </Typography>
+                    
+                    {assignment.dueDate && (
+                      <Typography variant="body2" color="textSecondary">
+                        Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
+                      </Typography>
+                    )}
+                    
+                    <Box sx={{ mt: 2 }}>
+                      <Typography
+                        sx={{
+                          ...styles.status,
+                          ...getStatusStyle(getAssignmentStatus(assignment)),
+                        }}
+                      >
+                        Status: {getAssignmentStatus(assignment)}
+                      </Typography>
+                    </Box>
+
+                    {getAssignmentStatus(assignment) !== 'accepted' && (
+                      <Box mt={2}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleOpenSubmit(assignment)}
+                          disabled={getAssignmentStatus(assignment) === 'submitted'}
+                        >
+                          {getAssignmentStatus(assignment) === 'rejected' 
+                            ? 'Resubmit Assignment' 
+                            : 'Submit Assignment'}
+                        </Button>
                       </Box>
-                    ))}
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ) : null
+          ))}
+        </Grid>
+      )}
 
       {/* Submit Assignment Dialog */}
       <Dialog

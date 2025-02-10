@@ -145,14 +145,22 @@ const AssignmentDetails = () => {
 
   const handleReviewAssignment = async () => {
     try {
-      await api.post(`/assignments/${id}/review`, {
+      console.log('Submitting review:', {
         ...reviewData,
         studentId: selectedSubmission.student._id
       });
+      
+      const response = await api.post(`/assignments/${id}/review`, {
+        ...reviewData,
+        studentId: selectedSubmission.student._id
+      });
+      
+      console.log('Review response:', response.data);
       setOpenReviewDialog(false);
       fetchAssignmentDetails();
       toast.success('Assignment reviewed successfully');
     } catch (error) {
+      console.error('Review error:', error);
       toast.error('Error reviewing assignment');
     }
   };
