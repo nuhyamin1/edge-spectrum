@@ -17,6 +17,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
+import { UserCircleIcon } from '@heroicons/react/24/outline';
 
 const styles = {
   header: {
@@ -230,10 +231,15 @@ const AssignmentDetails = () => {
           <Grid item xs={12} key={submission._id}>
             <Card>
               <Box sx={styles.studentCard}>
-                <Avatar
-                  src={submission.student.profilePicture}
-                  sx={styles.avatar}
-                />
+                {submission.student.profilePicture?.data ? (
+                  <img
+                    src={submission.student.profilePicture.data}
+                    alt={`${submission.student.name}'s profile`}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <UserCircleIcon className="w-10 h-10 text-gray-400" />
+                )}
                 <Box sx={styles.studentInfo}>
                   <Typography variant="h6">
                     {submission.student.name}

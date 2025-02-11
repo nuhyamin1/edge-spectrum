@@ -301,7 +301,7 @@ router.get('/:id/details', auth, async (req, res) => {
     }).populate([
       {
         path: 'assignedStudents.studentId',
-        select: 'name email profilePicture'
+        select: 'name email profilePicture.data'
       },
       {
         path: 'teacherId',
@@ -323,8 +323,13 @@ router.get('/:id/details', auth, async (req, res) => {
       maxLinks: assignment.maxLinks,
       teacherId: assignment.teacherId,
       submissions: assignment.assignedStudents.map(student => ({
-        _id: student.studentId,
-        student: student.studentId,
+        _id: student._id,
+        student: {
+          _id: student.studentId._id,
+          name: student.studentId.name,
+          email: student.studentId.email,
+          profilePicture: student.studentId.profilePicture
+        },
         status: student.status,
         mark: student.mark,
         feedback: student.feedback,
