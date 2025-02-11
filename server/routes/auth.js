@@ -17,6 +17,7 @@ const transporter = nodemailer.createTransport({
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    console.log('Registration request received for:', email);
 
     // Check if user exists
     let user = await User.findOne({ email });
@@ -30,6 +31,7 @@ router.post('/register', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
+    console.log('Created verification token for:', email);
 
     // Create new user
     user = new User({
@@ -42,19 +44,24 @@ router.post('/register', async (req, res) => {
     });
 
     await user.save();
+    console.log('User saved to database');
 
     // Send verification email
     const verificationUrl = `http://localhost:3000/verify/${verificationToken}`;
+    console.log('Verification URL:', verificationUrl);
+    
     await transporter.sendMail({
       to: email,
       subject: 'Email Verification',
       html: `Please click this link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
     });
+    console.log('Verification email sent');
 
     res.status(201).json({
       message: 'Registration successful. Please check your email for verification.'
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -63,15 +70,20 @@ router.post('/register', async (req, res) => {
 router.get('/verify/:token', async (req, res) => {
   try {
     const { token } = req.params;
+    console.log('Received verification request with token:', token);
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded token:', decoded);
+
     const user = await User.findOne({
       email: decoded.email,
       verificationToken: token,
       verificationTokenExpires: { $gt: Date.now() }
     });
+    console.log('Found user:', user ? 'Yes' : 'No');
 
     if (!user) {
+      console.log('User not found or token expired');
       return res.status(400).json({ message: 'Invalid or expired token' });
     }
 
@@ -79,9 +91,11 @@ router.get('/verify/:token', async (req, res) => {
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
     await user.save();
+    console.log('User verified successfully');
 
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
+    console.error('Verification error:', error);
     res.status(500).json({ message: error.message });
   }
 });

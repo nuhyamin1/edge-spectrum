@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
     contentType: String  // MIME type (e.g., 'image/jpeg', 'image/png')
   },
   isEmailVerified: { type: Boolean, default: false },
+  verificationToken: String,
+  verificationTokenExpires: Date,
   profileFields: {
     github: String,
     linkedin: String,
