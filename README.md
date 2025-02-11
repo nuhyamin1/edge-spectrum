@@ -75,22 +75,33 @@ A modern virtual learning platform that connects teachers and students through i
   - External link submission
   - Submission status tracking
   - Resubmission capability for rejected assignments
+  - Late submission handling:
+    - Visual countdown timer showing time remaining
+    - Clear indication of past due date
+    - Late submissions automatically marked
+    - Concise display of late duration (e.g., "Late (2h 30m)")
+    - Confirmation dialog for late submissions
 - Teacher review system:
   - Accept/Reject submissions
   - Numerical marking (0-100)
   - Detailed feedback provision
   - Rejection reason when applicable
+  - Clear visibility of late submission timing
 - Assignment status management:
-  - Status indicators (pending, submitted, accepted, rejected)
+  - Status indicators (pending, submitted, submitted_late, accepted, rejected)
   - Color-coded status display
   - Real-time status updates
 - Assignment details display:
+  - Clean and consistent card layout
+  - Organized sections for different types of information
+  - Clear visual hierarchy
+  - Responsive design for all screen sizes
   - Assignment information
   - Submission status
   - Mark display
   - Teacher feedback
   - Rejection reasons (if applicable)
-  - Due date information
+  - Due date information and countdown
 - Role-specific views:
   - Teacher view with review capabilities
   - Student view with submission options
@@ -329,5 +340,3 @@ A modern virtual learning platform that connects teachers and students through i
    ```
 
 ## Project Structure
-
-```

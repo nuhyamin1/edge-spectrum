@@ -130,10 +130,16 @@ router.post('/:id/submit', auth, async (req, res) => {
       return res.status(404).json({ message: 'Assignment not found' });
     }
 
-    const assignedStudent = assignment.assignedStudents.find(student => student.studentId.toString() === req.user._id.toString());
-    if (!assignedStudent) {
+    const student = assignment.assignedStudents.find(
+      student => student.studentId.toString() === req.user._id.toString()
+    );
+
+    if (!student) {
       return res.status(403).json({ message: 'You are not assigned to this assignment' });
     }
+
+    // Check if submission is late
+    const isLate = new Date() > new Date(assignment.dueDate);
 
     // Handle file uploads
     upload(req, res, async (err) => {
@@ -171,19 +177,25 @@ router.post('/:id/submit', auth, async (req, res) => {
         });
       });
 
-      assignedStudent.submissions = submissions;
-      assignedStudent.status = 'submitted';
-      assignedStudent.submittedAt = new Date();
-      assignedStudent.submissionAttempts += 1;
-      assignedStudent.mark = null;
-      assignedStudent.feedback = '';
-      assignedStudent.rejectionReason = '';
+      student.submissions = submissions;
+      student.status = 'submitted';
+      student.submittedAt = new Date();
+      student.submissionAttempts += 1;
+      student.mark = null;
+      student.feedback = '';
+      student.rejectionReason = '';
+
+      // Add late flag to submission if it's late
+      if (isLate) {
+        student.status = 'submitted_late';
+      }
 
       await assignment.save();
-      res.json(assignment);
+      res.json({ message: 'Assignment submitted successfully', isLate });
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error submitting assignment:', error);
+    res.status(500).json({ message: 'Error submitting assignment' });
   }
 });
 

@@ -186,6 +186,63 @@ const AssignmentDetails = () => {
     }
   };
 
+  const getTimeDifference = (submittedAt, dueDate) => {
+    const submitted = new Date(submittedAt);
+    const due = new Date(dueDate);
+    const diff = submitted - due;
+
+    if (diff <= 0) return null; // Not late
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    // More concise format
+    if (days > 0) return `Late (${days}d ${hours}h)`;
+    if (hours > 0) return `Late (${hours}h ${minutes}m)`;
+    return `Late (${minutes}m)`;
+  };
+
+  const getStatusDisplay = (student) => {
+    const statusStyle = {
+      p: 1,
+      borderRadius: 1,
+      display: 'inline-block',
+      typography: 'body2',
+      mb: 1,
+    };
+
+    let style = {
+      ...statusStyle,
+    };
+
+    switch (student.status) {
+      case 'pending':
+        style.backgroundColor = '#fff3e0';
+        style.color = '#ed6c02';
+        return <Box sx={style}>Pending</Box>;
+      case 'submitted':
+        style.backgroundColor = '#e3f2fd';
+        style.color = '#1976d2';
+        return <Box sx={style}>Submitted</Box>;
+      case 'submitted_late':
+        style.backgroundColor = '#fff3cd';
+        style.color = '#856404';
+        const lateText = getTimeDifference(student.submittedAt, assignment.dueDate);
+        return <Box sx={style}>{lateText}</Box>;
+      case 'accepted':
+        style.backgroundColor = '#e8f5e9';
+        style.color = '#2e7d32';
+        return <Box sx={style}>Accepted</Box>;
+      case 'rejected':
+        style.backgroundColor = '#fbe9e7';
+        style.color = '#d32f2f';
+        return <Box sx={style}>Rejected</Box>;
+      default:
+        return student.status;
+    }
+  };
+
   const getStatusStyle = (status) => {
     switch (status) {
       case 'pending':
@@ -245,14 +302,7 @@ const AssignmentDetails = () => {
                     {submission.student.name}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Typography
-                      sx={{
-                        ...styles.status,
-                        ...getStatusStyle(submission.status),
-                      }}
-                    >
-                      {submission.status || 'pending'}
-                    </Typography>
+                    {getStatusDisplay(submission)}
                     {submission.mark && (
                       <Typography variant="body2">
                         Mark: {submission.mark}/100

@@ -21,7 +21,7 @@ const assignedStudentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'submitted', 'accepted', 'rejected'],
+    enum: ['pending', 'submitted', 'submitted_late', 'accepted', 'rejected'],
     default: 'pending'
   },
   submissions: [submissionSchema],

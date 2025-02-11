@@ -13,8 +13,9 @@ import {
   Typography,
   Link,
   IconButton,
+  Alert,
 } from '@mui/material';
-import { Add as AddIcon, Clear as ClearIcon } from '@mui/icons-material';
+import { Add as AddIcon, Clear as ClearIcon, AccessTime as AccessTimeIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -78,6 +79,12 @@ const styles = {
     backgroundColor: '#e3f2fd',
     color: '#1976d2',
   },
+  submitted_late: {
+    backgroundColor: '#fff3cd',
+    color: '#856404',
+    fontWeight: 'bold',
+    border: '2px solid #ffeeba',
+  },
   accepted: {
     backgroundColor: '#e8f5e9',
     color: '#2e7d32',
@@ -85,6 +92,32 @@ const styles = {
   rejected: {
     backgroundColor: '#fbe9e7',
     color: '#d32f2f',
+  },
+  countdown: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 1,
+    mb: 2,
+    p: 1,
+    borderRadius: 1,
+    width: 'fit-content',
+  },
+  countdownWarning: {
+    backgroundColor: '#fff3cd',
+    color: '#856404',
+  },
+  countdownDanger: {
+    backgroundColor: '#f8d7da',
+    color: '#721c24',
+  },
+  countdownNormal: {
+    backgroundColor: '#d4edda',
+    color: '#155724',
+  },
+  countdownExpired: {
+    backgroundColor: '#f8d7da',
+    color: '#721c24',
+    fontWeight: 'bold',
   },
 };
 
@@ -97,6 +130,7 @@ const StudentAssignments = () => {
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [links, setLinks] = useState(['']); // Start with one empty link field
+  const [confirmLateSubmit, setConfirmLateSubmit] = useState(false);
 
   useEffect(() => {
     fetchAssignments();
@@ -175,15 +209,20 @@ const StudentAssignments = () => {
       
       formData.append('links', JSON.stringify(validLinks));
 
-      await api.post(`/assignments/${selectedAssignment._id}/submit`, formData, {
+      const response = await api.post(`/assignments/${selectedAssignment._id}/submit`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
+      if (response.data.isLate) {
+        toast.warning('Assignment submitted successfully, but marked as late');
+      } else {
+        toast.success('Assignment submitted successfully');
+      }
+
       setOpenSubmitDialog(false);
       fetchAssignments();
-      toast.success('Assignment submitted successfully');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error submitting assignment');
     }
@@ -195,6 +234,8 @@ const StudentAssignments = () => {
         return styles.pending;
       case 'submitted':
         return styles.submitted;
+      case 'submitted_late':
+        return styles.submitted_late;
       case 'accepted':
         return styles.accepted;
       case 'rejected':
@@ -202,6 +243,17 @@ const StudentAssignments = () => {
       default:
         return {};
     }
+  };
+
+  const getStatusDisplay = (status) => {
+    const statusMap = {
+      pending: 'Pending',
+      submitted: 'Submitted',
+      submitted_late: 'Submitted (Late)',
+      accepted: 'Accepted',
+      rejected: 'Rejected'
+    };
+    return statusMap[status] || status;
   };
 
   const getAssignmentDetails = (assignment) => {
@@ -216,6 +268,64 @@ const StudentAssignments = () => {
     );
     
     return studentSubmission;
+  };
+
+  const getTimeRemaining = (dueDate) => {
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diff = due - now;
+
+    if (diff <= 0) {
+      return { expired: true, text: 'Past Due Date' };
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    let text = '';
+    if (days > 0) text += `${days}d `;
+    if (hours > 0) text += `${hours}h `;
+    text += `${minutes}m remaining`;
+
+    const warning = diff < (24 * 60 * 60 * 1000); // less than 24 hours
+    const danger = diff < (6 * 60 * 60 * 1000);   // less than 6 hours
+
+    return { expired: false, text, warning, danger };
+  };
+
+  const handleSubmitClick = async () => {
+    const isLate = new Date() > new Date(selectedAssignment.dueDate);
+    if (isLate) {
+      setConfirmLateSubmit(true);
+    } else {
+      await handleSubmit();
+    }
+  };
+
+  const handleConfirmLateSubmit = async () => {
+    setConfirmLateSubmit(false);
+    await handleSubmit();
+  };
+
+  const renderCountdown = (dueDate) => {
+    const timeRemaining = getTimeRemaining(dueDate);
+    const style = {
+      ...styles.countdown,
+      ...(timeRemaining.expired ? styles.countdownExpired : 
+          timeRemaining.danger ? styles.countdownDanger :
+          timeRemaining.warning ? styles.countdownWarning :
+          styles.countdownNormal)
+    };
+
+    return (
+      <Box sx={style}>
+        <AccessTimeIcon />
+        <Typography variant="body2">
+          {timeRemaining.text}
+        </Typography>
+      </Box>
+    );
   };
 
   if (loading) {
@@ -235,114 +345,87 @@ const StudentAssignments = () => {
   }
 
   return (
-    <Box p={3}>
-      <Typography variant="h4" gutterBottom>
-        My Assignments
-      </Typography>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
+      <Typography variant="h5" sx={{ mb: 3 }}>My Assignments</Typography>
+      
+      {assignments.map((assignment) => (
+        <Card key={assignment._id} sx={{ mb: 3, width: '100%' }}>
+          <CardContent>
+            {/* Header Section */}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Typography variant="h6">{assignment.title}</Typography>
+                {renderCountdown(assignment.dueDate)}
+              </Box>
+              
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Teacher: {assignment.teacherId?.name}
+              </Typography>
+              
+              <Typography variant="body2" color="text.secondary">
+                Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
+              </Typography>
+            </Box>
 
-      {!assignments || assignments.length === 0 ? (
-        <Typography variant="body1" color="textSecondary">
-          No assignments found.
-        </Typography>
-      ) : (
-        <Grid container spacing={3}>
-          {assignments.map((assignment) => {
-            if (!assignment) return null;
-            const assignmentDetails = getAssignmentDetails(assignment);
-            const status = assignmentDetails?.status || 'pending';
+            {/* Status Section */}
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                sx={{
+                  ...getStatusStyle(getAssignmentDetails(assignment)?.status),
+                  display: 'inline-block'
+                }}
+              >
+                Status: {getStatusDisplay(getAssignmentDetails(assignment)?.status)}
+              </Typography>
+            </Box>
 
-            return (
-              <Grid item xs={12} md={6} lg={4} key={assignment._id || 'unknown'}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      {assignment.title || 'Untitled Assignment'}
-                    </Typography>
-                    
-                    {assignment.teacherId && (
-                      <Typography variant="body2" color="textSecondary">
-                        Teacher: {assignment.teacherId.name || 'Unknown Teacher'}
-                      </Typography>
-                    )}
-                    
-                    <Typography variant="body2">
-                      {assignment.description || 'No description provided'}
-                    </Typography>
-                    
-                    {assignment.dueDate && (
-                      <Typography variant="body2" color="textSecondary">
-                        Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
-                      </Typography>
-                    )}
-                    
-                    <Box sx={{ mt: 2 }}>
-                      <Typography
-                        sx={{
-                          ...styles.status,
-                          ...getStatusStyle(status),
-                        }}
-                      >
-                        Status: {status}
-                      </Typography>
-                    </Box>
+            {/* Mark and Feedback Section - Only show if they exist */}
+            {getAssignmentDetails(assignment)?.mark && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                  Mark: {getAssignmentDetails(assignment)?.mark}/100
+                </Typography>
+              </Box>
+            )}
 
-                    {/* Display mark if available */}
-                    {assignmentDetails?.mark !== undefined && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="body1" color="primary">
-                          Mark: {assignmentDetails.mark}/100
-                        </Typography>
-                      </Box>
-                    )}
+            {getAssignmentDetails(assignment)?.feedback && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Feedback:
+                </Typography>
+                <Typography variant="body1">
+                  {getAssignmentDetails(assignment)?.feedback}
+                </Typography>
+              </Box>
+            )}
 
-                    {/* Display feedback if available */}
-                    {assignmentDetails?.feedback && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Feedback:
-                        </Typography>
-                        <Typography variant="body2" sx={{ pl: 1 }}>
-                          {assignmentDetails.feedback}
-                        </Typography>
-                      </Box>
-                    )}
+            {getAssignmentDetails(assignment)?.rejectionReason && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: '#fff3cd', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Rejection Reason:
+                </Typography>
+                <Typography variant="body1" color="error">
+                  {getAssignmentDetails(assignment)?.rejectionReason}
+                </Typography>
+              </Box>
+            )}
 
-                    {/* Display rejection reason if status is rejected */}
-                    {status === 'rejected' && assignmentDetails?.rejectionReason && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="subtitle2" color="error">
-                          Reason for Rejection:
-                        </Typography>
-                        <Typography variant="body2" sx={{ pl: 1 }}>
-                          {assignmentDetails.rejectionReason}
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {status !== 'accepted' && (
-                      <Box mt={2}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleOpenSubmit(assignment)}
-                          disabled={status === 'submitted'}
-                        >
-                          {status === 'rejected' ? 'Resubmit Assignment' : 'Submit Assignment'}
-                        </Button>
-                        {status === 'submitted' && (
-                          <Typography variant="body2" color="textSecondary" mt={1}>
-                            Submission received - waiting for teacher review
-                          </Typography>
-                        )}
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
-      )}
+            {/* Action Section */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleOpenSubmit(assignment)}
+                disabled={getAssignmentDetails(assignment)?.status === 'accepted'}
+              >
+                {getAssignmentDetails(assignment)?.status === 'accepted' 
+                  ? 'Submitted & Accepted' 
+                  : 'Submit Assignment'}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      ))}
 
       {/* Submit Assignment Dialog */}
       <Dialog
@@ -422,11 +505,30 @@ const StudentAssignments = () => {
         <DialogActions>
           <Button onClick={() => setOpenSubmitDialog(false)}>Cancel</Button>
           <Button 
-            onClick={handleSubmit} 
+            onClick={handleSubmitClick} 
             color="primary"
             disabled={selectedFiles.length === 0 && links.every(link => !link.trim())}
           >
             Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Late Submission Confirmation Dialog */}
+      <Dialog open={confirmLateSubmit} onClose={() => setConfirmLateSubmit(false)}>
+        <DialogTitle>Late Submission Warning</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            This assignment is past its due date. Your submission will be marked as late.
+          </Alert>
+          <Typography>
+            Are you sure you want to proceed with the submission?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmLateSubmit(false)}>Cancel</Button>
+          <Button onClick={handleConfirmLateSubmit} variant="contained" color="warning">
+            Submit Late
           </Button>
         </DialogActions>
       </Dialog>
