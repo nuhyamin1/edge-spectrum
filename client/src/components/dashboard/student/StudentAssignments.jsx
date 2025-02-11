@@ -107,16 +107,16 @@ const styles = {
     color: '#856404',
   },
   countdownDanger: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
+    backgroundColor: '#ffebee',
+    color: '#c62828',
   },
   countdownNormal: {
-    backgroundColor: '#d4edda',
-    color: '#155724',
+    backgroundColor: '#e8f5e9',
+    color: '#2e7d32',
   },
   countdownExpired: {
-    backgroundColor: '#f8d7da',
-    color: '#721c24',
+    backgroundColor: '#ffebee',
+    color: '#c62828',
     fontWeight: 'bold',
   },
 };
@@ -276,7 +276,7 @@ const StudentAssignments = () => {
     const diff = due - now;
 
     if (diff <= 0) {
-      return { expired: true, text: 'Past Due Date' };
+      return { expired: true, text: 'Overdue' };
     }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -292,20 +292,6 @@ const StudentAssignments = () => {
     const danger = diff < (6 * 60 * 60 * 1000);   // less than 6 hours
 
     return { expired: false, text, warning, danger };
-  };
-
-  const handleSubmitClick = async () => {
-    const isLate = new Date() > new Date(selectedAssignment.dueDate);
-    if (isLate) {
-      setConfirmLateSubmit(true);
-    } else {
-      await handleSubmit();
-    }
-  };
-
-  const handleConfirmLateSubmit = async () => {
-    setConfirmLateSubmit(false);
-    await handleSubmit();
   };
 
   const renderCountdown = (dueDate) => {
@@ -326,6 +312,20 @@ const StudentAssignments = () => {
         </Typography>
       </Box>
     );
+  };
+
+  const handleSubmitClick = async () => {
+    const isLate = new Date() > new Date(selectedAssignment.dueDate);
+    if (isLate) {
+      setConfirmLateSubmit(true);
+    } else {
+      await handleSubmit();
+    }
+  };
+
+  const handleConfirmLateSubmit = async () => {
+    setConfirmLateSubmit(false);
+    await handleSubmit();
   };
 
   if (loading) {
@@ -516,10 +516,10 @@ const StudentAssignments = () => {
 
       {/* Late Submission Confirmation Dialog */}
       <Dialog open={confirmLateSubmit} onClose={() => setConfirmLateSubmit(false)}>
-        <DialogTitle>Late Submission Warning</DialogTitle>
+        <DialogTitle>Overdue Assignment Submission</DialogTitle>
         <DialogContent>
           <Alert severity="warning" sx={{ mb: 2 }}>
-            This assignment is past its due date. Your submission will be marked as late.
+            This assignment is overdue. Your submission will be marked as late.
           </Alert>
           <Typography>
             Are you sure you want to proceed with the submission?
@@ -528,7 +528,7 @@ const StudentAssignments = () => {
         <DialogActions>
           <Button onClick={() => setConfirmLateSubmit(false)}>Cancel</Button>
           <Button onClick={handleConfirmLateSubmit} variant="contained" color="warning">
-            Submit Late
+            Submit Overdue Assignment
           </Button>
         </DialogActions>
       </Dialog>

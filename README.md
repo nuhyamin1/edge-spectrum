@@ -75,18 +75,18 @@ A modern virtual learning platform that connects teachers and students through i
   - External link submission
   - Submission status tracking
   - Resubmission capability for rejected assignments
-  - Late submission handling:
+  - Overdue submission handling:
     - Visual countdown timer showing time remaining
-    - Clear indication of past due date
-    - Late submissions automatically marked
-    - Concise display of late duration (e.g., "Late (2h 30m)")
-    - Confirmation dialog for late submissions
+    - Clear indication when assignment is overdue
+    - Overdue submissions automatically marked
+    - Concise display of overdue duration (e.g., "Overdue (2h 30m)")
+    - Confirmation dialog for overdue submissions
 - Teacher review system:
   - Accept/Reject submissions
   - Numerical marking (0-100)
   - Detailed feedback provision
   - Rejection reason when applicable
-  - Clear visibility of late submission timing
+  - Clear visibility of overdue submission timing
 - Assignment status management:
   - Status indicators (pending, submitted, submitted_late, accepted, rejected)
   - Color-coded status display
