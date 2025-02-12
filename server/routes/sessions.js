@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Session = require('../models/Session');
+const Attendance = require('../models/Attendance');
 const auth = require('../middleware/auth');
 const isTeacher = require('../middleware/isTeacher');
 const socketService = require('../services/socket');
@@ -369,6 +370,60 @@ router.post('/:id/end', auth, isTeacher, async (req, res) => {
     } catch (error) {
         console.error('Error ending session:', error);
         res.status(500).json({ error: 'Failed to end session' });
+    }
+});
+
+// Get attendance for a session
+router.get('/:id/attendance', auth, async (req, res) => {
+    try {
+        const attendance = await Attendance.find({ sessionId: req.params.id })
+            .select('studentId status timestamp')
+            .lean();
+        res.json(attendance);
+    } catch (error) {
+        console.error('Error fetching attendance:', error);
+        res.status(500).json({ error: 'Failed to fetch attendance records' });
+    }
+});
+
+// Update attendance status
+router.post('/:id/attendance', auth, async (req, res) => {
+    try {
+        const { studentId, status } = req.body;
+        
+        // Validate session exists and student is enrolled
+        const session = await Session.findOne({
+            _id: req.params.id,
+            enrolledStudents: studentId
+        });
+
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found or student not enrolled' });
+        }
+
+        // Update or create attendance record
+        const attendance = await Attendance.findOneAndUpdate(
+            { sessionId: req.params.id, studentId },
+            { 
+                status,
+                timestamp: Date.now()
+            },
+            { upsert: true, new: true }
+        );
+
+        // Emit socket event for real-time update
+        const io = socketService.getIO();
+        io.emit('attendanceUpdate', {
+            sessionId: req.params.id,
+            studentId,
+            status,
+            timestamp: attendance.timestamp
+        });
+
+        res.json(attendance);
+    } catch (error) {
+        console.error('Error updating attendance:', error);
+        res.status(500).json({ error: 'Failed to update attendance status' });
     }
 });
 

@@ -14,6 +14,47 @@ module.exports = {
         io.on('connection', (socket) => {
             console.log('Client connected:', socket.id);
 
+            // Handle student joining classroom
+            socket.on('studentJoinedClassroom', async (data) => {
+                const { sessionId, studentId, studentName } = data;
+                console.log('Student joined classroom:', { sessionId, studentId, studentName, socketId: socket.id });
+
+                try {
+                    // Join the session room
+                    socket.join(`session_${sessionId}`);
+
+                    // Broadcast to everyone in the session
+                    io.to(`session_${sessionId}`).emit('studentJoinedClassroom', {
+                        sessionId,
+                        studentId,
+                        studentName,
+                        timestamp: Date.now()
+                    });
+                    
+                    console.log(`Broadcasted join event for student ${studentName} in session ${sessionId}`);
+                } catch (error) {
+                    console.error('Error handling student join:', error);
+                }
+            });
+
+            // Handle attendance updates
+            socket.on('attendanceUpdate', (data) => {
+                const { sessionId, studentId, status } = data;
+                io.to(`session_${sessionId}`).emit('attendanceStatusChanged', {
+                    sessionId,
+                    studentId,
+                    status,
+                    timestamp: Date.now()
+                });
+            });
+
+            // Add join event handler
+            socket.on('join', (data) => {
+                const { sessionId } = data;
+                socket.join(`session_${sessionId}`);
+                console.log(`Socket ${socket.id} joined room session_${sessionId}`);
+            });
+
             socket.on('disconnect', () => {
                 console.log('Client disconnected:', socket.id);
             });

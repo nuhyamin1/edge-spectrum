@@ -1,18 +1,80 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from '../../../utils/axios';
 import Layout from '../Layout';
 import io from 'socket.io-client';
+import { useAuth } from '../../../context/AuthContext';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [gracePeriodExpired, setGracePeriodExpired] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const [socket, setSocket] = useState(null);
+  const hasEmittedJoin = useRef(false);
+
+  useEffect(() => {
+    const initializeSocket = async () => {
+      try {
+        // Initialize socket connection
+        const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
+        setSocket(newSocket);
+
+        // Wait for socket connection to be established
+        await new Promise((resolve) => {
+          newSocket.on('connect', () => {
+            console.log('Socket connected:', newSocket.id);
+            resolve();
+          });
+        });
+
+        // Join the session room so that teacher clients can receive events
+        newSocket.emit('join', { sessionId });
+
+        // Delay emitting the studentJoinedClassroom event to allow the join event to be processed
+        console.log('Waiting 100ms before emitting studentJoinedClassroom event...');
+        setTimeout(() => {
+          console.log('Emitting studentJoinedClassroom event:', {
+            sessionId,
+            studentId: user.id,
+            studentName: user.name
+          });
+          newSocket.emit('studentJoinedClassroom', {
+            sessionId,
+            studentId: user.id,
+            studentName: user.name
+          });
+          hasEmittedJoin.current = true;
+        }, 100);
+
+        // Listen for session updates
+        newSocket.on('sessionUpdate', (data) => {
+          if (data.sessionId === sessionId) {
+            if (data.status === 'completed') {
+              toast.info('The teacher has ended this session');
+              navigate('/dashboard');
+            }
+          }
+        });
+
+        // Cleanup socket connection
+        return () => {
+          if (newSocket) {
+            console.log('Disconnecting socket:', newSocket.id);
+            newSocket.disconnect();
+          }
+        };
+      } catch (error) {
+        console.error('Socket initialization error:', error);
+      }
+    };
+
+    initializeSocket();
+  }, [sessionId, navigate, user.id, user.name]);
 
   const getGracePeriodInfo = () => {
     const storageKey = `gracePeriod_${sessionId}`;
@@ -46,29 +108,6 @@ const StudentClassroom = () => {
       return null;
     }
   };
-
-  useEffect(() => {
-    // Initialize socket connection
-    const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
-    setSocket(newSocket);
-
-    // Listen for session updates
-    newSocket.on('sessionUpdate', (data) => {
-      if (data.sessionId === sessionId) {
-        if (data.status === 'completed') {
-          toast.info('The teacher has ended this session');
-          navigate('/dashboard');  
-        }
-      }
-    });
-
-    // Cleanup socket connection
-    return () => {
-      if (newSocket) {
-        newSocket.disconnect();
-      }
-    };
-  }, [sessionId, navigate]);
 
   useEffect(() => {
     console.log('StudentClassroom mounted with sessionId:', sessionId);
