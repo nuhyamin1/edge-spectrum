@@ -33,8 +33,16 @@ const Classroom = () => {
           status: 'present'
         });
 
-        // Update local state
+        // Update local attendance state
         updateAttendanceStatus(data.studentId, 'present');
+
+        // Update enrolledStudents list if this student is not already listed
+        if (session && session.enrolledStudents && !session.enrolledStudents.find(student => student._id === data.studentId)) {
+          setSession(prevSession => ({
+            ...prevSession,
+            enrolledStudents: [...prevSession.enrolledStudents, { _id: data.studentId, name: data.studentName }]
+          }));
+        }
 
         // Emit attendance update to all clients
         if (socketRef.current) {
@@ -49,7 +57,7 @@ const Classroom = () => {
         toast.error('Failed to update attendance status');
       }
     }
-  }, [sessionId, updateAttendanceStatus]);
+  }, [sessionId, updateAttendanceStatus, session]);
 
   // Initialize socket connection
   useEffect(() => {
