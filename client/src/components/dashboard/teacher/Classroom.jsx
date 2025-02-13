@@ -36,12 +36,18 @@ const Classroom = () => {
         // Update local attendance state
         updateAttendanceStatus(data.studentId, 'present');
 
-        // Update enrolledStudents list if this student is not already listed
-        if (session && session.enrolledStudents && !session.enrolledStudents.find(student => student._id === data.studentId)) {
-          setSession(prevSession => ({
-            ...prevSession,
-            enrolledStudents: [...prevSession.enrolledStudents, { _id: data.studentId, name: data.studentName }]
-          }));
+        // Update enrolledStudents list using functional update to avoid duplicates
+        if (session && session.enrolledStudents) {
+          setSession(prevSession => {
+            const exists = prevSession.enrolledStudents.some(student => student._id === data.studentId);
+            if (!exists) {
+              return {
+                ...prevSession,
+                enrolledStudents: [...prevSession.enrolledStudents, { _id: data.studentId, name: data.studentName }]
+              };
+            }
+            return prevSession;
+          });
         }
 
         // Emit attendance update to all clients
