@@ -305,7 +305,7 @@ const Classroom = () => {
               <div>
                 <p className="font-medium text-gray-900">{student.name}</p>
                 <p className="text-sm text-gray-500">{student.email}</p>
-                {attendanceStatus[student._id] === 'present' && (
+                {attendanceStatus[student._id] === 'present' && session.status === 'active' && (
                   <span className="text-xs text-green-600 font-medium">
                     Currently in classroom
                   </span>
