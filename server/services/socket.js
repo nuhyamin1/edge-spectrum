@@ -16,7 +16,7 @@ module.exports = {
 
             // Handle student joining classroom
             socket.on('studentJoinedClassroom', async (data) => {
-                const { sessionId, studentId, studentName } = data;
+                const { sessionId, studentId, studentName, studentEmail, studentProfilePicture } = data;
                 console.log('Student joined classroom:', { sessionId, studentId, studentName, socketId: socket.id });
 
                 try {
@@ -28,6 +28,8 @@ module.exports = {
                         sessionId,
                         studentId,
                         studentName,
+                        studentEmail,
+                        studentProfilePicture,
                         timestamp: Date.now()
                     });
                     

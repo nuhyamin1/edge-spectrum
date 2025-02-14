@@ -41,12 +41,16 @@ const StudentClassroom = () => {
           console.log('Emitting studentJoinedClassroom event:', {
             sessionId,
             studentId: user.id,
-            studentName: user.name
+            studentName: user.name,
+            studentEmail: user.email,
+            studentProfilePicture: user.profilePicture
           });
           newSocket.emit('studentJoinedClassroom', {
             sessionId,
             studentId: user.id,
-            studentName: user.name
+            studentName: user.name,
+            studentEmail: user.email,
+            studentProfilePicture: user.profilePicture
           });
           hasEmittedJoin.current = true;
         }, 100);
@@ -74,7 +78,7 @@ const StudentClassroom = () => {
     };
 
     initializeSocket();
-  }, [sessionId, navigate, user.id, user.name]);
+  }, [sessionId, navigate, user.id, user.name, user.email, user.profilePicture]);
 
   const getGracePeriodInfo = () => {
     const storageKey = `gracePeriod_${sessionId}`;

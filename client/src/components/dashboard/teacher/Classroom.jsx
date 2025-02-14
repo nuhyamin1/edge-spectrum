@@ -39,14 +39,33 @@ const Classroom = () => {
         // Update enrolledStudents list using functional update to avoid duplicates
         if (session && session.enrolledStudents) {
           setSession(prevSession => {
-            const exists = prevSession.enrolledStudents.some(student => student._id === data.studentId);
-            if (!exists) {
-              return {
-                ...prevSession,
-                enrolledStudents: [...prevSession.enrolledStudents, { _id: data.studentId, name: data.studentName }]
-              };
+            // Update existing student info if found
+            const updatedStudents = prevSession.enrolledStudents.map(student => {
+              if (student._id === data.studentId) {
+                return {
+                  ...student,
+                  name: data.studentName,
+                  email: data.studentEmail,
+                  profilePicture: data.studentProfilePicture
+                };
+              }
+              return student;
+            });
+
+            // If the student isn't in the list, add them
+            if (!prevSession.enrolledStudents.some(student => student._id === data.studentId)) {
+              updatedStudents.push({
+                _id: data.studentId,
+                name: data.studentName,
+                email: data.studentEmail,
+                profilePicture: data.studentProfilePicture
+              });
             }
-            return prevSession;
+
+            return {
+              ...prevSession,
+              enrolledStudents: updatedStudents
+            };
           });
         }
 
