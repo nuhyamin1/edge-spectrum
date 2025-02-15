@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
+import { useAuth } from '../../context/AuthContext';
 
 const config = {
   mode: "rtc",
@@ -16,22 +17,41 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
   const [error, setError] = useState(null);
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Function to handle user published events
     const handleUserPublished = async (user, mediaType) => {
       try {
         await client.subscribe(user, mediaType);
+        
         if (mediaType === "video") {
           setUsers((prevUsers) => {
-            if (!prevUsers.find(u => u.uid === user.uid)) {
-              return [...prevUsers, user];
+            const existingUser = prevUsers.find(u => u.uid === user.uid);
+            if (existingUser) {
+              return prevUsers.map(u => 
+                u.uid === user.uid 
+                  ? { ...u, videoTrack: user.videoTrack }
+                  : u
+              );
             }
-            return prevUsers;
+            return [...prevUsers, user];
           });
         }
+        
         if (mediaType === "audio" && user.audioTrack) {
           user.audioTrack.play();
+          setUsers((prevUsers) => {
+            const existingUser = prevUsers.find(u => u.uid === user.uid);
+            if (existingUser) {
+              return prevUsers.map(u => 
+                u.uid === user.uid 
+                  ? { ...u, audioTrack: user.audioTrack }
+                  : u
+              );
+            }
+            return [...prevUsers, user];
+          });
         }
       } catch (err) {
         console.error("Error subscribing to user:", err);
@@ -44,9 +64,18 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
       if (mediaType === "audio" && user.audioTrack) {
         user.audioTrack.stop();
       }
-      if (mediaType === "video") {
-        setUsers((prevUsers) => prevUsers.filter((User) => User.uid !== user.uid));
-      }
+      setUsers((prevUsers) => {
+        return prevUsers.map(u => {
+          if (u.uid === user.uid) {
+            return {
+              ...u,
+              ...(mediaType === "audio" && { audioTrack: null }),
+              ...(mediaType === "video" && { videoTrack: null })
+            };
+          }
+          return u;
+        }).filter(u => u.videoTrack || u.audioTrack);
+      });
     };
 
     // Function to handle user left events
@@ -60,7 +89,12 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
         client.on("user-unpublished", handleUserUnpublished);
         client.on("user-left", handleUserLeft);
 
-        await client.join(config.appId, sessionId, null, null);
+        // Generate a unique ID for the user
+        const uid = isTeacher ? 'teacher' : `${user.name}_${Math.floor(Math.random() * 1000000)}`;
+
+        // Join channel with the unique ID
+        await client.join(config.appId, sessionId, null, uid);
+
         if (tracks) {
           await client.publish(tracks);
           setStart(true);
@@ -72,6 +106,7 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
     };
 
     if (ready && tracks) {
+      console.log("Initializing with tracks:", tracks);
       init();
     }
 
@@ -91,7 +126,6 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
           });
         }
         
-        // Only try to unpublish and leave if we have tracks
         if (tracks) {
           client.unpublish(tracks).then(() => {
             client.leave();
@@ -101,7 +135,7 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
         console.error("Error during cleanup:", err);
       }
     };
-  }, [sessionId, client, ready, tracks]);
+  }, [sessionId, client, ready, tracks, isTeacher, user.name]);
 
   if (error) {
     return (
@@ -124,6 +158,8 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
     );
   }
 
+  console.log("Current users in room:", users);
+
   return (
     <div className="h-full w-full bg-gray-100 p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
@@ -136,23 +172,30 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
               />
             </div>
             <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-              {isTeacher ? 'Teacher' : 'You'}
+              {user.name} {isTeacher ? '(Teacher)' : ''}
             </div>
           </div>
         )}
         {users.length > 0 &&
-          users.map((user) => {
-            if (user.videoTrack) {
+          users.map((remoteUser) => {
+            if (remoteUser.videoTrack) {
+              // Extract username from uid if it contains the user's name
+              const displayName = remoteUser.uid === 'teacher' 
+                ? 'Teacher'
+                : remoteUser.uid.includes('_') 
+                  ? remoteUser.uid.split('_')[0] 
+                  : `Student ${remoteUser.uid}`;
+
               return (
-                <div key={user.uid} className="relative bg-white rounded-lg shadow-md overflow-hidden aspect-video">
+                <div key={remoteUser.uid} className="relative bg-white rounded-lg shadow-md overflow-hidden aspect-video">
                   <div className="absolute inset-0">
                     <AgoraVideoPlayer
-                      videoTrack={user.videoTrack}
+                      videoTrack={remoteUser.videoTrack}
                       style={{ height: '100%', width: '100%' }}
                     />
                   </div>
                   <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-                    {isTeacher ? `Student ${user.uid}` : user.uid === 'teacher' ? 'Teacher' : `Student ${user.uid}`}
+                    {displayName}
                   </div>
                 </div>
               );
