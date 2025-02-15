@@ -130,12 +130,43 @@ A modern virtual learning platform that connects teachers and students through i
 - Customizable student profile
 - Personal profile management
 
-### Classroom Features (In Development)
-- Real-time chat
-- Video conferencing
-- Interactive whiteboard
-- Screen sharing
-- Student participation tracking
+### Classroom Features (February 15, 2025)
+- Implemented comprehensive classroom environment with multiple tabs:
+  - Attendance Room
+  - Video Room
+  - Discussion Room (Coming Soon)
+  - Exercise Room (Coming Soon)
+
+#### Attendance Room
+- Real-time attendance tracking system:
+  - Automatic student presence detection
+  - Manual attendance management for teachers
+  - Visual indicators for present/absent students
+  - Bulk actions to mark all students present/absent
+  - Real-time updates using Socket.IO
+  - Profile picture display for each student
+  - Attendance status persistence across sessions
+
+#### Video Room
+- Integrated Agora SDK for real-time video communication:
+  - Two-column layout design:
+    - Left column dedicated to teacher:
+      - Prominent teacher video display
+      - Comprehensive session information panel
+      - Real-time session status updates
+      - Detailed class information (title, subject, duration, etc.)
+    - Right column for student participants:
+      - Grid layout for student videos
+      - Dynamic participant count
+      - Automatic video feed management
+  - Features:
+    - Real-time video and audio streaming
+    - Automatic camera and microphone handling
+    - Dynamic user join/leave handling
+    - Clear user identification with names
+    - Responsive design for all screen sizes
+    - Error handling with user-friendly messages
+    - Loading states with proper user feedback
 
 ## Recent Updates
 
@@ -276,6 +307,14 @@ A modern virtual learning platform that connects teachers and students through i
 - Updated assignment details API to properly include profile picture data
 - Enhanced student submission list with proper profile picture rendering
 - Improved data structure consistency for profile pictures across views
+
+### Classroom Enhancement (February 15, 2025)
+- Added real-time video communication using Agora SDK
+- Implemented two-column classroom layout
+- Added session information display
+- Enhanced user experience with proper error handling
+- Improved student-teacher interaction through video
+- Updated classroom navigation with tabbed interface
 
 ## Next Steps
 - Add assignment filtering and search functionality
