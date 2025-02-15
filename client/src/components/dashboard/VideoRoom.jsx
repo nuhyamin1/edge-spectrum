@@ -11,7 +11,7 @@ const config = {
 const useClient = createClient(config);
 const useMicrophoneAndCameraTracks = createMicrophoneAndCameraTracks();
 
-const VideoRoom = ({ sessionId, isTeacher }) => {
+const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [users, setUsers] = useState([]);
   const [start, setStart] = useState(false);
   const [error, setError] = useState(null);
@@ -158,50 +158,137 @@ const VideoRoom = ({ sessionId, isTeacher }) => {
     );
   }
 
-  console.log("Current users in room:", users);
+  // Filter out teacher from users list
+  const teacherUser = users.find(u => u.uid === 'teacher');
+  const studentUsers = users.filter(u => u.uid !== 'teacher');
 
   return (
     <div className="h-full w-full bg-gray-100 p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
-        {start && tracks && (
-          <div className="relative bg-white rounded-lg shadow-md overflow-hidden aspect-video">
-            <div className="absolute inset-0">
-              <AgoraVideoPlayer
-                videoTrack={tracks[1]}
-                style={{ height: '100%', width: '100%' }}
-              />
-            </div>
-            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-              {user.name} {isTeacher ? '(Teacher)' : ''}
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+        {/* Left Column - Teacher and Session Info */}
+        <div className="flex flex-col space-y-4">
+          {/* Teacher Video */}
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            {isTeacher && start && tracks ? (
+              <div className="relative aspect-video">
+                <div className="absolute inset-0">
+                  <AgoraVideoPlayer
+                    videoTrack={tracks[1]}
+                    style={{ height: '100%', width: '100%' }}
+                  />
+                </div>
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                  {user.name} (Teacher)
+                </div>
+              </div>
+            ) : teacherUser?.videoTrack ? (
+              <div className="relative aspect-video">
+                <div className="absolute inset-0">
+                  <AgoraVideoPlayer
+                    videoTrack={teacherUser.videoTrack}
+                    style={{ height: '100%', width: '100%' }}
+                  />
+                </div>
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                  Teacher
+                </div>
+              </div>
+            ) : (
+              <div className="aspect-video flex items-center justify-center bg-gray-100">
+                <p className="text-gray-500">Teacher video not available</p>
+              </div>
+            )}
           </div>
-        )}
-        {users.length > 0 &&
-          users.map((remoteUser) => {
-            if (remoteUser.videoTrack) {
-              // Extract username from uid if it contains the user's name
-              const displayName = remoteUser.uid === 'teacher' 
-                ? 'Teacher'
-                : remoteUser.uid.includes('_') 
+
+          {/* Session Details */}
+          {session && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h2 className="text-xl font-semibold mb-4">{session.title}</h2>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <span className="text-gray-600 w-32">Subject:</span>
+                  <span className="text-gray-900">{session.subject}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-gray-600 w-32">Status:</span>
+                  <span className={`px-2 py-1 rounded text-sm ${
+                    session.status === 'active' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                  </span>
+                </div>
+                {session.startedAt && (
+                  <div className="flex items-center">
+                    <span className="text-gray-600 w-32">Started:</span>
+                    <span className="text-gray-900">
+                      {new Date(session.startedAt).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center">
+                  <span className="text-gray-600 w-32">Duration:</span>
+                  <span className="text-gray-900">{session.duration} minutes</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-gray-600 w-32">Grace Period:</span>
+                  <span className="text-gray-900">{session.gracePeriod} minutes</span>
+                </div>
+                {session.description && (
+                  <div className="mt-4">
+                    <span className="text-gray-600 block mb-2">Description:</span>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded">
+                      {session.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Student Videos */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <h3 className="text-lg font-semibold mb-4">Participants ({studentUsers.length})</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {!isTeacher && start && tracks && (
+              <div className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="absolute inset-0">
+                  <AgoraVideoPlayer
+                    videoTrack={tracks[1]}
+                    style={{ height: '100%', width: '100%' }}
+                  />
+                </div>
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                  {user.name} (You)
+                </div>
+              </div>
+            )}
+            {studentUsers.map((remoteUser) => {
+              if (remoteUser.videoTrack) {
+                const displayName = remoteUser.uid.includes('_') 
                   ? remoteUser.uid.split('_')[0] 
                   : `Student ${remoteUser.uid}`;
 
-              return (
-                <div key={remoteUser.uid} className="relative bg-white rounded-lg shadow-md overflow-hidden aspect-video">
-                  <div className="absolute inset-0">
-                    <AgoraVideoPlayer
-                      videoTrack={remoteUser.videoTrack}
-                      style={{ height: '100%', width: '100%' }}
-                    />
+                return (
+                  <div key={remoteUser.uid} className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="absolute inset-0">
+                      <AgoraVideoPlayer
+                        videoTrack={remoteUser.videoTrack}
+                        style={{ height: '100%', width: '100%' }}
+                      />
+                    </div>
+                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                      {displayName}
+                    </div>
                   </div>
-                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
-                    {displayName}
-                  </div>
-                </div>
-              );
-            }
-            return null;
-          })}
+                );
+              }
+              return null;
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -437,7 +437,7 @@ const Classroom = () => {
               </div>
             )}
             {activeTab === 'video' && (
-              <VideoRoom sessionId={sessionId} isTeacher={true} />
+              <VideoRoom sessionId={sessionId} isTeacher={true} session={session} />
             )}
             {activeTab === 'discussion' && (
               <div className="p-4">

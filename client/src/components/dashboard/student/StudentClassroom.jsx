@@ -280,7 +280,7 @@ const StudentClassroom = () => {
             </div>
           )}
           {activeTab === 'video' && (
-            <VideoRoom sessionId={sessionId} isTeacher={false} />
+            <VideoRoom sessionId={sessionId} isTeacher={false} session={session} />
           )}
           {activeTab === 'discussion' && (
             <div className="p-4">
