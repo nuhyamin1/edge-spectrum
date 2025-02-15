@@ -5,6 +5,7 @@ import axios from '../../../utils/axios';
 import Layout from '../Layout';
 import io from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
+import VideoRoom from '../VideoRoom';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -16,6 +17,7 @@ const StudentClassroom = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [socket, setSocket] = useState(null);
   const hasEmittedJoin = useRef(false);
+  const [activeTab, setActiveTab] = useState('attendance');
 
   useEffect(() => {
     const initializeSocket = async () => {
@@ -218,71 +220,80 @@ const StudentClassroom = () => {
 
   return (
     <Layout userType="student">
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-800">{session.title}</h2>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-blue-600">{formatTimeLeft(timeLeft)}</span>
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                Live Session
-              </span>
-            </div>
-          </div>
+      <div className="flex flex-col flex-grow overflow-hidden">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('attendance')}
+              className={`${
+                activeTab === 'attendance'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Attendance Room
+            </button>
+            <button
+              onClick={() => setActiveTab('video')}
+              className={`${
+                activeTab === 'video'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Video Room
+            </button>
+            <button
+              onClick={() => setActiveTab('discussion')}
+              className={`${
+                activeTab === 'discussion'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Discussion Room
+            </button>
+            <button
+              onClick={() => setActiveTab('exercise')}
+              className={`${
+                activeTab === 'exercise'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Exercise Room
+            </button>
+          </nav>
         </div>
 
-        <div className="p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Session Information</h3>
-            <p className="text-gray-600">Subject: {session.subject}</p>
-            <p className="text-gray-600">Teacher: {session.teacher?.name}</p>
-            {session.startedAt && (
-              <p className="text-gray-600">Started at: {new Date(session.startedAt).toLocaleString()}</p>
-            )}
-          </div>
-
-          <div className="space-y-6">
-            {/* Chat Section */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-lg font-medium mb-4">Class Chat</h4>
-              <div className="h-64 bg-gray-50 rounded-lg p-4 mb-4">
-                <p className="text-gray-500 text-center">Chat messages will appear here</p>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Type your message..."
-                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                  Send
-                </button>
+        {/* Tab content */}
+        <div className="flex-grow overflow-y-auto">
+          {activeTab === 'attendance' && (
+            <div className="p-4">
+              <h2 className="text-lg font-semibold mb-4">Attendance Status</h2>
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-sm text-gray-600">
+                  Your attendance has been recorded for this session.
+                </p>
               </div>
             </div>
-
-            {/* Video Section */}
-            <div className="border rounded-lg p-4">
-              <h4 className="text-lg font-medium mb-4">Video Stream</h4>
-              <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">Video stream will appear here</p>
-              </div>
+          )}
+          {activeTab === 'video' && (
+            <VideoRoom sessionId={sessionId} isTeacher={false} />
+          )}
+          {activeTab === 'discussion' && (
+            <div className="p-4">
+              <h2 className="text-lg font-semibold">Discussion Room</h2>
+              <p className="text-gray-500">Coming soon...</p>
             </div>
-
-            {/* Materials Section */}
-            {session.materials && (
-              <div className="border rounded-lg p-4">
-                <h4 className="text-lg font-medium mb-4">Session Materials</h4>
-                <a
-                  href={session.materials}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  View Materials
-                </a>
-              </div>
-            )}
-          </div>
+          )}
+          {activeTab === 'exercise' && (
+            <div className="p-4">
+              <h2 className="text-lg font-semibold">Exercise Room</h2>
+              <p className="text-gray-500">Coming soon...</p>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

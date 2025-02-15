@@ -6,6 +6,7 @@ import Layout from '../Layout';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { io } from 'socket.io-client';
+import VideoRoom from '../VideoRoom';
 
 const Classroom = () => {
   const { sessionId } = useParams();
@@ -265,69 +266,6 @@ const Classroom = () => {
     }
   };
 
-  const renderAttendanceRoom = () => (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-semibold">Attendance Room</h3>
-        <div className="flex space-x-4">
-          <button
-            onClick={handleMarkAllPresent}
-            className="flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors"
-          >
-            <CheckIcon className="w-5 h-5 mr-2" />
-            Mark All Present
-          </button>
-          <button
-            onClick={handleMarkAllAbsent}
-            className="flex items-center px-4 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 transition-colors"
-          >
-            <XMarkIcon className="w-5 h-5 mr-2" />
-            Mark All Absent
-          </button>
-        </div>
-      </div>
-      <div className="space-y-4">
-        {session.enrolledStudents.map((student) => (
-          <div 
-            key={student._id} 
-            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <div className="flex items-center space-x-4">
-              {student.profilePicture?.data ? (
-                <img
-                  src={student.profilePicture.data}
-                  alt={`${student.name}'s profile`}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <UserCircleIcon className="w-12 h-12 text-gray-400" />
-              )}
-              <div>
-                <p className="font-medium text-gray-900">{student.name}</p>
-                <p className="text-sm text-gray-500">{student.email}</p>
-                {attendanceStatus[student._id] === 'present' && session.status === 'active' && (
-                  <span className="text-xs text-green-600 font-medium">
-                    Currently in classroom
-                  </span>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => toggleAttendance(student._id)}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                attendanceStatus[student._id] === 'present'
-                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                  : 'bg-red-100 text-red-800 hover:bg-red-200'
-              }`}
-            >
-              {attendanceStatus[student._id] === 'present' ? <CheckIcon className="w-5 h-5" title="Present" /> : <XMarkIcon className="w-5 h-5" title="Absent" />}
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   if (loading) {
     return (
       <Layout userType="teacher">
@@ -406,7 +344,6 @@ const Classroom = () => {
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
-                disabled
               >
                 Video Room
               </button>
@@ -437,10 +374,83 @@ const Classroom = () => {
 
           {/* Tab Content */}
           <div className="p-6">
-            {activeTab === 'attendance' && renderAttendanceRoom()}
-            {activeTab === 'video' && <div>Video Room (Coming Soon)</div>}
-            {activeTab === 'discussion' && <div>Discussion Room (Coming Soon)</div>}
-            {activeTab === 'exercise' && <div>Exercise Room (Coming Soon)</div>}
+            {activeTab === 'attendance' && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold">Attendance Room</h3>
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={handleMarkAllPresent}
+                      className="flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors"
+                    >
+                      <CheckIcon className="w-5 h-5 mr-2" />
+                      Mark All Present
+                    </button>
+                    <button
+                      onClick={handleMarkAllAbsent}
+                      className="flex items-center px-4 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 transition-colors"
+                    >
+                      <XMarkIcon className="w-5 h-5 mr-2" />
+                      Mark All Absent
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {session.enrolledStudents.map((student) => (
+                    <div 
+                      key={student._id} 
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center space-x-4">
+                        {student.profilePicture?.data ? (
+                          <img
+                            src={student.profilePicture.data}
+                            alt={`${student.name}'s profile`}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <UserCircleIcon className="w-12 h-12 text-gray-400" />
+                        )}
+                        <div>
+                          <p className="font-medium text-gray-900">{student.name}</p>
+                          <p className="text-sm text-gray-500">{student.email}</p>
+                          {attendanceStatus[student._id] === 'present' && session.status === 'active' && (
+                            <span className="text-xs text-green-600 font-medium">
+                              Currently in classroom
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => toggleAttendance(student._id)}
+                        className={`px-4 py-2 rounded-md text-sm font-medium ${
+                          attendanceStatus[student._id] === 'present'
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        }`}
+                      >
+                        {attendanceStatus[student._id] === 'present' ? <CheckIcon className="w-5 h-5" title="Present" /> : <XMarkIcon className="w-5 h-5" title="Absent" />}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {activeTab === 'video' && (
+              <VideoRoom sessionId={sessionId} isTeacher={true} />
+            )}
+            {activeTab === 'discussion' && (
+              <div className="p-4">
+                <h2 className="text-lg font-semibold">Discussion Room</h2>
+                <p className="text-gray-500">Coming soon...</p>
+              </div>
+            )}
+            {activeTab === 'exercise' && (
+              <div className="p-4">
+                <h2 className="text-lg font-semibold">Exercise Room</h2>
+                <p className="text-gray-500">Coming soon...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
