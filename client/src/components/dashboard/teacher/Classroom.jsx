@@ -320,7 +320,7 @@ const Classroom = () => {
                   : 'bg-red-100 text-red-800 hover:bg-red-200'
               }`}
             >
-              {attendanceStatus[student._id] === 'present' ? 'Present' : 'Absent'}
+              {attendanceStatus[student._id] === 'present' ? <CheckIcon className="w-5 h-5" title="Present" /> : <XMarkIcon className="w-5 h-5" title="Absent" />}
             </button>
           </div>
         ))}
