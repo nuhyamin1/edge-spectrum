@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import { useAuth } from '../../context/AuthContext';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash } from 'react-icons/fa';
 
 const config = {
   mode: "rtc",
@@ -15,9 +16,25 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [users, setUsers] = useState([]);
   const [start, setStart] = useState(false);
   const [error, setError] = useState(null);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [isVideoMuted, setIsVideoMuted] = useState(false);
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
   const { user } = useAuth();
+
+  const toggleAudio = async () => {
+    if (tracks && tracks[0]) {
+      await tracks[0].setEnabled(!isAudioMuted);
+      setIsAudioMuted(!isAudioMuted);
+    }
+  };
+
+  const toggleVideo = async () => {
+    if (tracks && tracks[1]) {
+      await tracks[1].setEnabled(!isVideoMuted);
+      setIsVideoMuted(!isVideoMuted);
+    }
+  };
 
   useEffect(() => {
     // Function to handle user published events
@@ -289,6 +306,28 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             })}
           </div>
         </div>
+      </div>
+      <div className="absolute bottom-4 right-4 flex space-x-4">
+        <button
+          className="bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200"
+          onClick={toggleAudio}
+        >
+          {isAudioMuted ? (
+            <FaMicrophoneSlash size={20} color="#666" />
+          ) : (
+            <FaMicrophone size={20} color="#666" />
+          )}
+        </button>
+        <button
+          className="bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200"
+          onClick={toggleVideo}
+        >
+          {isVideoMuted ? (
+            <FaVideoSlash size={20} color="#666" />
+          ) : (
+            <FaVideo size={20} color="#666" />
+          )}
+        </button>
       </div>
     </div>
   );
