@@ -296,11 +296,6 @@ A modern virtual learning platform that connects teachers and students through i
   - Assignment management with multi-file support
   - Bulk assignment creation
   - Assignment file downloads
-- In Progress:
-  - Image compression for better performance
-  - Profile picture update confirmation
-  - Classroom features implementation
-  - Material search and filtering
 
 ### Profile Picture Display Fix (February 6, 2025)
 - Fixed profile picture display in assignment details view
@@ -315,8 +310,17 @@ A modern virtual learning platform that connects teachers and students through i
 - Enhanced user experience with proper error handling
 - Improved student-teacher interaction through video
 - Updated classroom navigation with tabbed interface
+- Added mute/unmute functionality
+- Added video disabled functionality
+- Added screen sharing functionality (half working)
+Next Steps:
+- Add whiteboard functionality
+- Add hand raise functionality
+- Add record audio functionality
+- Add breakout room functionality
 
-## Next Steps
+
+## Next Steps for interesting features to consider
 - Add assignment filtering and search functionality
 - Implement assignment statistics and analytics
 - Add batch download for multiple submissions
