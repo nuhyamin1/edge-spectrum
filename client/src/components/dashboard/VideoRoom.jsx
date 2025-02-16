@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks, createScreenVideoTrack } from 'agora-rtc-react';
+import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress } from 'react-icons/fa';
 
 const config = {
   mode: "rtc",
@@ -18,6 +19,15 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [error, setError] = useState(null);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenTrack, setScreenTrack] = useState(null);
+  const [screenClient, setScreenClient] = useState(null);
+  const [remoteScreenTrack, setRemoteScreenTrack] = useState(null);
+  const [remoteScreenUser, setRemoteScreenUser] = useState(null);
+  const [videoPosition, setVideoPosition] = useState({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isVideoExpanded, setIsVideoExpanded] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
   const { user } = useAuth();
@@ -36,6 +46,129 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
+  const toggleScreenShare = async () => {
+    try {
+      if (!isScreenSharing) {
+        // Create a new client for screen sharing
+        const newScreenClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+        
+        // Join channel with screen sharing client
+        await newScreenClient.join(
+          config.appId,
+          sessionId,
+          null,
+          `${user.id}_screen` // Use a unique identifier for screen sharing
+        );
+        
+        // Create screen sharing track
+        const screenVideoTrack = await AgoraRTC.createScreenVideoTrack({
+          encoderConfig: "1080p_1",
+          optimizationMode: "detail",
+        });
+
+        // Publish screen track using the screen sharing client
+        await newScreenClient.publish(screenVideoTrack);
+        
+        setScreenClient(newScreenClient);
+        setScreenTrack(screenVideoTrack);
+        setIsScreenSharing(true);
+
+        // Handle screen sharing stop event
+        screenVideoTrack.on("track-ended", async () => {
+          await stopScreenSharing();
+        });
+
+        // Set up event handlers for the screen sharing client
+        newScreenClient.on("user-published", async (user, mediaType) => {
+          await newScreenClient.subscribe(user, mediaType);
+          if (mediaType === "video") {
+            setRemoteScreenTrack(user.videoTrack);
+            setRemoteScreenUser(user);
+          }
+        });
+
+        newScreenClient.on("user-unpublished", (user) => {
+          if (remoteScreenUser && user.uid === remoteScreenUser.uid) {
+            setRemoteScreenTrack(null);
+            setRemoteScreenUser(null);
+          }
+        });
+      } else {
+        await stopScreenSharing();
+      }
+    } catch (error) {
+      console.error("Error toggling screen share:", error);
+      setError("Failed to toggle screen sharing");
+      setIsScreenSharing(false);
+      if (screenTrack) {
+        screenTrack.close();
+        setScreenTrack(null);
+      }
+      if (screenClient) {
+        await screenClient.leave();
+        setScreenClient(null);
+      }
+    }
+  };
+
+  const stopScreenSharing = async () => {
+    try {
+      if (screenClient && screenTrack) {
+        // Unpublish and close screen track
+        await screenClient.unpublish(screenTrack);
+        screenTrack.close();
+        
+        // Leave the channel with screen client
+        await screenClient.leave();
+        
+        setScreenTrack(null);
+        setScreenClient(null);
+        setIsScreenSharing(false);
+      }
+    } catch (error) {
+      console.error("Error stopping screen share:", error);
+      setError("Failed to stop screen sharing");
+    }
+  };
+
+  const handleDragStart = (e) => {
+    setIsDragging(true);
+    const touch = e.type === 'touchstart' ? e.touches[0] : e;
+    dragStartPos.current = {
+      x: touch.clientX - videoPosition.x,
+      y: touch.clientY - videoPosition.y
+    };
+  };
+
+  const handleDrag = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const touch = e.type === 'touchmove' ? e.touches[0] : e;
+    setVideoPosition({
+      x: touch.clientX - dragStartPos.current.x,
+      y: touch.clientY - dragStartPos.current.y
+    });
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleDrag);
+      window.addEventListener('mouseup', handleDragEnd);
+      window.addEventListener('touchmove', handleDrag);
+      window.addEventListener('touchend', handleDragEnd);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleDrag);
+      window.removeEventListener('mouseup', handleDragEnd);
+      window.removeEventListener('touchmove', handleDrag);
+      window.removeEventListener('touchend', handleDragEnd);
+    };
+  }, [isDragging]);
+
   useEffect(() => {
     // Function to handle user published events
     const handleUserPublished = async (user, mediaType) => {
@@ -43,31 +176,42 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         await client.subscribe(user, mediaType);
         
         if (mediaType === "video") {
-          setUsers((prevUsers) => {
-            const existingUser = prevUsers.find(u => u.uid === user.uid);
-            if (existingUser) {
-              return prevUsers.map(u => 
-                u.uid === user.uid 
-                  ? { ...u, videoTrack: user.videoTrack }
-                  : u
-              );
-            }
-            return [...prevUsers, user];
-          });
+          const videoTrack = user.videoTrack;
+          
+          // Check if this is a screen sharing track
+          if (videoTrack && videoTrack._source === "screen") {
+            console.log("Received screen share from:", user.uid);
+            setRemoteScreenTrack(videoTrack);
+            setRemoteScreenUser(user);
+          } else {
+            // Handle regular video track
+            setUsers((prevUsers) => {
+              const existingUser = prevUsers.find(u => u.uid === user.uid);
+              if (existingUser) {
+                return prevUsers.map(u => 
+                  u.uid === user.uid 
+                    ? { ...u, videoTrack }
+                    : u
+                );
+              }
+              return [...prevUsers, { ...user, videoTrack }];
+            });
+          }
         }
         
-        if (mediaType === "audio" && user.audioTrack) {
-          user.audioTrack.play();
+        if (mediaType === "audio") {
+          const audioTrack = user.audioTrack;
+          audioTrack?.play();
           setUsers((prevUsers) => {
             const existingUser = prevUsers.find(u => u.uid === user.uid);
             if (existingUser) {
               return prevUsers.map(u => 
                 u.uid === user.uid 
-                  ? { ...u, audioTrack: user.audioTrack }
+                  ? { ...u, audioTrack }
                   : u
               );
             }
-            return [...prevUsers, user];
+            return [...prevUsers, { ...user, audioTrack }];
           });
         }
       } catch (err) {
@@ -78,21 +222,33 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
     // Function to handle user unpublished events
     const handleUserUnpublished = (user, mediaType) => {
-      if (mediaType === "audio" && user.audioTrack) {
-        user.audioTrack.stop();
+      if (mediaType === "video") {
+        // Check if this was the screen sharing user
+        if (remoteScreenUser && user.uid === remoteScreenUser.uid) {
+          console.log("Screen share ended from:", user.uid);
+          setRemoteScreenTrack(null);
+          setRemoteScreenUser(null);
+        } else {
+          setUsers((prevUsers) => 
+            prevUsers.map(u => 
+              u.uid === user.uid 
+                ? { ...u, videoTrack: null }
+                : u
+            ).filter(u => u.videoTrack || u.audioTrack)
+          );
+        }
       }
-      setUsers((prevUsers) => {
-        return prevUsers.map(u => {
-          if (u.uid === user.uid) {
-            return {
-              ...u,
-              ...(mediaType === "audio" && { audioTrack: null }),
-              ...(mediaType === "video" && { videoTrack: null })
-            };
-          }
-          return u;
-        }).filter(u => u.videoTrack || u.audioTrack);
-      });
+      
+      if (mediaType === "audio") {
+        user.audioTrack?.stop();
+        setUsers((prevUsers) => 
+          prevUsers.map(u => 
+            u.uid === user.uid 
+              ? { ...u, audioTrack: null }
+              : u
+          ).filter(u => u.videoTrack || u.audioTrack)
+        );
+      }
     };
 
     // Function to handle user left events
@@ -154,6 +310,17 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     };
   }, [sessionId, client, ready, tracks, isTeacher, user.name]);
 
+  useEffect(() => {
+    return () => {
+      if (screenClient && screenTrack) {
+        screenClient.unpublish(screenTrack).then(() => {
+          screenTrack.close();
+          screenClient.leave();
+        }).catch(console.error);
+      }
+    };
+  }, [screenClient, screenTrack]);
+
   if (error) {
     return (
       <div className="h-full w-full bg-gray-100 p-4 flex items-center justify-center">
@@ -181,6 +348,55 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
   return (
     <div className="h-full w-full bg-gray-100 p-4">
+      {/* Screen Share Display with Floating Video */}
+      {(isScreenSharing || remoteScreenTrack) && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 p-4">
+          <div className="relative h-full">
+            {isScreenSharing && (
+              <button
+                onClick={stopScreenSharing}
+                className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 z-10"
+              >
+                <FaTimesCircle size={24} />
+              </button>
+            )}
+            <AgoraVideoPlayer
+              videoTrack={isScreenSharing ? screenTrack : remoteScreenTrack}
+              style={{ height: '100%', width: '100%', objectFit: 'contain' }}
+            />
+            
+            {/* Floating Video Window */}
+            {tracks && tracks[1] && !isVideoMuted && (
+              <div
+                className={`absolute cursor-move rounded-lg overflow-hidden shadow-lg transition-all ${
+                  isVideoExpanded ? 'w-96 h-72' : 'w-48 h-36'
+                }`}
+                style={{
+                  left: `${videoPosition.x}px`,
+                  top: `${videoPosition.y}px`,
+                  touchAction: 'none'
+                }}
+                onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
+              >
+                <div className="relative w-full h-full">
+                  <AgoraVideoPlayer
+                    videoTrack={tracks[1]}
+                    style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                  />
+                  <button
+                    onClick={() => setIsVideoExpanded(!isVideoExpanded)}
+                    className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded hover:bg-opacity-75"
+                  >
+                    {isVideoExpanded ? <FaCompress size={16} /> : <FaExpand size={16} />}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
         {/* Left Column - Teacher and Session Info */}
         <div className="flex flex-col space-y-4">
@@ -307,7 +523,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           </div>
         </div>
       </div>
-      <div className="absolute bottom-4 right-4 flex space-x-4">
+      <div className="fixed bottom-4 right-4 flex space-x-4">
         <button
           className="bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200"
           onClick={toggleAudio}
@@ -326,6 +542,18 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             <FaVideoSlash size={20} color="#666" />
           ) : (
             <FaVideo size={20} color="#666" />
+          )}
+        </button>
+        <button
+          className={`bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200 ${
+            isScreenSharing ? 'bg-blue-100' : ''
+          }`}
+          onClick={toggleScreenShare}
+        >
+          {isScreenSharing ? (
+            <FaTimesCircle size={20} color="#666" />
+          ) : (
+            <FaDesktop size={20} color="#666" />
           )}
         </button>
       </div>
