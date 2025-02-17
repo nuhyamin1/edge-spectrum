@@ -8,6 +8,7 @@ import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { io } from 'socket.io-client';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
+import { FaArrowLeft, FaHome } from 'react-icons/fa';
 
 const Classroom = () => {
   const { sessionId } = useParams();
@@ -288,187 +289,206 @@ const Classroom = () => {
   }
 
   return (
-    <Layout userType="teacher">
-      <div className="space-y-6">
-        {/* Header Section */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">{session.title}</h2>
-              <div className="flex items-center space-x-4">
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  session.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                  session.status === 'active' ? 'bg-green-100 text-green-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                </span>
-                {session.status === 'scheduled' && (
+    <div className="min-h-screen bg-gray-100">
+      <div className="flex flex-col h-screen">
+        {/* Navigation bar with home button */}
+        <div className="bg-white shadow-sm p-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-colors duration-200 group relative"
+            title="Back to Dashboard"
+          >
+            <FaHome className="w-5 h-5" />
+            {/* Tooltip */}
+            <span className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              Back to Dashboard
+            </span>
+          </button>
+        </div>
+
+        <Layout userType="teacher">
+          <div className="space-y-6">
+            {/* Header Section */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-gray-800">{session.title}</h2>
+                  <div className="flex items-center space-x-4">
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      session.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
+                      session.status === 'active' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                    </span>
+                    {session.status === 'scheduled' && (
+                      <button
+                        onClick={handleStartSession}
+                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      >
+                        Start Session
+                      </button>
+                    )}
+                    {session.status === 'active' && (
+                      <button
+                        onClick={handleEndSession}
+                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      >
+                        End Session
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabs Navigation */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="border-b border-gray-200">
+                <nav className="flex space-x-8 px-6" aria-label="Tabs">
                   <button
-                    onClick={handleStartSession}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    onClick={() => setActiveTab('attendance')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'attendance'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                   >
-                    Start Session
+                    Attendance Room
                   </button>
+                  <button
+                    onClick={() => setActiveTab('video')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'video'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Video Room
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('whiteboard')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'whiteboard'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    Whiteboard
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('discussion')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'discussion'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                    disabled
+                  >
+                    Discussion Room
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('exercise')}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === 'exercise'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                    disabled
+                  >
+                    Exercise Room
+                  </button>
+                </nav>
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-6">
+                {activeTab === 'attendance' && (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-semibold">Attendance Room</h3>
+                      <div className="flex space-x-4">
+                        <button
+                          onClick={handleMarkAllPresent}
+                          className="flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors"
+                        >
+                          <CheckIcon className="w-5 h-5 mr-2" />
+                          Mark All Present
+                        </button>
+                        <button
+                          onClick={handleMarkAllAbsent}
+                          className="flex items-center px-4 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 transition-colors"
+                        >
+                          <XMarkIcon className="w-5 h-5 mr-2" />
+                          Mark All Absent
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      {session.enrolledStudents.map((student) => (
+                        <div 
+                          key={student._id} 
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center space-x-4">
+                            {student.profilePicture?.data ? (
+                              <img
+                                src={student.profilePicture.data}
+                                alt={`${student.name}'s profile`}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <UserCircleIcon className="w-12 h-12 text-gray-400" />
+                            )}
+                            <div>
+                              <p className="font-medium text-gray-900">{student.name}</p>
+                              <p className="text-sm text-gray-500">{student.email}</p>
+                              {attendanceStatus[student._id] === 'present' && session.status === 'active' && (
+                                <span className="text-xs text-green-600 font-medium">
+                                  Currently in classroom
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => toggleAttendance(student._id)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium ${
+                              attendanceStatus[student._id] === 'present'
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                            }`}
+                          >
+                            {attendanceStatus[student._id] === 'present' ? <CheckIcon className="w-5 h-5" title="Present" /> : <XMarkIcon className="w-5 h-5" title="Absent" />}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                {session.status === 'active' && (
-                  <button
-                    onClick={handleEndSession}
-                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                  >
-                    End Session
-                  </button>
+                {activeTab === 'video' && (
+                  <VideoRoom sessionId={sessionId} isTeacher={true} session={session} />
+                )}
+                {activeTab === 'whiteboard' && (
+                  <Whiteboard sessionId={sessionId} />
+                )}
+                {activeTab === 'discussion' && (
+                  <div className="p-4">
+                    <h2 className="text-lg font-semibold">Discussion Room</h2>
+                    <p className="text-gray-500">Coming soon...</p>
+                  </div>
+                )}
+                {activeTab === 'exercise' && (
+                  <div className="p-4">
+                    <h2 className="text-lg font-semibold">Exercise Room</h2>
+                    <p className="text-gray-500">Coming soon...</p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Tabs Navigation */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('attendance')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'attendance'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Attendance Room
-              </button>
-              <button
-                onClick={() => setActiveTab('video')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'video'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Video Room
-              </button>
-              <button
-                onClick={() => setActiveTab('whiteboard')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'whiteboard'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Whiteboard
-              </button>
-              <button
-                onClick={() => setActiveTab('discussion')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'discussion'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                disabled
-              >
-                Discussion Room
-              </button>
-              <button
-                onClick={() => setActiveTab('exercise')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'exercise'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                disabled
-              >
-                Exercise Room
-              </button>
-            </nav>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-6">
-            {activeTab === 'attendance' && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-semibold">Attendance Room</h3>
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={handleMarkAllPresent}
-                      className="flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors"
-                    >
-                      <CheckIcon className="w-5 h-5 mr-2" />
-                      Mark All Present
-                    </button>
-                    <button
-                      onClick={handleMarkAllAbsent}
-                      className="flex items-center px-4 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 transition-colors"
-                    >
-                      <XMarkIcon className="w-5 h-5 mr-2" />
-                      Mark All Absent
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  {session.enrolledStudents.map((student) => (
-                    <div 
-                      key={student._id} 
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        {student.profilePicture?.data ? (
-                          <img
-                            src={student.profilePicture.data}
-                            alt={`${student.name}'s profile`}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <UserCircleIcon className="w-12 h-12 text-gray-400" />
-                        )}
-                        <div>
-                          <p className="font-medium text-gray-900">{student.name}</p>
-                          <p className="text-sm text-gray-500">{student.email}</p>
-                          {attendanceStatus[student._id] === 'present' && session.status === 'active' && (
-                            <span className="text-xs text-green-600 font-medium">
-                              Currently in classroom
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => toggleAttendance(student._id)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium ${
-                          attendanceStatus[student._id] === 'present'
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-red-100 text-red-800 hover:bg-red-200'
-                        }`}
-                      >
-                        {attendanceStatus[student._id] === 'present' ? <CheckIcon className="w-5 h-5" title="Present" /> : <XMarkIcon className="w-5 h-5" title="Absent" />}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {activeTab === 'video' && (
-              <VideoRoom sessionId={sessionId} isTeacher={true} session={session} />
-            )}
-            {activeTab === 'whiteboard' && (
-              <Whiteboard sessionId={sessionId} />
-            )}
-            {activeTab === 'discussion' && (
-              <div className="p-4">
-                <h2 className="text-lg font-semibold">Discussion Room</h2>
-                <p className="text-gray-500">Coming soon...</p>
-              </div>
-            )}
-            {activeTab === 'exercise' && (
-              <div className="p-4">
-                <h2 className="text-lg font-semibold">Exercise Room</h2>
-                <p className="text-gray-500">Coming soon...</p>
-              </div>
-            )}
-          </div>
-        </div>
+        </Layout>
       </div>
-    </Layout>
+    </div>
   );
 };
 

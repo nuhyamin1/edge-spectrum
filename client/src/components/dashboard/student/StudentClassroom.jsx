@@ -7,6 +7,7 @@ import io from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
+import { FaArrowLeft, FaHome } from 'react-icons/fa';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -220,53 +221,66 @@ const StudentClassroom = () => {
   }
 
   return (
-    <Layout userType="student">
-      <div className="flex flex-col flex-grow overflow-hidden">
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab('attendance')}
-              className={`${
-                activeTab === 'attendance'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-            >
-              Attendance Room
-            </button>
-            <button
-              onClick={() => setActiveTab('video')}
-              className={`${
-                activeTab === 'video'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-            >
-              Video Room
-            </button>
-            <button
-              onClick={() => setActiveTab('whiteboard')}
-              className={`${
-                activeTab === 'whiteboard'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-            >
-              Whiteboard
-            </button>
-            <button
-              onClick={() => setActiveTab('discussion')}
-              className={`${
-                activeTab === 'discussion'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-            >
-              Discussion Room
-            </button>
-          </nav>
+    <div className="min-h-screen bg-gray-100">
+      <div className="flex flex-col h-screen">
+        {/* Navigation bar with home button */}
+        <div className="bg-white shadow-sm p-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-colors duration-200 group relative"
+            title="Back to Dashboard"
+          >
+            <FaHome className="w-5 h-5" />
+            {/* Tooltip */}
+            <span className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              Back to Dashboard
+            </span>
+          </button>
         </div>
+
+        {/* Tabs navigation */}
+        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <button
+            onClick={() => setActiveTab('attendance')}
+            className={`${
+              activeTab === 'attendance'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+          >
+            Attendance Room
+          </button>
+          <button
+            onClick={() => setActiveTab('video')}
+            className={`${
+              activeTab === 'video'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+          >
+            Video Room
+          </button>
+          <button
+            onClick={() => setActiveTab('whiteboard')}
+            className={`${
+              activeTab === 'whiteboard'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+          >
+            Whiteboard
+          </button>
+          <button
+            onClick={() => setActiveTab('discussion')}
+            className={`${
+              activeTab === 'discussion'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+          >
+            Discussion Room
+          </button>
+        </nav>
 
         {/* Tab content */}
         <div className="flex-grow overflow-y-auto">
@@ -294,7 +308,7 @@ const StudentClassroom = () => {
           )}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 
