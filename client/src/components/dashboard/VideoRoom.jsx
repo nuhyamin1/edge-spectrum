@@ -4,6 +4,7 @@ import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
 import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
+import io from 'socket.io-client';
 
 const config = {
   mode: "rtc",
@@ -157,6 +158,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   
   const qualityStats = useQualityMonitor(client);
   const [showWhiteboard, setShowWhiteboard] = useState(false);
+  const socketRef = useRef(null);
 
   const toggleAudio = async () => {
     if (tracks && tracks[0]) {
@@ -367,6 +369,48 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     };
   }, [screenTrack]);
 
+  // Add useEffect for socket connection and event handling
+  useEffect(() => {
+    // Initialize socket connection if not already connected
+    if (!socketRef.current) {
+      const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+        withCredentials: true,
+      });
+      socketRef.current = socket;
+
+      // Join the whiteboard room
+      socket.emit('joinWhiteboard', { sessionId });
+
+      // Listen for whiteboard visibility changes from other users
+      socket.on('whiteboardVisibilityChanged', (data) => {
+        if (data.isVisible) {
+          setShowWhiteboard(true);
+        }
+      });
+    }
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [sessionId]);
+
+  // Modify the whiteboard toggle function
+  const handleWhiteboardToggle = () => {
+    const newVisibility = !showWhiteboard;
+    setShowWhiteboard(newVisibility);
+    
+    // Only emit the event when opening the whiteboard
+    if (newVisibility) {
+      socketRef.current.emit('toggleWhiteboard', {
+        sessionId,
+        isVisible: true
+      });
+    }
+  };
+
   const QualityMonitor = ({ stats }) => {
     if (!stats || Object.keys(stats).length === 0) return null;
 
@@ -442,15 +486,22 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       
       {/* Whiteboard Overlay */}
       {showWhiteboard && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 p-4">
-          <div className="relative h-full">
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+          <div className="relative h-full max-w-6xl mx-auto">
             <button
               onClick={() => setShowWhiteboard(false)}
-              className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 z-10"
+              className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 z-10 transition-colors duration-200"
             >
               <FaTimesCircle size={24} />
             </button>
-            <Whiteboard sessionId={sessionId} />
+            <div className="h-full p-4">
+              <Whiteboard 
+                sessionId={sessionId} 
+                className="bg-opacity-50"
+                inVideoRoom={true}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -634,26 +685,30 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       <div className="fixed bottom-0 left-0 right-0 bg-black/50 p-4 flex justify-center space-x-4">
         <button
           onClick={toggleAudio}
-          className={`p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'}`}
+          className={`p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          title={isAudioMuted ? "Unmute Audio" : "Mute Audio"}
         >
           {isAudioMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
         </button>
         <button
           onClick={toggleVideo}
-          className={`p-3 rounded-full ${isVideoMuted ? 'bg-red-500' : 'bg-blue-500'}`}
+          className={`p-3 rounded-full ${isVideoMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          title={isVideoMuted ? "Turn On Video" : "Turn Off Video"}
         >
           {isVideoMuted ? <FaVideoSlash /> : <FaVideo />}
         </button>
         <button
           onClick={toggleScreenShare}
-          className={`p-3 rounded-full ${isScreenSharing ? 'bg-green-500' : 'bg-blue-500'}`}
+          className={`p-3 rounded-full ${isScreenSharing ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
           disabled={!ready}
+          title="Share Screen"
         >
           <FaDesktop />
         </button>
         <button
-          onClick={() => setShowWhiteboard(!showWhiteboard)}
-          className={`p-3 rounded-full ${showWhiteboard ? 'bg-green-500' : 'bg-blue-500'}`}
+          onClick={handleWhiteboardToggle}
+          className={`p-3 rounded-full ${showWhiteboard ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          title={showWhiteboard ? "Hide Whiteboard" : "Show Whiteboard"}
         >
           <FaEdit />
         </button>
