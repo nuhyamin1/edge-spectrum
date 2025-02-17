@@ -337,7 +337,7 @@ A modern virtual learning platform that connects teachers and students through i
     - Shared color and brush size selection
 
 Next Steps:
-- Add hand raise functionality
+- Add hand raise functionality (planned)
 - Add record audio functionality
 - Add breakout room functionality
 

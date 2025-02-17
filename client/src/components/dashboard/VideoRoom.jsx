@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 
@@ -556,9 +556,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       )}
 
       {/* Video grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 h-full">
+      <div className="grid grid-cols-12 gap-4 p-4 h-full">
         {/* Left Column - Teacher and Session Info */}
-        <div className="flex flex-col space-y-4">
+        <div className="col-span-5 flex flex-col space-y-4">
           {/* Teacher Video */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             {isTeacher && start && tracks ? (
@@ -641,7 +641,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
 
         {/* Right Column - Student Videos */}
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="col-span-7 bg-white rounded-lg shadow-md p-4">
           <h3 className="text-lg font-semibold mb-4">Participants ({studentUsers.length})</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {!isTeacher && start && tracks && (
@@ -682,7 +682,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-0 left-0 right-0 bg-black/50 p-4 flex justify-center space-x-4">
+
+      {/* Control bar */}
+      <div className="fixed bottom-0 left-12 right-0 bg-black/50 p-4 flex justify-center space-x-4">
         <button
           onClick={toggleAudio}
           className={`p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}

@@ -7,7 +7,7 @@ import io from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
-import { FaArrowLeft, FaHome } from 'react-icons/fa';
+import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments } from 'react-icons/fa';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -221,67 +221,74 @@ const StudentClassroom = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="flex flex-col h-screen">
-        {/* Navigation bar with home button */}
-        <div className="bg-white shadow-sm p-4">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg transition-colors duration-200 group relative"
-            title="Back to Dashboard"
-          >
-            <FaHome className="w-5 h-5" />
-            {/* Tooltip */}
-            <span className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-              Back to Dashboard
-            </span>
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <div className="w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8">
+        {/* Home Button */}
+        <button 
+          onClick={() => navigate('/dashboard')}
+          className="text-gray-400 hover:text-white p-2 rounded-lg transition-colors duration-200"
+          title="Back to Dashboard"
+        >
+          <FaHome size={24} />
+        </button>
 
-        {/* Tabs navigation */}
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          <button
-            onClick={() => setActiveTab('attendance')}
-            className={`${
-              activeTab === 'attendance'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-          >
-            Attendance Room
-          </button>
-          <button
-            onClick={() => setActiveTab('video')}
-            className={`${
-              activeTab === 'video'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-          >
-            Video Room
-          </button>
-          <button
-            onClick={() => setActiveTab('whiteboard')}
-            className={`${
-              activeTab === 'whiteboard'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-          >
-            Whiteboard
-          </button>
-          <button
-            onClick={() => setActiveTab('discussion')}
-            className={`${
-              activeTab === 'discussion'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-            } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-          >
-            Discussion Room
-          </button>
-        </nav>
+        {/* Divider */}
+        <div className="w-8 border-t border-gray-700"></div>
 
+        {/* Tab Icons */}
+        <button 
+          onClick={() => setActiveTab('attendance')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'attendance' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Attendance Room"
+        >
+          <FaUserCheck size={24} />
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('video')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'video' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Video Room"
+        >
+          <FaVideo size={24} />
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('whiteboard')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'whiteboard' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Whiteboard"
+        >
+          <FaChalkboard size={24} />
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('discussion')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'discussion' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Discussion Room"
+          disabled={true}
+        >
+          <FaComments size={24} />
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
         {/* Tab content */}
         <div className="flex-grow overflow-y-auto">
           {activeTab === 'attendance' && (
