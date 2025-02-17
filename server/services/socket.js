@@ -98,6 +98,46 @@ module.exports = {
                 console.log(`Broadcasting hand raise status (${raised}) for user ${userId} in room ${room}`);
             });
 
+            // Breakout room event handlers
+            socket.on('createBreakoutRooms', (data) => {
+                const { sessionId, rooms } = data;
+                io.to(`session_${sessionId}`).emit('breakoutRoomsCreated', rooms);
+                console.log(`Created breakout rooms for session ${sessionId}:`, rooms);
+            });
+
+            socket.on('joinBreakoutRoom', (data) => {
+                const { sessionId, roomId, userId, userName } = data;
+                const breakoutRoom = `breakout_${sessionId}_${roomId}`;
+                socket.join(breakoutRoom);
+                io.to(breakoutRoom).emit('userJoinedBreakoutRoom', { userId, userName });
+                console.log(`User ${userName} joined breakout room ${breakoutRoom}`);
+            });
+
+            socket.on('leaveBreakoutRoom', (data) => {
+                const { sessionId, roomId, userId, userName } = data;
+                const breakoutRoom = `breakout_${sessionId}_${roomId}`;
+                socket.leave(breakoutRoom);
+                io.to(breakoutRoom).emit('userLeftBreakoutRoom', { userId, userName });
+                console.log(`User ${userName} left breakout room ${breakoutRoom}`);
+            });
+
+            socket.on('broadcastToBreakoutRooms', (data) => {
+                const { sessionId, message } = data;
+                const rooms = io.sockets.adapter.rooms;
+                for (const [roomName, room] of rooms.entries()) {
+                    if (roomName.startsWith(`breakout_${sessionId}_`)) {
+                        io.to(roomName).emit('breakoutRoomBroadcast', { message });
+                    }
+                }
+                console.log(`Broadcast message to all breakout rooms in session ${sessionId}`);
+            });
+
+            socket.on('endBreakoutRooms', (data) => {
+                const { sessionId } = data;
+                io.to(`session_${sessionId}`).emit('breakoutRoomsEnded');
+                console.log(`Ended all breakout rooms for session ${sessionId}`);
+            });
+
             socket.on('disconnect', () => {
                 console.log('Client disconnected:', socket.id);
             });

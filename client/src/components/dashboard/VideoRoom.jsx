@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
+import './VideoRoom.css';
 
 const config = {
   mode: "rtc",
@@ -142,6 +143,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [videoPosition, setVideoPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [isVideoExpanded, setIsVideoExpanded] = useState(false);
+  const [breakoutRooms, setBreakoutRooms] = useState([]);
+  const [currentBreakoutRoom, setCurrentBreakoutRoom] = useState(null);
+  const [breakoutMessage, setBreakoutMessage] = useState('');
   const dragStartPos = useRef({ x: 0, y: 0 });
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
@@ -404,14 +408,34 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           return newSet;
         });
       });
-    }
 
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-    };
+      // Breakout room event listeners
+      socket.on('breakoutRoomsCreated', (rooms) => {
+        setBreakoutRooms(rooms);
+      });
+
+      socket.on('userJoinedBreakoutRoom', ({ userId, userName }) => {
+        console.log(`${userName} joined the breakout room`);
+      });
+
+      socket.on('userLeftBreakoutRoom', ({ userId, userName }) => {
+        console.log(`${userName} left the breakout room`);
+      });
+
+      socket.on('breakoutRoomBroadcast', ({ message }) => {
+        setBreakoutMessage(message);
+        // Show message in a toast or notification
+        setTimeout(() => setBreakoutMessage(''), 5000);
+      });
+
+      socket.on('breakoutRoomsEnded', () => {
+        if (currentBreakoutRoom) {
+          leaveBreakoutRoom();
+        }
+        setBreakoutRooms([]);
+        setCurrentBreakoutRoom(null);
+      });
+    }
   }, [sessionId]);
 
   // Add useEffect for handling hand raise events
@@ -431,7 +455,84 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   }, []);
 
-  // Modify the whiteboard toggle function
+  const createBreakoutRooms = (numberOfRooms) => {
+    if (!isTeacher) return;
+    
+    const rooms = Array.from({ length: numberOfRooms }, (_, index) => ({
+      id: `room-${index + 1}`,
+      name: `Room ${index + 1}`,
+      participants: []
+    }));
+
+    socketRef.current.emit('createBreakoutRooms', {
+      sessionId,
+      rooms
+    });
+  };
+
+  const joinBreakoutRoom = async (roomId) => {
+    if (currentBreakoutRoom) {
+      await leaveBreakoutRoom();
+    }
+
+    // Leave the main channel
+    await client.leave();
+
+    // Join the breakout room channel
+    const breakoutChannelName = `${sessionId}_breakout_${roomId}`;
+    await client.join(config.appId, breakoutChannelName, null, user.id);
+
+    if (tracks) {
+      await client.publish(tracks);
+    }
+
+    setCurrentBreakoutRoom(roomId);
+    socketRef.current.emit('joinBreakoutRoom', {
+      sessionId,
+      roomId,
+      userId: user.id,
+      userName: user.name
+    });
+  };
+
+  const leaveBreakoutRoom = async () => {
+    if (!currentBreakoutRoom) return;
+
+    // Leave the breakout room channel
+    await client.leave();
+
+    // Rejoin the main channel
+    await client.join(config.appId, sessionId, null, user.id);
+
+    if (tracks) {
+      await client.publish(tracks);
+    }
+
+    socketRef.current.emit('leaveBreakoutRoom', {
+      sessionId,
+      roomId: currentBreakoutRoom,
+      userId: user.id,
+      userName: user.name
+    });
+
+    setCurrentBreakoutRoom(null);
+  };
+
+  const broadcastToBreakoutRooms = (message) => {
+    if (!isTeacher) return;
+    socketRef.current.emit('broadcastToBreakoutRooms', {
+      sessionId,
+      message
+    });
+  };
+
+  const endBreakoutRooms = () => {
+    if (!isTeacher) return;
+    socketRef.current.emit('endBreakoutRooms', {
+      sessionId
+    });
+  };
+
   const handleWhiteboardToggle = () => {
     const newVisibility = !showWhiteboard;
     setShowWhiteboard(newVisibility);
@@ -823,6 +924,72 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           <FaHandPaper className={isHandRaised ? 'animate-pulse' : ''} />
         </button>
       </div>
+
+      {/* Breakout Room Controls */}
+      {isTeacher && (
+        <div className="breakout-controls">
+          <button
+            onClick={() => createBreakoutRooms(4)}
+            className="control-button"
+            title="Create Breakout Rooms"
+          >
+            <FaUsers />
+          </button>
+          {breakoutRooms.length > 0 && (
+            <>
+              <input
+                type="text"
+                value={breakoutMessage}
+                onChange={(e) => setBreakoutMessage(e.target.value)}
+                placeholder="Broadcast message..."
+                className="broadcast-input"
+              />
+              <button
+                onClick={() => broadcastToBreakoutRooms(breakoutMessage)}
+                className="control-button"
+                title="Broadcast to Rooms"
+              >
+                <FaComments />
+              </button>
+              <button
+                onClick={endBreakoutRooms}
+                className="control-button"
+                title="End Breakout Rooms"
+              >
+                <FaTimesCircle />
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Breakout Room List */}
+      {breakoutRooms.length > 0 && !isTeacher && (
+        <div className="breakout-rooms-list">
+          <h3>Breakout Rooms</h3>
+          {breakoutRooms.map((room) => (
+            <button
+              key={room.id}
+              onClick={() => joinBreakoutRoom(room.id)}
+              className={`room-button ${currentBreakoutRoom === room.id ? 'active' : ''}`}
+            >
+              {room.name}
+            </button>
+          ))}
+          {currentBreakoutRoom && (
+            <button onClick={leaveBreakoutRoom} className="leave-room-button">
+              Return to Main Room
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Broadcast Message Display */}
+      {breakoutMessage && (
+        <div className="broadcast-message">
+          <p>{breakoutMessage}</p>
+        </div>
+      )}
     </div>
   );
 };
