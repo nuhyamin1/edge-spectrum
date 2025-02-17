@@ -182,3 +182,18 @@
   90% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -20px); }
 }
+
+/* Recording button styles */
+.control-button.active {
+  background-color: #dc2626;
+  color: white;
+}
+
+.control-button.active:hover {
+  background-color: #b91c1c;
+}
+
+.control-button svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -129,6 +129,58 @@ const useQualityMonitor = (client) => {
   return stats;
 };
 
+// Custom hook for recording
+const useRecording = () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+
+  const startRecording = async (stream) => {
+    try {
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        a.style = 'display: none';
+        a.href = url;
+        a.download = `recording-${new Date().toISOString()}.webm`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        chunksRef.current = [];
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  return {
+    isRecording,
+    startRecording,
+    stopRecording
+  };
+};
+
 const useClient = createClient(config);
 const useMicrophoneAndCameraTracks = createMicrophoneAndCameraTracks();
 
@@ -165,6 +217,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   } = useScreenShare(client, user.id);
   
   const qualityStats = useQualityMonitor(client);
+  const { isRecording, startRecording, stopRecording } = useRecording();
+  const recordingStreamRef = useRef(null);
   const [showWhiteboard, setShowWhiteboard] = useState(false);
   const socketRef = useRef(null);
   const [isHandRaised, setIsHandRaised] = useState(false);
@@ -633,6 +687,53 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   }, [isRoomListDragging]);
 
+  const handleRecording = async () => {
+    if (!isRecording) {
+      try {
+        const tracks = [];
+        
+        // Add local tracks if they exist
+        if (client.localTracks) {
+          const videoTrack = client.localTracks[1]; // camera track
+          const audioTrack = client.localTracks[0]; // microphone track
+          
+          if (videoTrack) {
+            tracks.push(videoTrack.getMediaStreamTrack());
+          }
+          if (audioTrack) {
+            tracks.push(audioTrack.getMediaStreamTrack());
+          }
+        }
+
+        // Add remote users' tracks
+        users.forEach(user => {
+          if (user.videoTrack) {
+            tracks.push(user.videoTrack.getMediaStreamTrack());
+          }
+          if (user.audioTrack) {
+            tracks.push(user.audioTrack.getMediaStreamTrack());
+          }
+        });
+
+        if (tracks.length === 0) {
+          console.error('No tracks available for recording');
+          return;
+        }
+
+        // Create a combined MediaStream
+        const combinedStream = new MediaStream(tracks);
+        recordingStreamRef.current = combinedStream;
+        await startRecording(combinedStream);
+        
+        console.log('Recording started with', tracks.length, 'tracks');
+      } catch (error) {
+        console.error('Error in handleRecording:', error);
+      }
+    } else {
+      stopRecording();
+    }
+  };
+
   const QualityMonitor = ({ stats }) => {
     if (!stats || Object.keys(stats).length === 0) return null;
 
@@ -974,6 +1075,13 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           title={isHandRaised ? "Lower Hand" : "Raise Hand"}
         >
           <FaHandPaper className={isHandRaised ? 'animate-pulse' : ''} />
+        </button>
+        <button 
+          onClick={handleRecording} 
+          className={`p-3 rounded-full ${isRecording ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          title={isRecording ? 'Stop Recording' : 'Start Recording'}
+        >
+          {isRecording ? <FaStop /> : <FaCircle style={{ color: '#ff0000' }} />}
         </button>
       </div>
 

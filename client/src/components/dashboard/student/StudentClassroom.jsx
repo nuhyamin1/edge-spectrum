@@ -289,6 +289,17 @@ const StudentClassroom = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="bg-white shadow-md p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-xl font-semibold">
+                {session?.title || 'Loading...'}
+              </h1>
+            </div>
+          </div>
+        </div>
+
         {/* Tab content */}
         <div className="flex-grow overflow-y-auto">
           {activeTab === 'attendance' && (
