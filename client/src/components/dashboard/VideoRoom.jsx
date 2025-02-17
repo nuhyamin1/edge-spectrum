@@ -411,6 +411,28 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
+  const toggleFullscreen = (elementId) => {
+    const element = document.getElementById(elementId);
+    
+    if (!document.fullscreenElement) {
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  };
+
   const QualityMonitor = ({ stats }) => {
     if (!stats || Object.keys(stats).length === 0) return null;
 
@@ -562,7 +584,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           {/* Teacher Video */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             {isTeacher && start && tracks ? (
-              <div className="relative aspect-video">
+              <div className="relative aspect-video" id="teacher-video">
                 <div className="absolute inset-0">
                   <AgoraVideoPlayer
                     videoTrack={tracks[1]}
@@ -572,9 +594,15 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
                   {user.name} (Teacher)
                 </div>
+                <button
+                  onClick={() => toggleFullscreen('teacher-video')}
+                  className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75 transition-opacity"
+                >
+                  <FaExpand size={16} />
+                </button>
               </div>
             ) : teacherUser?.videoTrack ? (
-              <div className="relative aspect-video">
+              <div className="relative aspect-video" id="teacher-video">
                 <div className="absolute inset-0">
                   <AgoraVideoPlayer
                     videoTrack={teacherUser.videoTrack}
@@ -584,6 +612,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
                   Teacher
                 </div>
+                <button
+                  onClick={() => toggleFullscreen('teacher-video')}
+                  className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75 transition-opacity"
+                >
+                  <FaExpand size={16} />
+                </button>
               </div>
             ) : (
               <div className="aspect-video flex items-center justify-center bg-gray-100">
@@ -662,9 +696,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 const displayName = remoteUser.uid.includes('_') 
                   ? remoteUser.uid.split('_')[0] 
                   : `Student ${remoteUser.uid}`;
+                const videoId = `student-video-${remoteUser.uid}`;
 
                 return (
-                  <div key={remoteUser.uid} className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden">
+                  <div key={remoteUser.uid} className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden" id={videoId}>
                     <div className="absolute inset-0">
                       <AgoraVideoPlayer
                         videoTrack={remoteUser.videoTrack}
@@ -674,6 +709,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
                       {displayName}
                     </div>
+                    <button
+                      onClick={() => toggleFullscreen(videoId)}
+                      className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75 transition-opacity"
+                    >
+                      <FaExpand size={16} />
+                    </button>
                   </div>
                 );
               }
