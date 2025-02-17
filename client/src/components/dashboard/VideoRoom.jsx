@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks, createScreenVideoTrack } from 'agora-rtc-react';
+import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
 import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress } from 'react-icons/fa';
@@ -8,6 +8,122 @@ const config = {
   mode: "rtc",
   codec: "vp8",
   appId: "47900e7641694ee59eefb1b7a2b4cff7"
+};
+
+// Custom hook for screen sharing
+const useScreenShare = (client, userId) => {
+  const [screenTrack, setScreenTrack] = useState(null);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [error, setError] = useState(null);
+  const [previousVideoTrack, setPreviousVideoTrack] = useState(null);
+
+  const startScreenShare = async () => {
+    try {
+      // Store and unpublish the current video track if it exists
+      const localTracks = client.localTracks;
+      const videoTrack = localTracks.find(track => track.trackMediaType === "video");
+      
+      if (videoTrack) {
+        setPreviousVideoTrack(videoTrack);
+        await client.unpublish(videoTrack);
+      }
+
+      // Create screen sharing track
+      const screenVideoTrack = await AgoraRTC.createScreenVideoTrack({
+        encoderConfig: {
+          width: 1920,
+          height: 1080,
+          frameRate: 30,
+          bitrateMin: 500,
+          bitrateMax: 1000,
+        },
+        optimizationMode: "detail",
+        screenSourceType: "screen"
+      });
+
+      // Set up screen sharing ended event
+      screenVideoTrack.on("track-ended", async () => {
+        await stopScreenShare();
+      });
+
+      await client.publish(screenVideoTrack);
+      setScreenTrack(screenVideoTrack);
+      setIsScreenSharing(true);
+
+    } catch (error) {
+      setError(error.message);
+      console.error("Screen sharing failed:", error);
+      
+      // If screen sharing fails, republish the previous video track
+      if (previousVideoTrack) {
+        try {
+          await client.publish(previousVideoTrack);
+          setPreviousVideoTrack(null);
+        } catch (e) {
+          console.error("Failed to restore camera track:", e);
+        }
+      }
+    }
+  };
+
+  const stopScreenShare = async () => {
+    try {
+      if (screenTrack) {
+        screenTrack.close();
+        await client.unpublish(screenTrack);
+        setScreenTrack(null);
+        setIsScreenSharing(false);
+
+        // Republish the previous video track if it exists
+        if (previousVideoTrack) {
+          await client.publish(previousVideoTrack);
+          setPreviousVideoTrack(null);
+        }
+      }
+    } catch (error) {
+      setError(error.message);
+      console.error("Error stopping screen share:", error);
+    }
+  };
+
+  return {
+    screenTrack,
+    isScreenSharing,
+    error,
+    startScreenShare,
+    stopScreenShare
+  };
+};
+
+// Quality monitoring hook
+const useQualityMonitor = (client) => {
+  const [stats, setStats] = useState({});
+
+  useEffect(() => {
+    let interval;
+    if (client) {
+      interval = setInterval(async () => {
+        try {
+          const networkQuality = client.getRemoteNetworkQuality();
+          const connection = client.getLocalVideoStats();
+          
+          setStats({
+            networkType: navigator.connection?.type || 'unknown',
+            networkQuality: networkQuality,
+            sendBitrate: connection.sendBitrate,
+            sendFrameRate: connection.sendFrameRate,
+            sendResolution: `${connection.sendResolutionWidth}x${connection.sendResolutionHeight}`,
+            lastMileDelay: connection.delay || 0
+          });
+        } catch (error) {
+          console.error("Error getting stats:", error);
+        }
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [client]);
+
+  return stats;
 };
 
 const useClient = createClient(config);
@@ -19,9 +135,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [error, setError] = useState(null);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [screenTrack, setScreenTrack] = useState(null);
-  const [screenClient, setScreenClient] = useState(null);
   const [remoteScreenTrack, setRemoteScreenTrack] = useState(null);
   const [remoteScreenUser, setRemoteScreenUser] = useState(null);
   const [videoPosition, setVideoPosition] = useState({ x: 20, y: 20 });
@@ -31,6 +144,17 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
   const { user } = useAuth();
+  
+  // Use our custom hooks
+  const { 
+    screenTrack, 
+    isScreenSharing, 
+    error: screenShareError, 
+    startScreenShare, 
+    stopScreenShare 
+  } = useScreenShare(client, user.id);
+  
+  const qualityStats = useQualityMonitor(client);
 
   const toggleAudio = async () => {
     if (tracks && tracks[0]) {
@@ -47,87 +171,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   };
 
   const toggleScreenShare = async () => {
-    try {
-      if (!isScreenSharing) {
-        // Create a new client for screen sharing
-        const newScreenClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-        
-        // Join channel with screen sharing client
-        await newScreenClient.join(
-          config.appId,
-          sessionId,
-          null,
-          `${user.id}_screen` // Use a unique identifier for screen sharing
-        );
-        
-        // Create screen sharing track
-        const screenVideoTrack = await AgoraRTC.createScreenVideoTrack({
-          encoderConfig: "1080p_1",
-          optimizationMode: "detail",
-        });
-
-        // Publish screen track using the screen sharing client
-        await newScreenClient.publish(screenVideoTrack);
-        
-        setScreenClient(newScreenClient);
-        setScreenTrack(screenVideoTrack);
-        setIsScreenSharing(true);
-
-        // Handle screen sharing stop event
-        screenVideoTrack.on("track-ended", async () => {
-          await stopScreenSharing();
-        });
-
-        // Set up event handlers for the screen sharing client
-        newScreenClient.on("user-published", async (user, mediaType) => {
-          await newScreenClient.subscribe(user, mediaType);
-          if (mediaType === "video") {
-            setRemoteScreenTrack(user.videoTrack);
-            setRemoteScreenUser(user);
-          }
-        });
-
-        newScreenClient.on("user-unpublished", (user) => {
-          if (remoteScreenUser && user.uid === remoteScreenUser.uid) {
-            setRemoteScreenTrack(null);
-            setRemoteScreenUser(null);
-          }
-        });
-      } else {
-        await stopScreenSharing();
-      }
-    } catch (error) {
-      console.error("Error toggling screen share:", error);
-      setError("Failed to toggle screen sharing");
-      setIsScreenSharing(false);
-      if (screenTrack) {
-        screenTrack.close();
-        setScreenTrack(null);
-      }
-      if (screenClient) {
-        await screenClient.leave();
-        setScreenClient(null);
-      }
-    }
-  };
-
-  const stopScreenSharing = async () => {
-    try {
-      if (screenClient && screenTrack) {
-        // Unpublish and close screen track
-        await screenClient.unpublish(screenTrack);
-        screenTrack.close();
-        
-        // Leave the channel with screen client
-        await screenClient.leave();
-        
-        setScreenTrack(null);
-        setScreenClient(null);
-        setIsScreenSharing(false);
-      }
-    } catch (error) {
-      console.error("Error stopping screen share:", error);
-      setError("Failed to stop screen sharing");
+    if (!isScreenSharing) {
+      await startScreenShare();
+    } else {
+      await stopScreenShare();
     }
   };
 
@@ -263,7 +310,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         client.on("user-left", handleUserLeft);
 
         // Generate a unique ID for the user
-        const uid = isTeacher ? 'teacher' : `${user.name}_${Math.floor(Math.random() * 1000000)}`;
+        const uid = isTeacher ? 'teacher' : `${user.id}_${Math.floor(Math.random() * 1000000)}`;
 
         // Join channel with the unique ID
         await client.join(config.appId, sessionId, null, uid);
@@ -312,14 +359,51 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
   useEffect(() => {
     return () => {
-      if (screenClient && screenTrack) {
-        screenClient.unpublish(screenTrack).then(() => {
-          screenTrack.close();
-          screenClient.leave();
-        }).catch(console.error);
+      if (screenTrack) {
+        screenTrack.close();
       }
     };
-  }, [screenClient, screenTrack]);
+  }, [screenTrack]);
+
+  const QualityMonitor = ({ stats }) => {
+    if (!stats || Object.keys(stats).length === 0) return null;
+
+    const getNetworkQualityText = (quality) => {
+      switch(quality) {
+        case 1: return 'Excellent';
+        case 2: return 'Good';
+        case 3: return 'Poor';
+        case 4: return 'Bad';
+        case 5: return 'Very Bad';
+        default: return 'Unknown';
+      }
+    };
+
+    return (
+      <div className="fixed bottom-4 right-4 bg-black/50 text-white p-4 rounded-lg text-sm">
+        <h3 className="font-bold mb-2">Network Stats</h3>
+        <div className="space-y-1">
+          <p>Network: {stats.networkType}</p>
+          <p>Quality: {getNetworkQualityText(stats.networkQuality)}</p>
+          <p>Latency: {stats.lastMileDelay}ms</p>
+          <p>Send Bitrate: {(stats.sendBitrate / 1024).toFixed(1)} Mbps</p>
+          <p>Frame Rate: {stats.sendFrameRate} fps</p>
+          <p>Resolution: {stats.sendResolution}</p>
+        </div>
+      </div>
+    );
+  };
+
+  const ErrorDisplay = ({ error }) => {
+    if (!error) return null;
+
+    return (
+      <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg">
+        <p className="font-bold">Error</p>
+        <p>{error}</p>
+      </div>
+    );
+  };
 
   if (error) {
     return (
@@ -347,14 +431,20 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const studentUsers = users.filter(u => u.uid !== 'teacher');
 
   return (
-    <div className="h-full w-full bg-gray-100 p-4">
+    <div className="relative w-full h-full bg-gray-900">
+      {/* Error display */}
+      <ErrorDisplay error={error || screenShareError} />
+      
+      {/* Quality monitor */}
+      <QualityMonitor stats={qualityStats} />
+      
       {/* Screen Share Display with Floating Video */}
       {(isScreenSharing || remoteScreenTrack) && (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-50 p-4">
           <div className="relative h-full">
             {isScreenSharing && (
               <button
-                onClick={stopScreenSharing}
+                onClick={stopScreenShare}
                 className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 z-10"
               >
                 <FaTimesCircle size={24} />
@@ -397,7 +487,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+      {/* Video grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 h-full">
         {/* Left Column - Teacher and Session Info */}
         <div className="flex flex-col space-y-4">
           {/* Teacher Video */}
@@ -523,38 +614,25 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-4 right-4 flex space-x-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-black/50 p-4 flex justify-center space-x-4">
         <button
-          className="bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200"
           onClick={toggleAudio}
+          className={`p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'}`}
         >
-          {isAudioMuted ? (
-            <FaMicrophoneSlash size={20} color="#666" />
-          ) : (
-            <FaMicrophone size={20} color="#666" />
-          )}
+          {isAudioMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
         </button>
         <button
-          className="bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200"
           onClick={toggleVideo}
+          className={`p-3 rounded-full ${isVideoMuted ? 'bg-red-500' : 'bg-blue-500'}`}
         >
-          {isVideoMuted ? (
-            <FaVideoSlash size={20} color="#666" />
-          ) : (
-            <FaVideo size={20} color="#666" />
-          )}
+          {isVideoMuted ? <FaVideoSlash /> : <FaVideo />}
         </button>
         <button
-          className={`bg-gray-100 p-2 rounded-lg shadow-md hover:bg-gray-200 ${
-            isScreenSharing ? 'bg-blue-100' : ''
-          }`}
           onClick={toggleScreenShare}
+          className={`p-3 rounded-full ${isScreenSharing ? 'bg-green-500' : 'bg-blue-500'}`}
+          disabled={!ready}
         >
-          {isScreenSharing ? (
-            <FaTimesCircle size={20} color="#666" />
-          ) : (
-            <FaDesktop size={20} color="#666" />
-          )}
+          <FaDesktop />
         </button>
       </div>
     </div>
