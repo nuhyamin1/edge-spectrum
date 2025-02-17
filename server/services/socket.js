@@ -57,6 +57,30 @@ module.exports = {
                 console.log(`Socket ${socket.id} joined room session_${sessionId}`);
             });
 
+            // Whiteboard event handlers
+            socket.on('joinWhiteboard', (data) => {
+                const { sessionId } = data;
+                const whiteboardRoom = `whiteboard_${sessionId}`;
+                socket.join(whiteboardRoom);
+                console.log(`Socket ${socket.id} joined whiteboard room ${whiteboardRoom}`);
+            });
+
+            socket.on('drawing', (data) => {
+                const { sessionId } = data;
+                const whiteboardRoom = `whiteboard_${sessionId}`;
+                // Broadcast the drawing event to all clients in the same whiteboard room except the sender
+                socket.to(whiteboardRoom).emit('drawing', data);
+                console.log(`Broadcasting drawing event in room ${whiteboardRoom}`);
+            });
+
+            socket.on('clearWhiteboard', (data) => {
+                const { sessionId } = data;
+                const whiteboardRoom = `whiteboard_${sessionId}`;
+                // Broadcast the clear event to all clients in the same whiteboard room
+                io.to(whiteboardRoom).emit('clearWhiteboard');
+                console.log(`Broadcasting clear whiteboard in room ${whiteboardRoom}`);
+            });
+
             socket.on('disconnect', () => {
                 console.log('Client disconnected:', socket.id);
             });

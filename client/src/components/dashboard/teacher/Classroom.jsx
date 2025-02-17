@@ -7,6 +7,7 @@ import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { io } from 'socket.io-client';
 import VideoRoom from '../VideoRoom';
+import Whiteboard from '../Whiteboard';
 
 const Classroom = () => {
   const { sessionId } = useParams();
@@ -348,6 +349,16 @@ const Classroom = () => {
                 Video Room
               </button>
               <button
+                onClick={() => setActiveTab('whiteboard')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'whiteboard'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Whiteboard
+              </button>
+              <button
                 onClick={() => setActiveTab('discussion')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'discussion'
@@ -438,6 +449,9 @@ const Classroom = () => {
             )}
             {activeTab === 'video' && (
               <VideoRoom sessionId={sessionId} isTeacher={true} session={session} />
+            )}
+            {activeTab === 'whiteboard' && (
+              <Whiteboard sessionId={sessionId} />
             )}
             {activeTab === 'discussion' && (
               <div className="p-4">

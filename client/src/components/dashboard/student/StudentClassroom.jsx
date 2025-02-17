@@ -6,6 +6,7 @@ import Layout from '../Layout';
 import io from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
 import VideoRoom from '../VideoRoom';
+import Whiteboard from '../Whiteboard';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -245,6 +246,16 @@ const StudentClassroom = () => {
               Video Room
             </button>
             <button
+              onClick={() => setActiveTab('whiteboard')}
+              className={`${
+                activeTab === 'whiteboard'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
+            >
+              Whiteboard
+            </button>
+            <button
               onClick={() => setActiveTab('discussion')}
               className={`${
                 activeTab === 'discussion'
@@ -253,16 +264,6 @@ const StudentClassroom = () => {
               } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
             >
               Discussion Room
-            </button>
-            <button
-              onClick={() => setActiveTab('exercise')}
-              className={`${
-                activeTab === 'exercise'
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              } whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium`}
-            >
-              Exercise Room
             </button>
           </nav>
         </div>
@@ -282,15 +283,12 @@ const StudentClassroom = () => {
           {activeTab === 'video' && (
             <VideoRoom sessionId={sessionId} isTeacher={false} session={session} />
           )}
+          {activeTab === 'whiteboard' && (
+            <Whiteboard sessionId={sessionId} />
+          )}
           {activeTab === 'discussion' && (
             <div className="p-4">
               <h2 className="text-lg font-semibold">Discussion Room</h2>
-              <p className="text-gray-500">Coming soon...</p>
-            </div>
-          )}
-          {activeTab === 'exercise' && (
-            <div className="p-4">
-              <h2 className="text-lg font-semibold">Exercise Room</h2>
               <p className="text-gray-500">Coming soon...</p>
             </div>
           )}

@@ -314,7 +314,7 @@ A modern virtual learning platform that connects teachers and students through i
 - Added video disabled functionality
 - Added screen sharing functionality (half working)
 Next Steps:
-- Add whiteboard functionality
+- Add whiteboard functionality (planned)
 - Add hand raise functionality
 - Add record audio functionality
 - Add breakout room functionality
