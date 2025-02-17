@@ -316,7 +316,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         client.on("user-left", handleUserLeft);
 
         // Generate a unique ID for the user
-        const uid = isTeacher ? 'teacher' : `${user.id}_${Math.floor(Math.random() * 1000000)}`;
+        const uid = isTeacher ? 'teacher' : `${user.name}___${user.id}_${Math.floor(Math.random() * 1000000)}`;
 
         // Join channel with the unique ID
         await client.join(config.appId, sessionId, null, uid);
@@ -740,12 +740,14 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             )}
             {studentUsers.map((remoteUser) => {
               if (remoteUser.videoTrack) {
-                const displayName = remoteUser.uid.includes('_') 
-                  ? remoteUser.uid.split('_')[0] 
+                const displayName = remoteUser.uid.includes('___') 
+                  ? remoteUser.uid.split('___')[0] 
                   : `Student ${remoteUser.uid}`;
                 const videoId = `student-video-${remoteUser.uid}`;
 
-                const userId = remoteUser.uid.split('_')[0];
+                const userId = remoteUser.uid.includes('___')
+                  ? remoteUser.uid.split('___')[1].split('_')[0] 
+                  : remoteUser.uid;
                 const hasRaisedHand = raisedHands.has(userId);
 
                 return (
