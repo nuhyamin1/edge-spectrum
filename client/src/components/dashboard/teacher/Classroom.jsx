@@ -8,7 +8,7 @@ import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { io } from 'socket.io-client';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
-import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook } from 'react-icons/fa';
+import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaPlayCircle, FaTimesCircle } from 'react-icons/fa';
 
 const Classroom = () => {
   const { sessionId } = useParams();
@@ -292,7 +292,7 @@ const Classroom = () => {
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8">
-        {/* Home Button */}
+        {/* Top Section */}
         <button 
           onClick={() => navigate('/dashboard')}
           className="text-gray-400 hover:text-white p-2 rounded-lg transition-colors duration-200"
@@ -366,46 +366,35 @@ const Classroom = () => {
         >
           <FaBook size={24} />
         </button>
+
+        {/* Bottom Section with Session Control */}
+        <div className="mt-auto">
+          <div className="w-8 border-t border-gray-700 mb-4"></div>
+          {session.status === 'scheduled' && (
+            <button
+              onClick={handleStartSession}
+              className="text-green-500 hover:text-green-400 p-2 rounded-lg transition-colors duration-200"
+              title="Start Session"
+            >
+              <FaPlayCircle size={24} />
+            </button>
+          )}
+          {session.status === 'active' && (
+            <button
+              onClick={handleEndSession}
+              className="text-red-500 hover:text-red-400 p-2 rounded-lg transition-colors duration-200"
+              title="End Session"
+            >
+              <FaTimesCircle size={24} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1">
         <Layout userType="teacher">
           <div className="space-y-6">
-            {/* Header Section */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold text-gray-800">{session.title}</h2>
-                  <div className="flex items-center space-x-4">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      session.status === 'scheduled' ? 'bg-yellow-100 text-yellow-800' :
-                      session.status === 'active' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                    </span>
-                    {session.status === 'scheduled' && (
-                      <button
-                        onClick={handleStartSession}
-                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                      >
-                        Start Session
-                      </button>
-                    )}
-                    {session.status === 'active' && (
-                      <button
-                        onClick={handleEndSession}
-                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                      >
-                        End Session
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Tab Content */}
             <div className="p-6">
               {activeTab === 'attendance' && (
