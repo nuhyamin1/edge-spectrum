@@ -47,19 +47,65 @@
 
 .breakout-rooms-list {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  left: 0;
+  top: 0;
   background-color: rgba(0, 0, 0, 0.8);
-  padding: 15px;
   border-radius: 8px;
   z-index: 1000;
-  min-width: 200px;
+  width: 240px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  user-select: none;
 }
 
-.breakout-rooms-list h3 {
-  margin: 0 0 10px 0;
+.breakout-rooms-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  background-color: rgba(44, 44, 44, 0.9);
+  border-radius: 8px 8px 0 0;
+  cursor: move;
+}
+
+.drag-handle {
+  margin-right: 10px;
+  color: #666;
+}
+
+.breakout-rooms-header h3 {
+  margin: 0;
   font-size: 16px;
   color: white;
+  flex-grow: 1;
+}
+
+.collapse-button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.collapse-button:hover {
+  color: white;
+}
+
+.breakout-rooms-content {
+  padding: 15px;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.breakout-rooms-list.collapsed .breakout-rooms-content {
+  max-height: 0;
+  padding: 0 15px;
+  overflow: hidden;
+  opacity: 0;
 }
 
 .room-button {
@@ -110,6 +156,24 @@
   border-radius: 4px;
   z-index: 1000;
   animation: fadeInOut 5s forwards;
+}
+
+/* Custom scrollbar for the breakout rooms content */
+.breakout-rooms-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.breakout-rooms-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.breakout-rooms-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.breakout-rooms-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 @keyframes fadeInOut {

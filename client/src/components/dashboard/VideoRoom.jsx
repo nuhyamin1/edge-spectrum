@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -146,6 +146,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [breakoutRooms, setBreakoutRooms] = useState([]);
   const [currentBreakoutRoom, setCurrentBreakoutRoom] = useState(null);
   const [breakoutMessage, setBreakoutMessage] = useState('');
+  const [isRoomListCollapsed, setIsRoomListCollapsed] = useState(false);
+  const [roomListPosition, setRoomListPosition] = useState({ x: window.innerWidth - 240, y: 20 });
+  const [isRoomListDragging, setIsRoomListDragging] = useState(false);
+  const roomListDragStart = useRef({ x: 0, y: 0 });
   const dragStartPos = useRef({ x: 0, y: 0 });
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
@@ -581,6 +585,54 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
+  const handleRoomListDragStart = (e) => {
+    if (e.target.closest('.room-button') || e.target.closest('.leave-room-button')) {
+      return; // Don't start dragging if clicking buttons
+    }
+    setIsRoomListDragging(true);
+    const touch = e.type === 'touchstart' ? e.touches[0] : e;
+    roomListDragStart.current = {
+      x: touch.clientX - roomListPosition.x,
+      y: touch.clientY - roomListPosition.y
+    };
+  };
+
+  const handleRoomListDrag = (e) => {
+    if (!isRoomListDragging) return;
+    e.preventDefault();
+    const touch = e.type === 'touchmove' ? e.touches[0] : e;
+    
+    // Calculate new position
+    let newX = touch.clientX - roomListDragStart.current.x;
+    let newY = touch.clientY - roomListDragStart.current.y;
+    
+    // Keep within window bounds
+    newX = Math.max(0, Math.min(window.innerWidth - 240, newX));
+    newY = Math.max(0, Math.min(window.innerHeight - 300, newY));
+    
+    setRoomListPosition({ x: newX, y: newY });
+  };
+
+  const handleRoomListDragEnd = () => {
+    setIsRoomListDragging(false);
+  };
+
+  useEffect(() => {
+    if (isRoomListDragging) {
+      window.addEventListener('mousemove', handleRoomListDrag);
+      window.addEventListener('mouseup', handleRoomListDragEnd);
+      window.addEventListener('touchmove', handleRoomListDrag);
+      window.addEventListener('touchend', handleRoomListDragEnd);
+
+      return () => {
+        window.removeEventListener('mousemove', handleRoomListDrag);
+        window.removeEventListener('mouseup', handleRoomListDragEnd);
+        window.removeEventListener('touchmove', handleRoomListDrag);
+        window.removeEventListener('touchend', handleRoomListDragEnd);
+      };
+    }
+  }, [isRoomListDragging]);
+
   const QualityMonitor = ({ stats }) => {
     if (!stats || Object.keys(stats).length === 0) return null;
 
@@ -965,22 +1017,44 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
       {/* Breakout Room List */}
       {breakoutRooms.length > 0 && !isTeacher && (
-        <div className="breakout-rooms-list">
-          <h3>Breakout Rooms</h3>
-          {breakoutRooms.map((room) => (
+        <div 
+          className={`breakout-rooms-list ${isRoomListCollapsed ? 'collapsed' : ''}`}
+          style={{ 
+            transform: `translate(${roomListPosition.x}px, ${roomListPosition.y}px)`,
+            transition: isRoomListDragging ? 'none' : 'transform 0.3s ease'
+          }}
+        >
+          <div 
+            className="breakout-rooms-header"
+            onMouseDown={handleRoomListDragStart}
+            onTouchStart={handleRoomListDragStart}
+          >
+            <FaGripVertical className="drag-handle" />
+            <h3>Breakout Rooms</h3>
             <button
-              key={room.id}
-              onClick={() => joinBreakoutRoom(room.id)}
-              className={`room-button ${currentBreakoutRoom === room.id ? 'active' : ''}`}
+              className="collapse-button"
+              onClick={() => setIsRoomListCollapsed(!isRoomListCollapsed)}
             >
-              {room.name}
+              {isRoomListCollapsed ? <FaChevronUp /> : <FaChevronDown />}
             </button>
-          ))}
-          {currentBreakoutRoom && (
-            <button onClick={leaveBreakoutRoom} className="leave-room-button">
-              Return to Main Room
-            </button>
-          )}
+          </div>
+          
+          <div className="breakout-rooms-content">
+            {breakoutRooms.map((room) => (
+              <button
+                key={room.id}
+                onClick={() => joinBreakoutRoom(room.id)}
+                className={`room-button ${currentBreakoutRoom === room.id ? 'active' : ''}`}
+              >
+                {room.name}
+              </button>
+            ))}
+            {currentBreakoutRoom && (
+              <button onClick={leaveBreakoutRoom} className="leave-room-button">
+                Return to Main Room
+              </button>
+            )}
+          </div>
         </div>
       )}
 
