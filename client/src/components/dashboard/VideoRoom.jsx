@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit } from 'react-icons/fa';
+import Whiteboard from './Whiteboard';
 
 const config = {
   mode: "rtc",
@@ -155,6 +156,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   } = useScreenShare(client, user.id);
   
   const qualityStats = useQualityMonitor(client);
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
 
   const toggleAudio = async () => {
     if (tracks && tracks[0]) {
@@ -438,6 +440,21 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       {/* Quality monitor */}
       <QualityMonitor stats={qualityStats} />
       
+      {/* Whiteboard Overlay */}
+      {showWhiteboard && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 p-4">
+          <div className="relative h-full">
+            <button
+              onClick={() => setShowWhiteboard(false)}
+              className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 z-10"
+            >
+              <FaTimesCircle size={24} />
+            </button>
+            <Whiteboard sessionId={sessionId} />
+          </div>
+        </div>
+      )}
+      
       {/* Screen Share Display with Floating Video */}
       {(isScreenSharing || remoteScreenTrack) && (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-50 p-4">
@@ -633,6 +650,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           disabled={!ready}
         >
           <FaDesktop />
+        </button>
+        <button
+          onClick={() => setShowWhiteboard(!showWhiteboard)}
+          className={`p-3 rounded-full ${showWhiteboard ? 'bg-green-500' : 'bg-blue-500'}`}
+        >
+          <FaEdit />
         </button>
       </div>
     </div>
