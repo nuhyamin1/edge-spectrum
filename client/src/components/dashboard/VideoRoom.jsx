@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 
@@ -159,6 +159,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const qualityStats = useQualityMonitor(client);
   const [showWhiteboard, setShowWhiteboard] = useState(false);
   const socketRef = useRef(null);
+  const [isHandRaised, setIsHandRaised] = useState(false);
+  const [raisedHands, setRaisedHands] = useState(new Set());
 
   const toggleAudio = async () => {
     if (tracks && tracks[0]) {
@@ -378,14 +380,29 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       });
       socketRef.current = socket;
 
-      // Join the whiteboard room
+      // Join both the whiteboard and session rooms
       socket.emit('joinWhiteboard', { sessionId });
+      socket.emit('join', { sessionId });
 
       // Listen for whiteboard visibility changes from other users
       socket.on('whiteboardVisibilityChanged', (data) => {
         if (data.isVisible) {
           setShowWhiteboard(true);
         }
+      });
+
+      // Listen for hand raise events
+      socket.on('handRaised', ({ userId, raised }) => {
+        console.log('Hand raise event received:', { userId, raised });
+        setRaisedHands(prev => {
+          const newSet = new Set(prev);
+          if (raised) {
+            newSet.add(userId);
+          } else {
+            newSet.delete(userId);
+          }
+          return newSet;
+        });
       });
     }
 
@@ -396,6 +413,23 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       }
     };
   }, [sessionId]);
+
+  // Add useEffect for handling hand raise events
+  useEffect(() => {
+    if (socketRef.current) {
+      socketRef.current.on('handRaised', ({ userId, raised }) => {
+        setRaisedHands(prev => {
+          const newSet = new Set(prev);
+          if (raised) {
+            newSet.add(userId);
+          } else {
+            newSet.delete(userId);
+          }
+          return newSet;
+        });
+      });
+    }
+  }, []);
 
   // Modify the whiteboard toggle function
   const handleWhiteboardToggle = () => {
@@ -430,6 +464,19 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
       }
+    }
+  };
+
+  const toggleHandRaise = () => {
+    const newState = !isHandRaised;
+    setIsHandRaised(newState);
+    
+    if (socketRef.current) {
+      socketRef.current.emit('toggleHand', {
+        sessionId,
+        userId: user.id,
+        raised: newState
+      });
     }
   };
 
@@ -698,6 +745,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                   : `Student ${remoteUser.uid}`;
                 const videoId = `student-video-${remoteUser.uid}`;
 
+                const userId = remoteUser.uid.split('_')[0];
+                const hasRaisedHand = raisedHands.has(userId);
+
                 return (
                   <div key={remoteUser.uid} className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden" id={videoId}>
                     <div className="absolute inset-0">
@@ -715,6 +765,14 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     >
                       <FaExpand size={16} />
                     </button>
+                    
+                    {/* Add hand raise indicator */}
+                    {hasRaisedHand && (
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-white px-3 py-1.5 rounded-full flex items-center space-x-1 animate-pulse">
+                        <FaHandPaper className="inline" />
+                        <span>Hand Raised</span>
+                      </div>
+                    )}
                   </div>
                 );
               }
@@ -754,6 +812,13 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           title={showWhiteboard ? "Hide Whiteboard" : "Show Whiteboard"}
         >
           <FaEdit />
+        </button>
+        <button
+          onClick={toggleHandRaise}
+          className={`p-3 rounded-full ${isHandRaised ? 'bg-yellow-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          title={isHandRaised ? "Lower Hand" : "Raise Hand"}
+        >
+          <FaHandPaper className={isHandRaised ? 'animate-pulse' : ''} />
         </button>
       </div>
     </div>

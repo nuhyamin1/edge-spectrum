@@ -89,6 +89,15 @@ module.exports = {
                 console.log(`Broadcasting whiteboard visibility change (${isVisible}) in room ${whiteboardRoom}`);
             });
 
+            // Add hand raise event handler
+            socket.on('toggleHand', (data) => {
+                const { sessionId, userId, raised } = data;
+                const room = `session_${sessionId}`;
+                // Broadcast the hand raise status to all clients in the session except the sender
+                socket.to(room).emit('handRaised', { userId, raised });
+                console.log(`Broadcasting hand raise status (${raised}) for user ${userId} in room ${room}`);
+            });
+
             socket.on('disconnect', () => {
                 console.log('Client disconnected:', socket.id);
             });
