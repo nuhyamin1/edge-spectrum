@@ -80,6 +80,9 @@ const useScreenShare = (client, userId) => {
         // Republish the previous video track if it exists
         if (previousVideoTrack) {
           await client.publish(previousVideoTrack);
+          if (previousVideoTrack.restart) {
+            previousVideoTrack.restart();
+          }
           setPreviousVideoTrack(null);
         }
       }
