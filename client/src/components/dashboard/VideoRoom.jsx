@@ -458,19 +458,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       isTeacher
     });
 
-    // Debug socket connection
-    socket.on('connect', () => {
-      console.log('Socket connected:', socket.id);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected');
-    });
-
-    socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-    });
-
     // Event listeners
     socket.on('teacher-feedback', (data) => {
       console.log('Received feedback:', data);
@@ -490,6 +477,15 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       });
     });
 
+    // Whiteboard event listeners
+    socket.on('whiteboardVisibilityChanged', ({ isVisible }) => {
+      console.log('Whiteboard visibility changed:', isVisible);
+      setShowWhiteboard(isVisible);
+      if (isVisible) {
+        socket.emit('joinWhiteboard', { sessionId });
+      }
+    });
+
     // Breakout room event listeners
     socket.on('breakoutRoomsCreated', (rooms) => {
       console.log('Breakout rooms created:', rooms);
@@ -505,11 +501,14 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     });
 
     socket.on('breakoutRoomBroadcast', ({ message }) => {
+      console.log('Received broadcast message:', message);
       setBreakoutMessage(message);
+      // Show message for 5 seconds
       setTimeout(() => setBreakoutMessage(''), 5000);
     });
 
     socket.on('breakoutRoomsEnded', () => {
+      console.log('Breakout rooms ended');
       if (currentBreakoutRoom) {
         leaveBreakoutRoom();
       }
@@ -522,6 +521,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         // Remove all listeners
         socket.off('teacher-feedback');
         socket.off('handRaised');
+        socket.off('whiteboardVisibilityChanged');
         socket.off('breakoutRoomsCreated');
         socket.off('userJoinedBreakoutRoom');
         socket.off('userLeftBreakoutRoom');
@@ -530,7 +530,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         socket.disconnect();
       }
     };
-  }, [sessionId, user.id, user.name, isTeacher, currentBreakoutRoom]);
+  }, [sessionId, user.id, user.name, isTeacher]);
 
   const handleFeedback = (message) => {
     console.log('Sending feedback:', message);
@@ -562,63 +562,78 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   };
 
   const joinBreakoutRoom = async (roomId) => {
-    if (currentBreakoutRoom) {
-      await leaveBreakoutRoom();
+    try {
+      if (currentBreakoutRoom) {
+        await leaveBreakoutRoom();
+      }
+
+      // Leave the main channel
+      await client.leave();
+
+      // Join the breakout room channel
+      const breakoutChannelName = `${sessionId}_breakout_${roomId}`;
+      await client.join(config.appId, breakoutChannelName, null, user.id);
+
+      if (tracks) {
+        await client.publish(tracks);
+      }
+
+      setCurrentBreakoutRoom(roomId);
+      socketRef.current.emit('joinBreakoutRoom', {
+        sessionId,
+        roomId,
+        userId: user.id,
+        userName: user.name
+      });
+
+      console.log(`Joined breakout room: ${roomId}`);
+    } catch (error) {
+      console.error('Error joining breakout room:', error);
+      setError('Failed to join breakout room');
     }
-
-    // Leave the main channel
-    await client.leave();
-
-    // Join the breakout room channel
-    const breakoutChannelName = `${sessionId}_breakout_${roomId}`;
-    await client.join(config.appId, breakoutChannelName, null, user.id);
-
-    if (tracks) {
-      await client.publish(tracks);
-    }
-
-    setCurrentBreakoutRoom(roomId);
-    socketRef.current.emit('joinBreakoutRoom', {
-      sessionId,
-      roomId,
-      userId: user.id,
-      userName: user.name
-    });
   };
 
   const leaveBreakoutRoom = async () => {
-    if (!currentBreakoutRoom) return;
+    try {
+      if (!currentBreakoutRoom) return;
 
-    // Leave the breakout room channel
-    await client.leave();
+      // Leave the breakout room channel
+      await client.leave();
 
-    // Rejoin the main channel
-    await client.join(config.appId, sessionId, null, user.id);
+      // Rejoin the main channel
+      await client.join(config.appId, sessionId, null, user.id);
 
-    if (tracks) {
-      await client.publish(tracks);
+      if (tracks) {
+        await client.publish(tracks);
+      }
+
+      socketRef.current.emit('leaveBreakoutRoom', {
+        sessionId,
+        roomId: currentBreakoutRoom,
+        userId: user.id,
+        userName: user.name
+      });
+
+      setCurrentBreakoutRoom(null);
+      console.log('Left breakout room');
+    } catch (error) {
+      console.error('Error leaving breakout room:', error);
+      setError('Failed to leave breakout room');
     }
-
-    socketRef.current.emit('leaveBreakoutRoom', {
-      sessionId,
-      roomId: currentBreakoutRoom,
-      userId: user.id,
-      userName: user.name
-    });
-
-    setCurrentBreakoutRoom(null);
   };
 
   const broadcastToBreakoutRooms = (message) => {
-    if (!isTeacher) return;
+    if (!isTeacher || !message.trim()) return;
+    console.log('Broadcasting message to breakout rooms:', message);
     socketRef.current.emit('broadcastToBreakoutRooms', {
       sessionId,
-      message
+      message: message.trim()
     });
   };
 
   const endBreakoutRooms = () => {
     if (!isTeacher) return;
+    console.log('Ending all breakout rooms');
     socketRef.current.emit('endBreakoutRooms', {
       sessionId
     });
@@ -628,14 +643,39 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     const newVisibility = !showWhiteboard;
     setShowWhiteboard(newVisibility);
     
-    // Only emit the event when opening the whiteboard
-    if (newVisibility) {
+    if (socketRef.current) {
+      // Emit whiteboard visibility change to all users
       socketRef.current.emit('toggleWhiteboard', {
         sessionId,
-        isVisible: true
+        isVisible: newVisibility
       });
+
+      // Join whiteboard room when opening
+      if (newVisibility) {
+        socketRef.current.emit('joinWhiteboard', {
+          sessionId
+        });
+      }
     }
   };
+
+  useEffect(() => {
+    if (socketRef.current) {
+      socketRef.current.on('whiteboardVisibilityChanged', ({ isVisible }) => {
+        console.log('Whiteboard visibility changed:', isVisible);
+        setShowWhiteboard(isVisible);
+        
+        // Join whiteboard room when it becomes visible
+        if (isVisible) {
+          socketRef.current.emit('joinWhiteboard', { sessionId });
+        }
+      });
+
+      return () => {
+        socketRef.current.off('whiteboardVisibilityChanged');
+      };
+    }
+  }, [sessionId, socketRef]);
 
   const toggleFullscreen = (elementId) => {
     const element = document.getElementById(elementId);
