@@ -37,6 +37,14 @@ const commentSchema = new mongoose.Schema({
   }
 });
 
+const linkPreviewSchema = new mongoose.Schema({
+  url: String,
+  title: String,
+  description: String,
+  image: String,
+  siteName: String
+});
+
 const postSchema = new mongoose.Schema({
   sessionId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -58,6 +66,7 @@ const postSchema = new mongoose.Schema({
     ref: 'User'
   }],
   comments: [commentSchema],
+  linkPreview: linkPreviewSchema,
   createdAt: {
     type: Date,
     default: Date.now

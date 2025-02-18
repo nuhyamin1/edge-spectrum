@@ -609,10 +609,13 @@ const Post = ({
           </div>
         </div>
       ) : (
-        <div 
-          className="text-gray-800 prose max-w-none"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <div>
+          <div 
+            className="text-gray-800 prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+          {post.linkPreview && <LinkPreview preview={post.linkPreview} />}
+        </div>
       )}
 
       <div className="flex items-center space-x-4 text-sm">
@@ -896,6 +899,42 @@ const Reply = ({
         </div>
       </div>
     </div>
+  );
+};
+
+const LinkPreview = ({ preview }) => {
+  if (!preview) return null;
+
+  return (
+    <a 
+      href={preview.url} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="block mt-3 border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+    >
+      <div className="flex">
+        {preview.image && (
+          <div className="w-1/3 max-w-[200px]">
+            <img 
+              src={preview.image} 
+              alt={preview.title || 'Link preview'} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+        <div className="p-4 flex-1">
+          {preview.siteName && (
+            <p className="text-sm text-gray-500 mb-1">{preview.siteName}</p>
+          )}
+          {preview.title && (
+            <h3 className="font-medium text-gray-900 mb-1">{preview.title}</h3>
+          )}
+          {preview.description && (
+            <p className="text-sm text-gray-600 line-clamp-2">{preview.description}</p>
+          )}
+        </div>
+      </div>
+    </a>
   );
 };
 

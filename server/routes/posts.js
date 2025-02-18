@@ -3,16 +3,21 @@ const router = express.Router();
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
 const discussionSocket = require('../services/discussionSocket');
+const { getFirstLinkPreview } = require('../utils/linkPreview');
 
 // Create a post
 router.post('/', auth, async (req, res) => {
   try {
     const { content, sessionId } = req.body;
     
+    // Get link preview if content contains a URL
+    const linkPreview = await getFirstLinkPreview(content);
+
     const post = new Post({
       content: content.trim(),
       author: req.user.id,
-      sessionId
+      sessionId,
+      linkPreview
     });
 
     await post.save();
