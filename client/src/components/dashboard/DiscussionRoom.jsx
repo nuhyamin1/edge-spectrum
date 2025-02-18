@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const DiscussionRoom = ({ sessionId }) => {
   const [posts, setPosts] = useState([]);
@@ -186,6 +186,85 @@ const DiscussionRoom = ({ sessionId }) => {
     }
   };
 
+  // Edit post
+  const handleEditPost = async (postId, content) => {
+    try {
+      const response = await axios.patch(`/api/posts/${postId}`, { content });
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post._id === postId ? { ...post, content: response.data.content } : post
+        )
+      );
+      toast.success('Post updated successfully');
+    } catch (error) {
+      console.error('Error editing post:', error);
+      toast.error('Failed to update post');
+    }
+  };
+
+  // Edit comment
+  const handleEditComment = async (postId, commentId, content) => {
+    try {
+      const response = await axios.patch(`/api/posts/${postId}/comments/${commentId}`, { content });
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: post.comments.map(comment =>
+                comment._id === commentId 
+                  ? { ...comment, content: response.data.content }
+                  : comment
+              )
+            };
+          }
+          return post;
+        })
+      );
+      toast.success('Comment updated successfully');
+    } catch (error) {
+      console.error('Error editing comment:', error);
+      toast.error('Failed to update comment');
+    }
+  };
+
+  // Edit reply
+  const handleEditReply = async (postId, commentId, replyId, content) => {
+    try {
+      const response = await axios.patch(
+        `/api/posts/${postId}/comments/${commentId}/replies/${replyId}`,
+        { content }
+      );
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: post.comments.map(comment => {
+                if (comment._id === commentId) {
+                  return {
+                    ...comment,
+                    replies: comment.replies.map(reply =>
+                      reply._id === replyId
+                        ? { ...reply, content: response.data.content }
+                        : reply
+                    )
+                  };
+                }
+                return comment;
+              })
+            };
+          }
+          return post;
+        })
+      );
+      toast.success('Reply updated successfully');
+    } catch (error) {
+      console.error('Error editing reply:', error);
+      toast.error('Failed to update reply');
+    }
+  };
+
   if (loading) {
     return <div>Loading discussion...</div>;
   }
@@ -223,6 +302,9 @@ const DiscussionRoom = ({ sessionId }) => {
             onToggleCommentLike={handleToggleCommentLike}
             onDeletePost={handleDeletePost}
             onDeleteComment={handleDeleteComment}
+            onEditPost={handleEditPost}
+            onEditComment={handleEditComment}
+            onEditReply={handleEditReply}
           />
         ))}
       </div>
@@ -239,10 +321,15 @@ const Post = ({
   onAddReply, 
   onToggleCommentLike,
   onDeletePost,
-  onDeleteComment 
+  onDeleteComment,
+  onEditPost,
+  onEditComment,
+  onEditReply
 }) => {
-  const [comment, setComment] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
   const [showComments, setShowComments] = useState(false);
+  const [comment, setComment] = useState('');
 
   const handleSubmitComment = (e) => {
     e.preventDefault();
@@ -250,6 +337,15 @@ const Post = ({
     
     onAddComment(post._id, comment);
     setComment('');
+  };
+
+  const handleSubmitEdit = () => {
+    if (editContent.trim() === post.content) {
+      setIsEditing(false);
+      return;
+    }
+    onEditPost(post._id, editContent);
+    setIsEditing(false);
   };
 
   const isLiked = post.likes.includes(currentUser.id);
@@ -269,7 +365,6 @@ const Post = ({
 
   return (
     <div className="bg-white rounded-lg shadow p-4 space-y-4">
-      {/* Post Header */}
       <div className="flex justify-between items-start">
         <div className="flex items-center space-x-3">
           {renderProfilePicture(post.author)}
@@ -281,20 +376,59 @@ const Post = ({
           </div>
         </div>
         {post.author._id === currentUser.id && (
-          <button
-            onClick={() => onDeletePost(post._id)}
-            className="text-gray-400 hover:text-red-500"
-            title="Delete post"
-          >
-            <TrashIcon className="w-5 h-5" />
-          </button>
+          <div className="flex space-x-2">
+            {!isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-gray-400 hover:text-blue-500"
+                title="Edit post"
+              >
+                <PencilIcon className="w-5 h-5" />
+              </button>
+            )}
+            <button
+              onClick={() => onDeletePost(post._id)}
+              className="text-gray-400 hover:text-red-500"
+              title="Delete post"
+            >
+              <TrashIcon className="w-5 h-5" />
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Post Content */}
-      <p className="text-gray-800">{post.content}</p>
+      {isEditing ? (
+        <div>
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="w-full p-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
+            rows="3"
+          />
+          <div className="flex justify-end space-x-2 mt-2">
+            <button
+              onClick={handleSubmitEdit}
+              className="text-green-500 hover:text-green-600"
+              title="Save changes"
+            >
+              <CheckIcon className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setEditContent(post.content);
+              }}
+              className="text-red-500 hover:text-red-600"
+              title="Cancel"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-gray-800">{post.content}</p>
+      )}
 
-      {/* Post Actions */}
       <div className="flex items-center space-x-4 text-sm">
         <button
           onClick={() => onToggleLike(post._id)}
@@ -327,6 +461,8 @@ const Post = ({
               onAddReply={onAddReply}
               onToggleLike={onToggleCommentLike}
               onDelete={onDeleteComment}
+              onEdit={onEditComment}
+              onEditReply={onEditReply}
               renderProfilePicture={renderProfilePicture}
             />
           ))}
@@ -354,12 +490,25 @@ const Comment = ({
   onAddReply, 
   onToggleLike, 
   onDelete,
+  onEdit,
+  onEditReply,
   renderProfilePicture 
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.content);
   const [reply, setReply] = useState('');
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   
+  const handleSubmitEdit = () => {
+    if (editContent.trim() === comment.content) {
+      setIsEditing(false);
+      return;
+    }
+    onEdit(postId, comment._id, editContent);
+    setIsEditing(false);
+  };
+
   const handleSubmitReply = (e) => {
     e.preventDefault();
     if (!reply.trim()) return;
@@ -378,20 +527,59 @@ const Comment = ({
         <div className="flex-1">
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="flex justify-between items-start">
-              <div>
-                <p className="font-medium text-sm">{comment.author.name}</p>
-                <p className="text-sm text-gray-800">{comment.content}</p>
-              </div>
-              {(comment.author._id === currentUser.id) && (
-                <button
-                  onClick={() => onDelete(postId, comment._id)}
-                  className="text-gray-400 hover:text-red-500"
-                  title="Delete comment"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
+              <p className="font-medium text-sm">{comment.author.name}</p>
+              {comment.author._id === currentUser.id && (
+                <div className="flex space-x-2">
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-gray-400 hover:text-blue-500"
+                      title="Edit comment"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onDelete(postId, comment._id)}
+                    className="text-gray-400 hover:text-red-500"
+                    title="Delete comment"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
+            {isEditing ? (
+              <div className="mt-2">
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full p-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
+                  rows="2"
+                />
+                <div className="flex justify-end space-x-2 mt-2">
+                  <button
+                    onClick={handleSubmitEdit}
+                    className="text-green-500 hover:text-green-600"
+                    title="Save changes"
+                  >
+                    <CheckIcon className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditContent(comment.content);
+                    }}
+                    className="text-red-500 hover:text-red-600"
+                    title="Cancel"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-800">{comment.content}</p>
+            )}
           </div>
           <div className="flex items-center space-x-4 mt-1 text-xs">
             <button
@@ -435,16 +623,92 @@ const Comment = ({
       {showReplies && comment.replies?.length > 0 && (
         <div className="pl-10 space-y-2">
           {comment.replies.map((reply, index) => (
-            <div key={index} className="flex space-x-3">
-              {renderProfilePicture(reply.author)}
-              <div className="flex-1 bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-sm">{reply.author.name}</p>
-                <p className="text-sm text-gray-800">{reply.content}</p>
-              </div>
-            </div>
+            <Reply
+              key={index}
+              reply={reply}
+              postId={postId}
+              commentId={comment._id}
+              currentUser={currentUser}
+              onEdit={onEditReply}
+              renderProfilePicture={renderProfilePicture}
+            />
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+const Reply = ({ 
+  reply, 
+  postId, 
+  commentId, 
+  currentUser, 
+  onEdit, 
+  renderProfilePicture 
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(reply.content);
+
+  const handleSubmitEdit = () => {
+    if (editContent.trim() === reply.content) {
+      setIsEditing(false);
+      return;
+    }
+    onEdit(postId, commentId, reply._id, editContent);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="flex space-x-3">
+      {renderProfilePicture(reply.author)}
+      <div className="flex-1">
+        <div className="bg-gray-50 rounded-lg p-3">
+          <div className="flex justify-between items-start">
+            <p className="font-medium text-sm">{reply.author.name}</p>
+            {reply.author._id === currentUser.id && !isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-gray-400 hover:text-blue-500"
+                title="Edit reply"
+              >
+                <PencilIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {isEditing ? (
+            <div className="mt-2">
+              <textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full p-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
+                rows="2"
+              />
+              <div className="flex justify-end space-x-2 mt-2">
+                <button
+                  onClick={handleSubmitEdit}
+                  className="text-green-500 hover:text-green-600"
+                  title="Save changes"
+                >
+                  <CheckIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditContent(reply.content);
+                  }}
+                  className="text-red-500 hover:text-red-600"
+                  title="Cancel"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-800">{reply.content}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

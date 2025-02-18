@@ -201,4 +201,91 @@ router.delete('/:postId/comments/:commentId', auth, async (req, res) => {
   }
 });
 
+// Edit a post
+router.patch('/:postId', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Check if user is the author of the post
+    if (post.author.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to edit this post' });
+    }
+
+    post.content = req.body.content.trim();
+    await post.save();
+    await post.populate('author', 'name email profilePicture');
+    
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating post' });
+  }
+});
+
+// Edit a comment
+router.patch('/:postId/comments/:commentId', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // Check if user is the author of the comment
+    if (comment.author.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to edit this comment' });
+    }
+
+    comment.content = req.body.content.trim();
+    await post.save();
+    await post.populate('comments.author', 'name email profilePicture');
+    
+    res.json(comment);
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating comment' });
+  }
+});
+
+// Edit a reply
+router.patch('/:postId/comments/:commentId/replies/:replyId', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    const reply = comment.replies.id(req.params.replyId);
+    if (!reply) {
+      return res.status(404).json({ error: 'Reply not found' });
+    }
+
+    // Check if user is the author of the reply
+    if (reply.author.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to edit this reply' });
+    }
+
+    reply.content = req.body.content.trim();
+    await post.save();
+    await post.populate('comments.replies.author', 'name email profilePicture');
+    
+    res.json(reply);
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating reply' });
+  }
+});
+
 module.exports = router; 
