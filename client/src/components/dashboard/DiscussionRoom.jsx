@@ -9,12 +9,14 @@ import { TrashIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './DiscussionRoom.css';
+import { io } from 'socket.io-client';
 
 const DiscussionRoom = ({ sessionId }) => {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [socket, setSocket] = useState(null);
 
   const modules = {
     toolbar: [
@@ -34,6 +36,54 @@ const DiscussionRoom = ({ sessionId }) => {
     'link', 'blockquote', 'code-block',
     'color', 'background'
   ];
+
+  useEffect(() => {
+    // Initialize socket connection
+    const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
+    setSocket(newSocket);
+
+    // Join discussion room
+    newSocket.emit('join-discussion', sessionId);
+
+    // Socket event listeners
+    newSocket.on('new-post', (post) => {
+      setPosts(prevPosts => [post, ...prevPosts]);
+    });
+
+    newSocket.on('delete-post', (postId) => {
+      setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+    });
+
+    newSocket.on('update-post', (updatedPost) => {
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post._id === updatedPost._id ? updatedPost : post
+        )
+      );
+    });
+
+    newSocket.on('new-comment', ({ postId, comment }) => {
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: [...post.comments, comment]
+            };
+          }
+          return post;
+        })
+      );
+    });
+
+    // ... add other socket event listeners ...
+
+    // Cleanup on unmount
+    return () => {
+      newSocket.emit('leave-discussion', sessionId);
+      newSocket.disconnect();
+    };
+  }, [sessionId]);
 
   // Fetch posts
   useEffect(() => {

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
+const discussionSocket = require('../services/discussionSocket');
 
 // Create a post
 router.post('/', auth, async (req, res) => {
@@ -15,9 +16,10 @@ router.post('/', auth, async (req, res) => {
     });
 
     await post.save();
-    
-    // Populate author details
     await post.populate('author', 'name email profilePicture');
+
+    // Emit socket event for new post
+    discussionSocket.emitNewPost(sessionId, post);
 
     res.status(201).json(post);
   } catch (error) {
@@ -161,12 +163,15 @@ router.delete('/:postId', auth, async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    // Check if user is the author of the post
     if (post.author.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Not authorized to delete this post' });
+      return res.status(403).json({ error: 'Not authorized' });
     }
 
     await post.deleteOne();
+    
+    // Emit socket event for deleted post
+    discussionSocket.emitDeletePost(post.sessionId, post._id);
+
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Error deleting post' });
