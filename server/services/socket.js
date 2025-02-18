@@ -154,6 +154,22 @@ module.exports = {
                 console.log(`Ended all breakout rooms for session ${sessionId}`);
             });
 
+            // Discussion room events
+            socket.on('newPost', (data) => {
+                const { sessionId } = data;
+                io.to(`session_${sessionId}`).emit('postCreated', data);
+            });
+
+            socket.on('newComment', (data) => {
+                const { sessionId } = data;
+                io.to(`session_${sessionId}`).emit('commentAdded', data);
+            });
+
+            socket.on('postLiked', (data) => {
+                const { sessionId } = data;
+                io.to(`session_${sessionId}`).emit('likeUpdated', data);
+            });
+
             socket.on('disconnect', () => {
                 console.log('Client disconnected:', socket.id);
             });

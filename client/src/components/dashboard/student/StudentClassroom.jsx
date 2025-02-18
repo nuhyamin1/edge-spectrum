@@ -7,6 +7,7 @@ import io from 'socket.io-client';
 import { useAuth } from '../../../context/AuthContext';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
+import DiscussionRoom from '../DiscussionRoom';
 import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments } from 'react-icons/fa';
 
 const StudentClassroom = () => {
@@ -281,7 +282,6 @@ const StudentClassroom = () => {
               : 'text-gray-400 hover:text-white'
           }`}
           title="Discussion Room"
-          disabled={true}
         >
           <FaComments size={24} />
         </button>
@@ -319,10 +319,7 @@ const StudentClassroom = () => {
             <Whiteboard sessionId={sessionId} />
           )}
           {activeTab === 'discussion' && (
-            <div className="p-4">
-              <h2 className="text-lg font-semibold">Discussion Room</h2>
-              <p className="text-gray-500">Coming soon...</p>
-            </div>
+            <DiscussionRoom sessionId={sessionId} />
           )}
         </div>
       </div>

@@ -1,0 +1,90 @@
+const express = require('express');
+const router = express.Router();
+const Post = require('../models/Post');
+const auth = require('../middleware/auth');
+
+// Create a post
+router.post('/', auth, async (req, res) => {
+  try {
+    const { content, sessionId } = req.body;
+    
+    const post = new Post({
+      content: content.trim(),
+      author: req.user.id,
+      sessionId
+    });
+
+    await post.save();
+    
+    // Populate author details
+    await post.populate('author', 'name email profilePicture');
+
+    res.status(201).json(post);
+  } catch (error) {
+    res.status(500).json({ error: 'Error creating post' });
+  }
+});
+
+// Get posts for a session
+router.get('/session/:sessionId', auth, async (req, res) => {
+  try {
+    const posts = await Post.find({ sessionId: req.params.sessionId })
+      .populate('author', 'name email profilePicture')
+      .populate('comments.author', 'name email profilePicture')
+      .sort({ createdAt: -1 });
+    
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching posts' });
+  }
+});
+
+// Add comment to post
+router.post('/:postId/comments', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    post.comments.push({
+      content: req.body.content.trim(),
+      author: req.user.id
+    });
+
+    await post.save();
+    await post.populate('comments.author', 'name email profilePicture');
+
+    res.json(post.comments[post.comments.length - 1]);
+  } catch (error) {
+    res.status(500).json({ error: 'Error adding comment' });
+  }
+});
+
+// Toggle like on post
+router.patch('/:postId/like', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const likeIndex = post.likes.indexOf(req.user.id);
+    
+    if (likeIndex === -1) {
+      post.likes.push(req.user.id);
+    } else {
+      post.likes.splice(likeIndex, 1);
+    }
+
+    await post.save();
+    
+    res.json({ likes: post.likes });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating like status' });
+  }
+});
+
+module.exports = router; 
