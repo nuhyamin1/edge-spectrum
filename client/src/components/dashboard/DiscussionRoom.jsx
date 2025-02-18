@@ -45,7 +45,13 @@ const DiscussionRoom = ({ sessionId }) => {
 
     // Socket event listeners
     newSocket.on('new-post', (post) => {
-      setPosts(prevPosts => [post, ...prevPosts]);
+      setPosts(prevPosts => {
+        // Check if post already exists
+        if (prevPosts.some(p => p._id === post._id)) {
+          return prevPosts;
+        }
+        return [post, ...prevPosts];
+      });
     });
 
     newSocket.on('delete-post', (postId) => {
@@ -64,6 +70,10 @@ const DiscussionRoom = ({ sessionId }) => {
       setPosts(prevPosts => 
         prevPosts.map(post => {
           if (post._id === postId) {
+            // Check if comment already exists
+            if (post.comments.some(c => c._id === comment._id)) {
+              return post;
+            }
             return {
               ...post,
               comments: [...post.comments, comment]
@@ -112,6 +122,10 @@ const DiscussionRoom = ({ sessionId }) => {
               ...post,
               comments: post.comments.map(comment => {
                 if (comment._id === commentId) {
+                  // Check if reply already exists
+                  if (comment.replies.some(r => r._id === reply._id)) {
+                    return comment;
+                  }
                   return {
                     ...comment,
                     replies: [...comment.replies, reply]
