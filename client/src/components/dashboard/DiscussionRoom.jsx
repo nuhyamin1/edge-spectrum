@@ -196,11 +196,10 @@ const DiscussionRoom = ({ sessionId }) => {
     if (!newPost.trim()) return;
 
     try {
-      const response = await axios.post('/api/posts', {
+      await axios.post('/api/posts', {
         content: newPost,
         sessionId
       });
-      setPosts(prevPosts => [response.data, ...prevPosts]);
       setNewPost('');
       toast.success('Post created successfully');
     } catch (error) {
@@ -212,17 +211,9 @@ const DiscussionRoom = ({ sessionId }) => {
   // Add comment
   const handleAddComment = async (postId, comment) => {
     try {
-      const response = await axios.post(`/api/posts/${postId}/comments`, {
+      await axios.post(`/api/posts/${postId}/comments`, {
         content: comment
       });
-
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
-          post._id === postId 
-            ? { ...post, comments: [...post.comments, response.data] }
-            : post
-        )
-      );
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
@@ -250,27 +241,9 @@ const DiscussionRoom = ({ sessionId }) => {
   // Add reply to comment
   const handleAddReply = async (postId, commentId, content) => {
     try {
-      const response = await axios.post(`/api/posts/${postId}/comments/${commentId}/replies`, {
+      await axios.post(`/api/posts/${postId}/comments/${commentId}/replies`, {
         content
       });
-
-      setPosts(prevPosts => 
-        prevPosts.map(post => {
-          if (post._id === postId) {
-            const updatedComments = post.comments.map(comment => {
-              if (comment._id === commentId) {
-                return {
-                  ...comment,
-                  replies: [...comment.replies, response.data]
-                };
-              }
-              return comment;
-            });
-            return { ...post, comments: updatedComments };
-          }
-          return post;
-        })
-      );
     } catch (error) {
       console.error('Error adding reply:', error);
       toast.error('Failed to add reply');
