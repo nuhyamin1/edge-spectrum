@@ -31,6 +31,7 @@ router.get('/session/:sessionId', auth, async (req, res) => {
     const posts = await Post.find({ sessionId: req.params.sessionId })
       .populate('author', 'name email profilePicture')
       .populate('comments.author', 'name email profilePicture')
+      .populate('comments.replies.author', 'name email profilePicture')
       .sort({ createdAt: -1 });
     
     res.json(posts);
@@ -84,6 +85,70 @@ router.patch('/:postId/like', auth, async (req, res) => {
     res.json({ likes: post.likes });
   } catch (error) {
     res.status(500).json({ error: 'Error updating like status' });
+  }
+});
+
+// Add reply to comment
+router.post('/:postId/comments/:commentId/replies', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    comment.replies.push({
+      content: req.body.content.trim(),
+      author: req.user.id
+    });
+
+    await post.save();
+    await post.populate([
+      {
+        path: 'comments.replies.author',
+        select: 'name email profilePicture'
+      }
+    ]);
+
+    const updatedComment = post.comments.id(req.params.commentId);
+    res.json(updatedComment.replies[updatedComment.replies.length - 1]);
+  } catch (error) {
+    res.status(500).json({ error: 'Error adding reply' });
+  }
+});
+
+// Toggle like on comment
+router.patch('/:postId/comments/:commentId/like', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    const likeIndex = comment.likes.indexOf(req.user.id);
+    
+    if (likeIndex === -1) {
+      comment.likes.push(req.user.id);
+    } else {
+      comment.likes.splice(likeIndex, 1);
+    }
+
+    await post.save();
+    
+    res.json({ likes: comment.likes });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating comment like status' });
   }
 });
 

@@ -88,6 +88,61 @@ const DiscussionRoom = ({ sessionId }) => {
     }
   };
 
+  // Add reply to comment
+  const handleAddReply = async (postId, commentId, content) => {
+    try {
+      const response = await axios.post(`/api/posts/${postId}/comments/${commentId}/replies`, {
+        content
+      });
+
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            const updatedComments = post.comments.map(comment => {
+              if (comment._id === commentId) {
+                return {
+                  ...comment,
+                  replies: [...comment.replies, response.data]
+                };
+              }
+              return comment;
+            });
+            return { ...post, comments: updatedComments };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error('Error adding reply:', error);
+      toast.error('Failed to add reply');
+    }
+  };
+
+  // Toggle like on comment
+  const handleToggleCommentLike = async (postId, commentId) => {
+    try {
+      const response = await axios.patch(`/api/posts/${postId}/comments/${commentId}/like`);
+      
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            const updatedComments = post.comments.map(comment => {
+              if (comment._id === commentId) {
+                return { ...comment, likes: response.data.likes };
+              }
+              return comment;
+            });
+            return { ...post, comments: updatedComments };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      toast.error('Failed to update comment like');
+    }
+  };
+
   if (loading) {
     return <div>Loading discussion...</div>;
   }
@@ -121,6 +176,8 @@ const DiscussionRoom = ({ sessionId }) => {
             currentUser={user}
             onAddComment={handleAddComment}
             onToggleLike={handleToggleLike}
+            onAddReply={handleAddReply}
+            onToggleCommentLike={handleToggleCommentLike}
           />
         ))}
       </div>
@@ -129,7 +186,7 @@ const DiscussionRoom = ({ sessionId }) => {
 };
 
 // Post Component
-const Post = ({ post, currentUser, onAddComment, onToggleLike }) => {
+const Post = ({ post, currentUser, onAddComment, onToggleLike, onAddReply, onToggleCommentLike }) => {
   const [comment, setComment] = useState('');
   const [showComments, setShowComments] = useState(false);
 
@@ -197,13 +254,15 @@ const Post = ({ post, currentUser, onAddComment, onToggleLike }) => {
       {showComments && (
         <div className="space-y-4">
           {post.comments.map(comment => (
-            <div key={comment._id} className="flex space-x-3 pl-10">
-              {renderProfilePicture(comment.author)}
-              <div className="flex-1 bg-gray-50 rounded-lg p-3">
-                <p className="font-medium text-sm">{comment.author.name}</p>
-                <p className="text-sm text-gray-800">{comment.content}</p>
-              </div>
-            </div>
+            <Comment
+              key={comment._id}
+              comment={comment}
+              postId={post._id}
+              currentUser={currentUser}
+              onAddReply={onAddReply}
+              onToggleLike={onToggleCommentLike}
+              renderProfilePicture={renderProfilePicture}
+            />
           ))}
 
           {/* Add Comment Form */}
@@ -216,6 +275,87 @@ const Post = ({ post, currentUser, onAddComment, onToggleLike }) => {
               className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </form>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Comment = ({ comment, postId, currentUser, onAddReply, onToggleLike, renderProfilePicture }) => {
+  const [reply, setReply] = useState('');
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  
+  const handleSubmitReply = (e) => {
+    e.preventDefault();
+    if (!reply.trim()) return;
+    
+    onAddReply(postId, comment._id, reply);
+    setReply('');
+    setShowReplyForm(false);
+  };
+
+  const isLiked = comment.likes?.includes(currentUser.id);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex space-x-3">
+        {renderProfilePicture(comment.author)}
+        <div className="flex-1">
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="font-medium text-sm">{comment.author.name}</p>
+            <p className="text-sm text-gray-800">{comment.content}</p>
+          </div>
+          <div className="flex items-center space-x-4 mt-1 text-xs">
+            <button
+              onClick={() => onToggleLike(postId, comment._id)}
+              className={`text-gray-500 hover:text-red-500 ${isLiked ? 'text-red-500' : ''}`}
+            >
+              {comment.likes?.length || 0} likes
+            </button>
+            <button
+              onClick={() => setShowReplyForm(!showReplyForm)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Reply
+            </button>
+            {comment.replies?.length > 0 && (
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                {comment.replies.length} replies
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Reply Form */}
+      {showReplyForm && (
+        <form onSubmit={handleSubmitReply} className="pl-10">
+          <input
+            type="text"
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            placeholder="Write a reply..."
+            className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+        </form>
+      )}
+
+      {/* Replies */}
+      {showReplies && comment.replies?.length > 0 && (
+        <div className="pl-10 space-y-2">
+          {comment.replies.map((reply, index) => (
+            <div key={index} className="flex space-x-3">
+              {renderProfilePicture(reply.author)}
+              <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                <p className="font-medium text-sm">{reply.author.name}</p>
+                <p className="text-sm text-gray-800">{reply.content}</p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
