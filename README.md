@@ -313,34 +313,11 @@ A modern virtual learning platform that connects teachers and students through i
 - Added mute/unmute functionality
 - Added video disabled functionality
 - Added screen sharing functionality
-- Added collaborative whiteboard functionality:
-  - Real-time drawing synchronization across all users
-  - Multiple drawing tools:
-    - Brush tool with customizable colors (12 colors)
-    - Eraser tool
-    - Clear board function
-  - Adjustable brush sizes (2px to 16px)
-  - Background options in video room:
-    - Transparent background
-    - White background with toggle switch
-  - Whiteboard available in two locations:
-    - Dedicated whiteboard tab in classroom
-    - Overlay mode in video room
-  - Synchronized whiteboard visibility in video room:
-    - Auto-shows for all users when any user opens it
-    - Individual close control for each user
-  - Touch device support for mobile users
-  - Intuitive UI with organized control panel
-  - Real-time collaboration features:
-    - Instant drawing updates across all users
-    - Synchronized clear board function
-    - Shared color and brush size selection
-
-Next Steps:
-- Add hand raise functionality (planned)
-- Add record audio functionality
-- Add breakout room functionality
-
+- Added whiteboard functionality
+- Added hand raise functionality
+- Added breakout room functionality
+- Added record video/audio functionality
+- Added feedback functionality
 
 ## Next Steps for interesting features to consider
 - Add assignment filtering and search functionality
