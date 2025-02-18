@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
-const discussionSocket = require('../services/discussionSocket');
+const socketService = require('../services/socket');
 const { getFirstLinkPreview } = require('../utils/linkPreview');
 
 // Create a post
@@ -24,7 +24,7 @@ router.post('/', auth, async (req, res) => {
     await post.populate('author', 'name email profilePicture');
 
     // Emit socket event for new post
-    discussionSocket.emitNewPost(sessionId, post);
+    socketService.emitNewPost(sessionId, post);
 
     res.status(201).json(post);
   } catch (error) {
@@ -66,7 +66,7 @@ router.post('/:postId/comments', auth, async (req, res) => {
 
     const newComment = post.comments[post.comments.length - 1];
     // Emit socket event for new comment
-    discussionSocket.emitNewComment(post.sessionId, post._id, newComment);
+    socketService.emitNewComment(post.sessionId, post._id, newComment);
 
     res.json(newComment);
   } catch (error) {
@@ -94,7 +94,7 @@ router.patch('/:postId/like', auth, async (req, res) => {
     await post.save();
     
     // Emit socket event for like toggle
-    discussionSocket.emitToggleLike(post.sessionId, post._id, post.likes);
+    socketService.emitToggleLike(post.sessionId, post._id, post.likes);
     
     res.json({ likes: post.likes });
   } catch (error) {
@@ -126,7 +126,7 @@ router.post('/:postId/comments/:commentId/replies', auth, async (req, res) => {
 
     const newReply = comment.replies[comment.replies.length - 1];
     // Emit socket event for new reply
-    discussionSocket.emitNewReply(post.sessionId, post._id, comment._id, newReply);
+    socketService.emitNewReply(post.sessionId, post._id, comment._id, newReply);
 
     res.json(newReply);
   } catch (error) {
@@ -159,7 +159,7 @@ router.patch('/:postId/comments/:commentId/like', auth, async (req, res) => {
     await post.save();
     
     // Emit socket event for comment like toggle
-    discussionSocket.emitToggleCommentLike(post.sessionId, post._id, comment._id, comment.likes);
+    socketService.emitToggleCommentLike(post.sessionId, post._id, comment._id, comment.likes);
     
     res.json({ likes: comment.likes });
   } catch (error) {
@@ -183,7 +183,7 @@ router.delete('/:postId', auth, async (req, res) => {
     await post.deleteOne();
     
     // Emit socket event for deleted post
-    discussionSocket.emitDeletePost(post.sessionId, post._id);
+    socketService.emitDeletePost(post.sessionId, post._id);
 
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {

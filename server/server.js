@@ -6,7 +6,6 @@ const path = require('path');
 const http = require('http');
 const socketService = require('./services/socket');
 const fs = require('fs');
-const discussionSocket = require('./services/discussionSocket');
 
 // Load environment variables
 dotenv.config();
@@ -14,9 +13,8 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.IO
+// Initialize Socket.IO only once
 const io = socketService.init(server);
-const discussionIo = discussionSocket.init(server);
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads/profile-pictures');

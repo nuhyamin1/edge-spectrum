@@ -155,19 +155,16 @@ module.exports = {
             });
 
             // Discussion room events
-            socket.on('newPost', (data) => {
-                const { sessionId } = data;
-                io.to(`session_${sessionId}`).emit('postCreated', data);
+            socket.on('join-discussion', (sessionId) => {
+                const discussionRoom = `discussion-${sessionId}`;
+                socket.join(discussionRoom);
+                console.log(`Client joined ${discussionRoom}`);
             });
 
-            socket.on('newComment', (data) => {
-                const { sessionId } = data;
-                io.to(`session_${sessionId}`).emit('commentAdded', data);
-            });
-
-            socket.on('postLiked', (data) => {
-                const { sessionId } = data;
-                io.to(`session_${sessionId}`).emit('likeUpdated', data);
+            socket.on('leave-discussion', (sessionId) => {
+                const discussionRoom = `discussion-${sessionId}`;
+                socket.leave(discussionRoom);
+                console.log(`Client left ${discussionRoom}`);
             });
 
             socket.on('disconnect', () => {
@@ -182,5 +179,56 @@ module.exports = {
             throw new Error('Socket.io not initialized!');
         }
         return io;
+    },
+    // Discussion room emit methods
+    emitNewPost: (sessionId, post) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('new-post', post);
+        }
+    },
+    emitDeletePost: (sessionId, postId) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('delete-post', postId);
+        }
+    },
+    emitUpdatePost: (sessionId, post) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('update-post', post);
+        }
+    },
+    emitNewComment: (sessionId, postId, comment) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('new-comment', { postId, comment });
+        }
+    },
+    emitDeleteComment: (sessionId, postId, commentId) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('delete-comment', { postId, commentId });
+        }
+    },
+    emitUpdateComment: (sessionId, postId, comment) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('update-comment', { postId, comment });
+        }
+    },
+    emitNewReply: (sessionId, postId, commentId, reply) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('new-reply', { postId, commentId, reply });
+        }
+    },
+    emitUpdateReply: (sessionId, postId, commentId, reply) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('update-reply', { postId, commentId, reply });
+        }
+    },
+    emitToggleLike: (sessionId, postId, likes) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('toggle-like', { postId, likes });
+        }
+    },
+    emitToggleCommentLike: (sessionId, postId, commentId, likes) => {
+        if (io) {
+            io.to(`discussion-${sessionId}`).emit('toggle-comment-like', { postId, commentId, likes });
+        }
     }
 };
