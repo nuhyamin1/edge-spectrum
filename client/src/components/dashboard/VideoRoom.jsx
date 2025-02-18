@@ -451,7 +451,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     
     socketRef.current = socket;
 
-    // Join the session room
     socket.emit('joinSession', {
       sessionId,
       userId: user.id,
@@ -472,14 +471,13 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       console.error('Socket connection error:', error);
     });
 
-    // Listen for teacher feedback events
+    // Event listeners
     socket.on('teacher-feedback', (data) => {
       console.log('Received feedback:', data);
-      const { message, from } = data;
-      showFeedbackMessage(`${message}`);
+      const { message } = data;
+      showFeedbackMessage(message);
     });
 
-    // Listen for other events...
     socket.on('handRaised', ({ userId, raised }) => {
       setRaisedHands(prev => {
         const newSet = new Set(prev);
@@ -492,15 +490,47 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       });
     });
 
-    // Cleanup on unmount
+    // Breakout room event listeners
+    socket.on('breakoutRoomsCreated', (rooms) => {
+      console.log('Breakout rooms created:', rooms);
+      setBreakoutRooms(rooms);
+    });
+
+    socket.on('userJoinedBreakoutRoom', ({ userId, userName }) => {
+      console.log(`${userName} joined the breakout room`);
+    });
+
+    socket.on('userLeftBreakoutRoom', ({ userId, userName }) => {
+      console.log(`${userName} left the breakout room`);
+    });
+
+    socket.on('breakoutRoomBroadcast', ({ message }) => {
+      setBreakoutMessage(message);
+      setTimeout(() => setBreakoutMessage(''), 5000);
+    });
+
+    socket.on('breakoutRoomsEnded', () => {
+      if (currentBreakoutRoom) {
+        leaveBreakoutRoom();
+      }
+      setBreakoutRooms([]);
+      setCurrentBreakoutRoom(null);
+    });
+
     return () => {
       if (socket) {
+        // Remove all listeners
         socket.off('teacher-feedback');
         socket.off('handRaised');
+        socket.off('breakoutRoomsCreated');
+        socket.off('userJoinedBreakoutRoom');
+        socket.off('userLeftBreakoutRoom');
+        socket.off('breakoutRoomBroadcast');
+        socket.off('breakoutRoomsEnded');
         socket.disconnect();
       }
     };
-  }, [sessionId, user.id, user.name, isTeacher]);
+  }, [sessionId, user.id, user.name, isTeacher, currentBreakoutRoom]);
 
   const handleFeedback = (message) => {
     console.log('Sending feedback:', message);
