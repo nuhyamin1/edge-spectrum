@@ -41,15 +41,33 @@ function Whiteboard({ sessionId, inVideoRoom = false }) {
     socket.on('drawing', onDrawingEvent);
 
     // Listen for whiteboard clear requests
-    socket.on('clearWhiteboard', handleClearBoard);
+    socket.on('clearWhiteboard', () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const context = canvas.getContext('2d');
+      if (isTransparent) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+      } else {
+        context.fillStyle = '#FFFFFF';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    });
 
     // Initialize canvas with transparent background
-    updateCanvasBackground();
+    const canvas = canvasRef.current;
+    if (canvas) {
+      // Set canvas size
+      canvas.width = 800;
+      canvas.height = 600;
+      updateCanvasBackground();
+    }
 
     return () => {
+      socket.off('drawing');
+      socket.off('clearWhiteboard');
       socket.disconnect();
     };
-  }, [sessionId]);
+  }, [sessionId, isTransparent]);
 
   useEffect(() => {
     updateCanvasBackground();
@@ -163,6 +181,8 @@ function Whiteboard({ sessionId, inVideoRoom = false }) {
 
   const handleClearBoard = () => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const context = canvas.getContext('2d');
     if (isTransparent) {
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -170,7 +190,11 @@ function Whiteboard({ sessionId, inVideoRoom = false }) {
       context.fillStyle = '#FFFFFF';
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
-    socketRef.current.emit('clearWhiteboard', { sessionId });
+
+    // Emit clear event to other users
+    if (socketRef.current) {
+      socketRef.current.emit('clearWhiteboard', { sessionId });
+    }
   };
 
   // Handle touch events for mobile devices
