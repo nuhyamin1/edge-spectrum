@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -229,6 +229,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const feedbackTimeoutRef = useRef(null);
+  const [isFeedbackCollapsed, setIsFeedbackCollapsed] = useState(false);
 
   const toggleAudio = async () => {
     if (tracks && tracks[0]) {
@@ -789,10 +790,14 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   };
 
   const feedbackMessages = [
-    { text: "Excellent! 🌟", icon: <FaStar /> },
-    { text: "Well done! 👏", icon: <FaThumbsUp /> },
-    { text: "Great point! 💡", icon: null },
-    { text: "Brilliant! ✨", icon: null },
+    { text: "Excellent! 🌟", icon: <FaStar />, color: "#FFD700" },
+    { text: "Well done! 👏", icon: <FaThumbsUp />, color: "#4CAF50" },
+    { text: "Great point! 💡", icon: null, color: "#2196F3" },
+    { text: "Keep going! 🚀", icon: null, color: "#9C27B0" },
+    { text: "Almost there! 💪", icon: null, color: "#FF9800" },
+    { text: "Try again! 🔄", icon: null, color: "#03A9F4" },
+    { text: "Good effort! 👍", icon: null, color: "#8BC34A" },
+    { text: "Nice try! 🎯", icon: null, color: "#FF5722" }
   ];
 
   const showFeedbackMessage = (message) => {
@@ -1236,12 +1241,21 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
       {/* Feedback Controls */}
       {isTeacher && (
-        <div className="feedback-controls">
+        <div className={`feedback-controls ${isFeedbackCollapsed ? 'collapsed' : ''}`}>
+          <button 
+            className="feedback-toggle"
+            onClick={() => setIsFeedbackCollapsed(!isFeedbackCollapsed)}
+            title={isFeedbackCollapsed ? "Show feedback options" : "Hide feedback options"}
+          >
+            {isFeedbackCollapsed ? <FaChevronLeft /> : <FaChevronRight />}
+          </button>
           {feedbackMessages.map((feedback, index) => (
             <button
               key={index}
               className="feedback-button"
+              style={{ backgroundColor: feedback.color }}
               onClick={() => handleFeedback(feedback.text)}
+              title={feedback.text}
             >
               {feedback.icon} {feedback.text}
             </button>
