@@ -1,0 +1,18 @@
+.ql-editor {
+  min-height: 100px;
+}
+
+.ql-container {
+  font-size: 16px;
+}
+
+/* Additional styles for better Quill integration */
+.ql-toolbar {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.ql-container {
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+} 

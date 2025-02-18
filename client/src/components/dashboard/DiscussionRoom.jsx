@@ -6,12 +6,34 @@ import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { TrashIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import './DiscussionRoom.css';
 
 const DiscussionRoom = ({ sessionId }) => {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+      ['link', 'blockquote', 'code-block'],
+      [{ 'color': [] }, { 'background': [] }],
+      ['clean']
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'blockquote', 'code-block',
+    'color', 'background'
+  ];
 
   // Fetch posts
   useEffect(() => {
@@ -31,9 +53,8 @@ const DiscussionRoom = ({ sessionId }) => {
   }, [sessionId]);
 
   // Create post
-  const handleCreatePost = async (e) => {
+  const handleSubmitPost = async (e) => {
     e.preventDefault();
-    
     if (!newPost.trim()) return;
 
     try {
@@ -41,7 +62,6 @@ const DiscussionRoom = ({ sessionId }) => {
         content: newPost,
         sessionId
       });
-
       setPosts(prevPosts => [response.data, ...prevPosts]);
       setNewPost('');
       toast.success('Post created successfully');
@@ -272,21 +292,25 @@ const DiscussionRoom = ({ sessionId }) => {
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       {/* Create Post Form */}
-      <form onSubmit={handleCreatePost} className="bg-white rounded-lg shadow p-4">
-        <textarea
+      <form onSubmit={handleSubmitPost} className="bg-white rounded-lg shadow p-4">
+        <ReactQuill
+          theme="snow"
           value={newPost}
-          onChange={(e) => setNewPost(e.target.value)}
-          placeholder="Start a discussion..."
-          className="w-full p-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
-          rows="3"
+          onChange={setNewPost}
+          modules={modules}
+          formats={formats}
+          placeholder="Write something..."
+          className="bg-white mb-4"
         />
-        <button
-          type="submit"
-          className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          disabled={!newPost.trim()}
-        >
-          Post
-        </button>
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            disabled={!newPost.trim()}
+          >
+            Post
+          </button>
+        </div>
       </form>
 
       {/* Posts List */}
@@ -330,6 +354,25 @@ const Post = ({
   const [editContent, setEditContent] = useState(post.content);
   const [showComments, setShowComments] = useState(false);
   const [comment, setComment] = useState('');
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{'list': 'ordered'}, {'list': 'bullet'}],
+      ['link', 'blockquote', 'code-block'],
+      [{ 'color': [] }, { 'background': [] }],
+      ['clean']
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'blockquote', 'code-block',
+    'color', 'background'
+  ];
 
   const handleSubmitComment = (e) => {
     e.preventDefault();
@@ -399,11 +442,13 @@ const Post = ({
 
       {isEditing ? (
         <div>
-          <textarea
+          <ReactQuill
+            theme="snow"
             value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            className="w-full p-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
-            rows="3"
+            onChange={setEditContent}
+            modules={modules}
+            formats={formats}
+            className="bg-white"
           />
           <div className="flex justify-end space-x-2 mt-2">
             <button
@@ -426,7 +471,10 @@ const Post = ({
           </div>
         </div>
       ) : (
-        <p className="text-gray-800">{post.content}</p>
+        <div 
+          className="text-gray-800 prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
       )}
 
       <div className="flex items-center space-x-4 text-sm">
