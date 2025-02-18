@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -226,6 +226,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const socketRef = useRef(null);
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [raisedHands, setRaisedHands] = useState(new Set());
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
+  const feedbackTimeoutRef = useRef(null);
 
   const toggleAudio = async () => {
     if (tracks && tracks[0]) {
@@ -436,85 +439,81 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     };
   }, [screenTrack]);
 
-  // Add useEffect for socket connection and event handling
+  // Initialize socket connection
   useEffect(() => {
-    // Initialize socket connection if not already connected
-    if (!socketRef.current) {
-      const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
-        withCredentials: true,
-      });
-      socketRef.current = socket;
+    // Initialize socket connection
+    const socket = io(process.env.REACT_APP_SOCKET_SERVER || 'http://localhost:5000', {
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5
+    });
+    
+    socketRef.current = socket;
 
-      // Join both the whiteboard and session rooms
-      socket.emit('joinWhiteboard', { sessionId });
-      socket.emit('join', { sessionId });
+    // Join the session room
+    socket.emit('joinSession', {
+      sessionId,
+      userId: user.id,
+      userName: user.name,
+      isTeacher
+    });
 
-      // Listen for whiteboard visibility changes from other users
-      socket.on('whiteboardVisibilityChanged', (data) => {
-        if (data.isVisible) {
-          setShowWhiteboard(true);
+    // Debug socket connection
+    socket.on('connect', () => {
+      console.log('Socket connected:', socket.id);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Socket disconnected');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+    // Listen for teacher feedback events
+    socket.on('teacher-feedback', (data) => {
+      console.log('Received feedback:', data);
+      const { message, from } = data;
+      showFeedbackMessage(`${message}`);
+    });
+
+    // Listen for other events...
+    socket.on('handRaised', ({ userId, raised }) => {
+      setRaisedHands(prev => {
+        const newSet = new Set(prev);
+        if (raised) {
+          newSet.add(userId);
+        } else {
+          newSet.delete(userId);
         }
+        return newSet;
       });
+    });
 
-      // Listen for hand raise events
-      socket.on('handRaised', ({ userId, raised }) => {
-        console.log('Hand raise event received:', { userId, raised });
-        setRaisedHands(prev => {
-          const newSet = new Set(prev);
-          if (raised) {
-            newSet.add(userId);
-          } else {
-            newSet.delete(userId);
-          }
-          return newSet;
-        });
-      });
+    // Cleanup on unmount
+    return () => {
+      if (socket) {
+        socket.off('teacher-feedback');
+        socket.off('handRaised');
+        socket.disconnect();
+      }
+    };
+  }, [sessionId, user.id, user.name, isTeacher]);
 
-      // Breakout room event listeners
-      socket.on('breakoutRoomsCreated', (rooms) => {
-        setBreakoutRooms(rooms);
-      });
-
-      socket.on('userJoinedBreakoutRoom', ({ userId, userName }) => {
-        console.log(`${userName} joined the breakout room`);
-      });
-
-      socket.on('userLeftBreakoutRoom', ({ userId, userName }) => {
-        console.log(`${userName} left the breakout room`);
-      });
-
-      socket.on('breakoutRoomBroadcast', ({ message }) => {
-        setBreakoutMessage(message);
-        // Show message in a toast or notification
-        setTimeout(() => setBreakoutMessage(''), 5000);
-      });
-
-      socket.on('breakoutRoomsEnded', () => {
-        if (currentBreakoutRoom) {
-          leaveBreakoutRoom();
-        }
-        setBreakoutRooms([]);
-        setCurrentBreakoutRoom(null);
-      });
-    }
-  }, [sessionId]);
-
-  // Add useEffect for handling hand raise events
-  useEffect(() => {
+  const handleFeedback = (message) => {
+    console.log('Sending feedback:', message);
     if (socketRef.current) {
-      socketRef.current.on('handRaised', ({ userId, raised }) => {
-        setRaisedHands(prev => {
-          const newSet = new Set(prev);
-          if (raised) {
-            newSet.add(userId);
-          } else {
-            newSet.delete(userId);
-          }
-          return newSet;
-        });
-      });
+      const feedbackData = {
+        sessionId,
+        message,
+        from: user.name
+      };
+      console.log('Emitting feedback:', feedbackData);
+      socketRef.current.emit('teacher-feedback', feedbackData);
+      showFeedbackMessage(message);
     }
-  }, []);
+  };
 
   const createBreakoutRooms = (numberOfRooms) => {
     if (!isTeacher) return;
@@ -776,6 +775,62 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       </div>
     );
   };
+
+  const FeedbackOverlay = ({ message, isVisible }) => {
+    if (!isVisible) return null;
+    
+    return (
+      <div className="feedback-overlay">
+        <div className="feedback-message">
+          {message}
+        </div>
+      </div>
+    );
+  };
+
+  const feedbackMessages = [
+    { text: "Excellent! 🌟", icon: <FaStar /> },
+    { text: "Well done! 👏", icon: <FaThumbsUp /> },
+    { text: "Great point! 💡", icon: null },
+    { text: "Brilliant! ✨", icon: null },
+  ];
+
+  const showFeedbackMessage = (message) => {
+    // Clear any existing timeout
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+
+    setFeedbackMessage(message);
+    setShowFeedback(true);
+
+    // Hide the message after animation duration (2s)
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setShowFeedback(false);
+      setFeedbackMessage("");
+    }, 2000);
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (socketRef.current) {
+      socketRef.current.on("teacher-feedback", ({ message }) => {
+        showFeedbackMessage(message);
+      });
+
+      return () => {
+        socketRef.current.off("teacher-feedback");
+      };
+    }
+  }, [socketRef]);
 
   if (error) {
     return (
@@ -1173,6 +1228,24 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       {breakoutMessage && (
         <div className="broadcast-message">
           <p>{breakoutMessage}</p>
+        </div>
+      )}
+
+      {/* Feedback Overlay */}
+      <FeedbackOverlay message={feedbackMessage} isVisible={showFeedback} />
+
+      {/* Feedback Controls */}
+      {isTeacher && (
+        <div className="feedback-controls">
+          {feedbackMessages.map((feedback, index) => (
+            <button
+              key={index}
+              className="feedback-button"
+              onClick={() => handleFeedback(feedback.text)}
+            >
+              {feedback.icon} {feedback.text}
+            </button>
+          ))}
         </div>
       )}
     </div>

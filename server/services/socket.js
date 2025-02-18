@@ -14,6 +14,13 @@ module.exports = {
         io.on('connection', (socket) => {
             console.log('Client connected:', socket.id);
 
+            socket.on('joinSession', (data) => {
+                const { sessionId, userId, userName, isTeacher } = data;
+                const room = `session_${sessionId}`;
+                socket.join(room);
+                console.log(`${isTeacher ? 'Teacher' : 'Student'} ${userName} (${userId}) joined room ${room}`);
+            });
+
             // Handle student joining classroom
             socket.on('studentJoinedClassroom', async (data) => {
                 const { sessionId, studentId, studentName, studentEmail, studentProfilePicture } = data;
@@ -96,6 +103,15 @@ module.exports = {
                 // Broadcast the hand raise status to all clients in the session except the sender
                 socket.to(room).emit('handRaised', { userId, raised });
                 console.log(`Broadcasting hand raise status (${raised}) for user ${userId} in room ${room}`);
+            });
+
+            // Teacher feedback event handler
+            socket.on('teacher-feedback', (data) => {
+                const { sessionId, message, from } = data;
+                const room = `session_${sessionId}`;
+                // Broadcast the feedback to all clients in the session
+                io.to(room).emit('teacher-feedback', { message, from });
+                console.log(`Broadcasting teacher feedback "${message}" from ${from} in room ${room}`);
             });
 
             // Breakout room event handlers
