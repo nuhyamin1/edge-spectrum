@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 const DiscussionRoom = ({ sessionId }) => {
   const [posts, setPosts] = useState([]);
@@ -143,6 +144,48 @@ const DiscussionRoom = ({ sessionId }) => {
     }
   };
 
+  // Delete post
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/posts/${postId}`);
+      setPosts(prevPosts => prevPosts.filter(post => post._id !== postId));
+      toast.success('Post deleted successfully');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
+  };
+
+  // Delete comment
+  const handleDeleteComment = async (postId, commentId) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/posts/${postId}/comments/${commentId}`);
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: post.comments.filter(comment => comment._id !== commentId)
+            };
+          }
+          return post;
+        })
+      );
+      toast.success('Comment deleted successfully');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Failed to delete comment');
+    }
+  };
+
   if (loading) {
     return <div>Loading discussion...</div>;
   }
@@ -178,6 +221,8 @@ const DiscussionRoom = ({ sessionId }) => {
             onToggleLike={handleToggleLike}
             onAddReply={handleAddReply}
             onToggleCommentLike={handleToggleCommentLike}
+            onDeletePost={handleDeletePost}
+            onDeleteComment={handleDeleteComment}
           />
         ))}
       </div>
@@ -186,7 +231,16 @@ const DiscussionRoom = ({ sessionId }) => {
 };
 
 // Post Component
-const Post = ({ post, currentUser, onAddComment, onToggleLike, onAddReply, onToggleCommentLike }) => {
+const Post = ({ 
+  post, 
+  currentUser, 
+  onAddComment, 
+  onToggleLike, 
+  onAddReply, 
+  onToggleCommentLike,
+  onDeletePost,
+  onDeleteComment 
+}) => {
   const [comment, setComment] = useState('');
   const [showComments, setShowComments] = useState(false);
 
@@ -216,14 +270,25 @@ const Post = ({ post, currentUser, onAddComment, onToggleLike, onAddReply, onTog
   return (
     <div className="bg-white rounded-lg shadow p-4 space-y-4">
       {/* Post Header */}
-      <div className="flex items-center space-x-3">
-        {renderProfilePicture(post.author)}
-        <div>
-          <p className="font-medium">{post.author.name}</p>
-          <p className="text-sm text-gray-500">
-            {new Date(post.createdAt).toLocaleDateString()}
-          </p>
+      <div className="flex justify-between items-start">
+        <div className="flex items-center space-x-3">
+          {renderProfilePicture(post.author)}
+          <div>
+            <p className="font-medium">{post.author.name}</p>
+            <p className="text-sm text-gray-500">
+              {new Date(post.createdAt).toLocaleDateString()}
+            </p>
+          </div>
         </div>
+        {post.author._id === currentUser.id && (
+          <button
+            onClick={() => onDeletePost(post._id)}
+            className="text-gray-400 hover:text-red-500"
+            title="Delete post"
+          >
+            <TrashIcon className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Post Content */}
@@ -261,6 +326,7 @@ const Post = ({ post, currentUser, onAddComment, onToggleLike, onAddReply, onTog
               currentUser={currentUser}
               onAddReply={onAddReply}
               onToggleLike={onToggleCommentLike}
+              onDelete={onDeleteComment}
               renderProfilePicture={renderProfilePicture}
             />
           ))}
@@ -281,7 +347,15 @@ const Post = ({ post, currentUser, onAddComment, onToggleLike, onAddReply, onTog
   );
 };
 
-const Comment = ({ comment, postId, currentUser, onAddReply, onToggleLike, renderProfilePicture }) => {
+const Comment = ({ 
+  comment, 
+  postId, 
+  currentUser, 
+  onAddReply, 
+  onToggleLike, 
+  onDelete,
+  renderProfilePicture 
+}) => {
   const [reply, setReply] = useState('');
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
@@ -303,8 +377,21 @@ const Comment = ({ comment, postId, currentUser, onAddReply, onToggleLike, rende
         {renderProfilePicture(comment.author)}
         <div className="flex-1">
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="font-medium text-sm">{comment.author.name}</p>
-            <p className="text-sm text-gray-800">{comment.content}</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-medium text-sm">{comment.author.name}</p>
+                <p className="text-sm text-gray-800">{comment.content}</p>
+              </div>
+              {(comment.author._id === currentUser.id) && (
+                <button
+                  onClick={() => onDelete(postId, comment._id)}
+                  className="text-gray-400 hover:text-red-500"
+                  title="Delete comment"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex items-center space-x-4 mt-1 text-xs">
             <button

@@ -152,4 +152,53 @@ router.patch('/:postId/comments/:commentId/like', auth, async (req, res) => {
   }
 });
 
+// Delete a post
+router.delete('/:postId', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Check if user is the author of the post
+    if (post.author.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to delete this post' });
+    }
+
+    await post.deleteOne();
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting post' });
+  }
+});
+
+// Delete a comment
+router.delete('/:postId/comments/:commentId', auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // Check if user is the author of the comment
+    if (comment.author.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Not authorized to delete this comment' });
+    }
+
+    comment.deleteOne();
+    await post.save();
+    
+    res.json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting comment' });
+  }
+});
+
 module.exports = router; 
