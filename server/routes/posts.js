@@ -59,7 +59,11 @@ router.post('/:postId/comments', auth, async (req, res) => {
     await post.save();
     await post.populate('comments.author', 'name email profilePicture');
 
-    res.json(post.comments[post.comments.length - 1]);
+    const newComment = post.comments[post.comments.length - 1];
+    // Emit socket event for new comment
+    discussionSocket.emitNewComment(post.sessionId, post._id, newComment);
+
+    res.json(newComment);
   } catch (error) {
     res.status(500).json({ error: 'Error adding comment' });
   }
@@ -83,6 +87,9 @@ router.patch('/:postId/like', auth, async (req, res) => {
     }
 
     await post.save();
+    
+    // Emit socket event for like toggle
+    discussionSocket.emitToggleLike(post.sessionId, post._id, post.likes);
     
     res.json({ likes: post.likes });
   } catch (error) {
@@ -110,15 +117,13 @@ router.post('/:postId/comments/:commentId/replies', auth, async (req, res) => {
     });
 
     await post.save();
-    await post.populate([
-      {
-        path: 'comments.replies.author',
-        select: 'name email profilePicture'
-      }
-    ]);
+    await post.populate('comments.replies.author', 'name email profilePicture');
 
-    const updatedComment = post.comments.id(req.params.commentId);
-    res.json(updatedComment.replies[updatedComment.replies.length - 1]);
+    const newReply = comment.replies[comment.replies.length - 1];
+    // Emit socket event for new reply
+    discussionSocket.emitNewReply(post.sessionId, post._id, comment._id, newReply);
+
+    res.json(newReply);
   } catch (error) {
     res.status(500).json({ error: 'Error adding reply' });
   }
@@ -147,6 +152,9 @@ router.patch('/:postId/comments/:commentId/like', auth, async (req, res) => {
     }
 
     await post.save();
+    
+    // Emit socket event for comment like toggle
+    discussionSocket.emitToggleCommentLike(post.sessionId, post._id, comment._id, comment.likes);
     
     res.json({ likes: comment.likes });
   } catch (error) {

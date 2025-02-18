@@ -38,11 +38,9 @@ const DiscussionRoom = ({ sessionId }) => {
   ];
 
   useEffect(() => {
-    // Initialize socket connection
     const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000');
     setSocket(newSocket);
 
-    // Join discussion room
     newSocket.emit('join-discussion', sessionId);
 
     // Socket event listeners
@@ -76,7 +74,83 @@ const DiscussionRoom = ({ sessionId }) => {
       );
     });
 
-    // ... add other socket event listeners ...
+    newSocket.on('delete-comment', ({ postId, commentId }) => {
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: post.comments.filter(comment => comment._id !== commentId)
+            };
+          }
+          return post;
+        })
+      );
+    });
+
+    newSocket.on('update-comment', ({ postId, comment }) => {
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: post.comments.map(c => 
+                c._id === comment._id ? comment : c
+              )
+            };
+          }
+          return post;
+        })
+      );
+    });
+
+    newSocket.on('new-reply', ({ postId, commentId, reply }) => {
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: post.comments.map(comment => {
+                if (comment._id === commentId) {
+                  return {
+                    ...comment,
+                    replies: [...comment.replies, reply]
+                  };
+                }
+                return comment;
+              })
+            };
+          }
+          return post;
+        })
+      );
+    });
+
+    newSocket.on('toggle-like', ({ postId, likes }) => {
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post._id === postId ? { ...post, likes } : post
+        )
+      );
+    });
+
+    newSocket.on('toggle-comment-like', ({ postId, commentId, likes }) => {
+      setPosts(prevPosts => 
+        prevPosts.map(post => {
+          if (post._id === postId) {
+            return {
+              ...post,
+              comments: post.comments.map(comment => 
+                comment._id === commentId 
+                  ? { ...comment, likes }
+                  : comment
+              )
+            };
+          }
+          return post;
+        })
+      );
+    });
 
     // Cleanup on unmount
     return () => {
