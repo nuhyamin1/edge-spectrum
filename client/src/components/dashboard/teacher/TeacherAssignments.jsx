@@ -8,42 +8,72 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
   TextField,
   Typography,
   MenuItem,
   Chip,
   IconButton,
   Link,
+  Divider,
+  Paper,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, CalendarToday as CalendarIcon, Assignment as AssignmentIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const styles = {
-  card: {
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
+  listContainer: {
+    width: '100%',
+    maxWidth: '900px',
+    margin: '0 auto',
   },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  cardContent: {
-    flex: 1,
-    cursor: 'pointer',
-    transition: 'transform 0.2s ease-in-out',
+  assignmentCard: {
+    width: '100%',
+    mb: 3,
+    transition: 'box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out',
     '&:hover': {
+      boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
       transform: 'translateY(-4px)',
     },
   },
+  cardContent: {
+    padding: 3,
+    cursor: 'pointer',
+  },
+  headerSection: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    mb: 2,
+  },
+  titleSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+  },
+  descriptionSection: {
+    my: 2,
+    pl: 4,
+  },
+  metaSection: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    mt: 2,
+  },
+  dateChip: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 0.5,
+    bgcolor: '#f0f7ff',
+    px: 1.5,
+    py: 0.75,
+    borderRadius: '16px',
+  },
   statsContainer: {
     display: 'flex',
-    gap: 2,
-    mt: 2,
+    gap: 1,
   },
   statChip: {
     borderRadius: '16px',
@@ -240,6 +270,15 @@ const TeacherAssignments = () => {
     return { total, pending, submitted, accepted, rejected };
   };
 
+  const formatDueDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
     <Box p={3}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
@@ -253,82 +292,98 @@ const TeacherAssignments = () => {
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
+      <Box sx={styles.listContainer}>
         {assignments.map((assignment) => {
           const stats = getSubmissionStats(assignment);
           return (
-            <Grid item xs={12} sm={6} md={4} key={assignment._id}>
-              <Card sx={styles.card}>
-                <CardContent>
-                  <Box sx={styles.cardHeader}>
-                    <Typography variant="h6" gutterBottom>
+            <Paper 
+              key={assignment._id}
+              elevation={2}
+              sx={styles.assignmentCard}
+            >
+              <CardContent 
+                sx={styles.cardContent}
+                onClick={() => navigate(`/teacher/assignments/${assignment._id}`)}
+              >
+                <Box sx={styles.headerSection}>
+                  <Box sx={styles.titleSection}>
+                    <AssignmentIcon color="primary" />
+                    <Typography variant="h6" fontWeight="bold">
                       {assignment.title}
                     </Typography>
-                    <IconButton
-                      color="error"
-                      onClick={(e) => handleDeleteAssignment(assignment._id, e)}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
                   </Box>
-                  <Box sx={styles.cardContent} onClick={() => navigate(`/teacher/assignments/${assignment._id}`)}>
-                    <Typography color="textSecondary" gutterBottom>
-                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                  <IconButton
+                    color="error"
+                    onClick={(e) => handleDeleteAssignment(assignment._id, e)}
+                    size="small"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+                
+                <Box sx={styles.descriptionSection}>
+                  <Typography
+                    variant="body1"
+                    color="textSecondary"
+                    sx={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    {assignment.description}
+                  </Typography>
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                <Box sx={styles.metaSection}>
+                  <Box sx={styles.dateChip}>
+                    <CalendarIcon fontSize="small" color="primary" />
+                    <Typography variant="body2" fontWeight="medium">
+                      Due: {formatDueDate(assignment.dueDate)}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      sx={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        mb: 2,
-                      }}
-                    >
-                      {assignment.description}
-                    </Typography>
-                    
-                    <Box sx={styles.statsContainer}>
+                  </Box>
+                  
+                  <Box sx={styles.statsContainer}>
+                    <Chip
+                      label={`Total: ${stats.total}`}
+                      size="small"
+                      sx={styles.statChip}
+                    />
+                    {stats.submitted > 0 && (
                       <Chip
-                        label={`Total: ${stats.total}`}
+                        label={`Submitted: ${stats.submitted}`}
                         size="small"
+                        color="primary"
                         sx={styles.statChip}
                       />
-                      {stats.submitted > 0 && (
-                        <Chip
-                          label={`Submitted: ${stats.submitted}`}
-                          size="small"
-                          color="primary"
-                          sx={styles.statChip}
-                        />
-                      )}
-                      {stats.accepted > 0 && (
-                        <Chip
-                          label={`Accepted: ${stats.accepted}`}
-                          size="small"
-                          color="success"
-                          sx={styles.statChip}
-                        />
-                      )}
-                      {stats.rejected > 0 && (
-                        <Chip
-                          label={`Rejected: ${stats.rejected}`}
-                          size="small"
-                          color="error"
-                          sx={styles.statChip}
-                        />
-                      )}
-                    </Box>
+                    )}
+                    {stats.accepted > 0 && (
+                      <Chip
+                        label={`Accepted: ${stats.accepted}`}
+                        size="small"
+                        color="success"
+                        sx={styles.statChip}
+                      />
+                    )}
+                    {stats.rejected > 0 && (
+                      <Chip
+                        label={`Rejected: ${stats.rejected}`}
+                        size="small"
+                        color="error"
+                        sx={styles.statChip}
+                      />
+                    )}
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                </Box>
+              </CardContent>
+            </Paper>
           );
         })}
-      </Grid>
+      </Box>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Create New Assignment</DialogTitle>

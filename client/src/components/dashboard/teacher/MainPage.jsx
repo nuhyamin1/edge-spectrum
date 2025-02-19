@@ -9,6 +9,7 @@ import '../Dashboard.css';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
+  const [activeSessions, setActiveSessions] = useState([]); // New state for active sessions
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
   const [visibleMaterials, setVisibleMaterials] = useState(4); // Show first 4 materials
@@ -27,20 +28,45 @@ const TeacherMainPage = () => {
       
       setMaterials(materialsRes.data);
       
-      // Split sessions into upcoming and completed
+      // Split sessions into active, upcoming and completed
       const now = new Date();
       const sessions = sessionsRes.data;
       
-      setUpcomingSessions(
+      // Helper function to safely parse dates
+      const parseDate = (dateString) => {
+        if (!dateString) return null;
+        try {
+          return new Date(dateString);
+        } catch (e) {
+          console.error("Error parsing date:", dateString, e);
+          return null;
+        }
+      };
+      
+      // Active sessions: status is "active"
+      setActiveSessions(
         sessions.filter(session => 
-          session.status !== 'completed' && new Date(session.dateTime) >= now
+          session.status === 'active'
         ).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
       );
       
+      // Upcoming sessions: status is "scheduled"
+      setUpcomingSessions(
+        sessions.filter(session => 
+          session.status === 'scheduled'
+        ).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+      );
+      
+      // Completed sessions: status is "completed"
       setCompletedSessions(
         sessions.filter(session => 
           session.status === 'completed'
-        ).sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt))
+        ).sort((a, b) => {
+          const endedAtA = parseDate(a.endedAt) || parseDate(a.endTime);
+          const endedAtB = parseDate(b.endedAt) || parseDate(b.endTime);
+          if (!endedAtA || !endedAtB) return 0;
+          return endedAtB - endedAtA; // Most recent first
+        })
       );
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -165,17 +191,30 @@ const TeacherMainPage = () => {
               Create Session
             </button>
           </div>
-          <SessionsSection 
-            title="Upcoming Sessions"
-            sessions={upcomingSessions}
-            type="upcoming"
-          />
+          {/* New Active Sessions Section */}
+          <div className="mb-12">
+            <SessionsSection 
+              title="Active Sessions"
+              sessions={activeSessions}
+              type="active"
+            />
+          </div>
 
-          <SessionsSection 
-            title="Completed Sessions"
-            sessions={completedSessions}
-            type="completed"
-          />
+          <div className="mb-12">
+            <SessionsSection 
+              title="Upcoming Sessions"
+              sessions={upcomingSessions}
+              type="upcoming"
+            />
+          </div>
+
+          <div>
+            <SessionsSection 
+              title="Completed Sessions"
+              sessions={completedSessions}
+              type="completed"
+            />
+          </div>
         </section>
       </div>
     </Layout>
