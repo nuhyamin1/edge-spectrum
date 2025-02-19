@@ -318,6 +318,9 @@ A modern virtual learning platform that connects teachers and students through i
 - Added breakout room functionality
 - Added record video/audio functionality
 - Added feedback functionality
+- Added discussion room functionality
+- Added exercise room functionality
+- Added pronunciation check functionality
 
 ## Next Steps for interesting features to consider
 - Add assignment filtering and search functionality

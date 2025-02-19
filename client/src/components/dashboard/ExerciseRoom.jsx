@@ -70,7 +70,7 @@ const ExerciseRoom = ({ sessionId, readOnly = false, initialContent = DEFAULT_CO
 
   return (
     <div className="exercise-room-container" style={{ padding: '20px' }}>
-      <h2>Exercise Room</h2>
+      <h2>Tasks to complete</h2>
       <div style={{ 
         border: '1px solid #ccc',
         borderRadius: '4px',
