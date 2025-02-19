@@ -9,7 +9,7 @@ import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
 import DiscussionRoom from '../DiscussionRoom';
 import ExerciseRoom from '../ExerciseRoom';
-import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments } from 'react-icons/fa';
+import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook } from 'react-icons/fa';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -247,7 +247,7 @@ const StudentClassroom = () => {
               ? 'text-blue-500 bg-gray-700' 
               : 'text-gray-400 hover:text-white'
           }`}
-          title="Attendance Room"
+          title="Attendance"
         >
           <FaUserCheck size={24} />
         </button>
@@ -277,18 +277,6 @@ const StudentClassroom = () => {
         </button>
 
         <button 
-          onClick={() => setActiveTab('exercise')}
-          className={`p-2 rounded-lg transition-colors duration-200 ${
-            activeTab === 'exercise' 
-              ? 'text-blue-500 bg-gray-700' 
-              : 'text-gray-400 hover:text-white'
-          }`}
-          title="Exercise Room"
-        >
-          <FaChalkboard size={24} />
-        </button>
-
-        <button 
           onClick={() => setActiveTab('discussion')}
           className={`p-2 rounded-lg transition-colors duration-200 ${
             activeTab === 'discussion' 
@@ -298,6 +286,18 @@ const StudentClassroom = () => {
           title="Discussion Room"
         >
           <FaComments size={24} />
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('exercise')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'exercise' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Exercise Room"
+        >
+          <FaBook size={24} />
         </button>
       </div>
 
@@ -332,6 +332,9 @@ const StudentClassroom = () => {
           {activeTab === 'whiteboard' && (
             <Whiteboard sessionId={sessionId} />
           )}
+          {activeTab === 'discussion' && (
+            <DiscussionRoom sessionId={sessionId} />
+          )}
           {activeTab === 'exercise' && (
             <ExerciseRoom 
               sessionId={sessionId} 
@@ -339,9 +342,6 @@ const StudentClassroom = () => {
               initialContent={exerciseContent}
               onContentChange={setExerciseContent}
             />
-          )}
-          {activeTab === 'discussion' && (
-            <DiscussionRoom sessionId={sessionId} />
           )}
         </div>
       </div>
