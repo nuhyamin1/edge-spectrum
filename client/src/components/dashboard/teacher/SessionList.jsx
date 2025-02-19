@@ -116,9 +116,25 @@ const SessionList = () => {
                     <div className="mt-2 space-x-2">
                       <button
                         onClick={() => navigate(`/teacher/classroom/${session._id}`)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        className={`${
+                          session.status === 'active' 
+                            ? 'bg-green-600' 
+                            : session.status === 'completed'
+                            ? 'bg-gray-400'
+                            : 'bg-blue-600'
+                        } text-white px-6 py-2 rounded-md hover:${
+                          session.status === 'active'
+                            ? 'bg-green-700'
+                            : session.status === 'completed'
+                            ? 'bg-gray-700'
+                            : 'bg-blue-700'
+                        } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-[140px]`}
                       >
-                        Start Session
+                        {session.status === 'active' 
+                          ? 'Live' 
+                          : session.status === 'completed' 
+                          ? 'Completed' 
+                          : 'Start'}
                       </button>
                       <button
                         onClick={() => navigate(`/dashboard/edit-session/${session._id}`)}
