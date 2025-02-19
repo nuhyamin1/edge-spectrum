@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -230,6 +230,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const feedbackTimeoutRef = useRef(null);
   const [isFeedbackCollapsed, setIsFeedbackCollapsed] = useState(false);
+  const [pronunciationWord, setPronunciationWord] = useState('');
+  const [showPronunciation, setShowPronunciation] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState(null);
+  const [availableVoices, setAvailableVoices] = useState([]);
 
   const toggleAudio = async () => {
     if (tracks && tracks[0]) {
@@ -907,6 +911,61 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   }, [socketRef]);
 
+  // Initialize speech synthesis voices
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    
+    const loadVoices = () => {
+      const voices = synth.getVoices();
+      const englishVoices = voices.filter(voice => 
+        voice.lang.startsWith('en-')
+      );
+      setAvailableVoices(englishVoices);
+      
+      // Try to find Microsoft Ava voice
+      const avaVoice = englishVoices.find(voice => 
+        voice.name === "Microsoft Ava Online (Natural) - English (United States)"
+      );
+      
+      // Set Ava as default if available, otherwise use first English voice
+      if (!selectedVoice) {
+        setSelectedVoice(avaVoice || englishVoices[0]);
+      }
+    };
+
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    return () => {
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, [selectedVoice]);
+
+  const handlePronunciation = () => {
+    if (!pronunciationWord.trim() || !selectedVoice) return;
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(pronunciationWord);
+    utterance.voice = selectedVoice;
+    utterance.rate = 0.8; // Slightly slower for clearer pronunciation
+    utterance.pitch = 1;
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleVoiceChange = (e) => {
+    const voice = availableVoices.find(v => v.name === e.target.value);
+    if (voice) {
+      setSelectedVoice(voice);
+    }
+  };
+
   if (error) {
     return (
       <div className="h-full w-full bg-gray-100 p-4 flex items-center justify-center">
@@ -1332,6 +1391,50 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           ))}
         </div>
       )}
+
+      {/* Pronunciation Tool */}
+      <div className={`pronunciation-tool ${showPronunciation ? 'expanded' : ''}`}>
+        <button
+          onClick={() => setShowPronunciation(!showPronunciation)}
+          className="pronunciation-toggle"
+          title="Pronunciation Tool"
+        >
+          <FaVolumeUp />
+        </button>
+        
+        {showPronunciation && (
+          <div className="pronunciation-content">
+            <select 
+              value={selectedVoice?.name || ''} 
+              onChange={handleVoiceChange}
+              className="voice-select"
+            >
+              {availableVoices.map(voice => (
+                <option key={voice.name} value={voice.name}>
+                  {voice.name}
+                </option>
+              ))}
+            </select>
+            
+            <div className="pronunciation-input-group">
+              <input
+                type="text"
+                value={pronunciationWord}
+                onChange={(e) => setPronunciationWord(e.target.value)}
+                placeholder="Enter word to pronounce..."
+                className="pronunciation-input"
+              />
+              <button
+                onClick={handlePronunciation}
+                className="pronunciation-button"
+                disabled={!pronunciationWord.trim() || !selectedVoice}
+              >
+                <FaVolumeUp />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
