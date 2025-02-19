@@ -21,6 +21,14 @@ module.exports = {
                 console.log(`${isTeacher ? 'Teacher' : 'Student'} ${userName} (${userId}) joined room ${room}`);
             });
 
+            // Handle exercise room updates
+            socket.on('exercise-update', (data) => {
+                const { sessionId, content } = data;
+                const room = `session_${sessionId}`;
+                socket.to(room).emit('exercise-update', { content });
+                console.log(`Exercise content updated in room ${room}`);
+            });
+
             // Handle student joining classroom
             socket.on('studentJoinedClassroom', async (data) => {
                 const { sessionId, studentId, studentName, studentEmail, studentProfilePicture } = data;

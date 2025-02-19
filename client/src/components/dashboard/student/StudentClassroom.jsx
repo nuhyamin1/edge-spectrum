@@ -8,6 +8,7 @@ import { useAuth } from '../../../context/AuthContext';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
 import DiscussionRoom from '../DiscussionRoom';
+import ExerciseRoom from '../ExerciseRoom';
 import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments } from 'react-icons/fa';
 
 const StudentClassroom = () => {
@@ -21,6 +22,7 @@ const StudentClassroom = () => {
   const [socket, setSocket] = useState(null);
   const hasEmittedJoin = useRef(false);
   const [activeTab, setActiveTab] = useState('attendance');
+  const [exerciseContent, setExerciseContent] = useState('');
 
   useEffect(() => {
     const initializeSocket = async () => {
@@ -275,6 +277,18 @@ const StudentClassroom = () => {
         </button>
 
         <button 
+          onClick={() => setActiveTab('exercise')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'exercise' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Exercise Room"
+        >
+          <FaChalkboard size={24} />
+        </button>
+
+        <button 
           onClick={() => setActiveTab('discussion')}
           className={`p-2 rounded-lg transition-colors duration-200 ${
             activeTab === 'discussion' 
@@ -317,6 +331,14 @@ const StudentClassroom = () => {
           )}
           {activeTab === 'whiteboard' && (
             <Whiteboard sessionId={sessionId} />
+          )}
+          {activeTab === 'exercise' && (
+            <ExerciseRoom 
+              sessionId={sessionId} 
+              readOnly={true}
+              initialContent={exerciseContent}
+              onContentChange={setExerciseContent}
+            />
           )}
           {activeTab === 'discussion' && (
             <DiscussionRoom sessionId={sessionId} />

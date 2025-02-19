@@ -8,6 +8,7 @@ import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { io } from 'socket.io-client';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
+import ExerciseRoom from '../ExerciseRoom';
 import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaPlayCircle, FaTimesCircle } from 'react-icons/fa';
 import DiscussionRoom from '../DiscussionRoom';
 
@@ -18,6 +19,7 @@ const Classroom = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('attendance');
   const [attendanceStatus, setAttendanceStatus] = useState({});
+  const [exerciseContent, setExerciseContent] = useState('');
   const socketRef = useRef(null);
 
   const updateAttendanceStatus = useCallback((studentId, status) => {
@@ -362,7 +364,6 @@ const Classroom = () => {
               : 'text-gray-400 hover:text-white'
           }`}
           title="Exercise Room"
-          disabled={true}
         >
           <FaBook size={24} />
         </button>
@@ -469,10 +470,12 @@ const Classroom = () => {
                 <DiscussionRoom sessionId={sessionId} />
               )}
               {activeTab === 'exercise' && (
-                <div className="p-4">
-                  <h2 className="text-lg font-semibold">Exercise Room</h2>
-                  <p className="text-gray-500">Coming soon...</p>
-                </div>
+                <ExerciseRoom 
+                  sessionId={sessionId} 
+                  readOnly={false}
+                  initialContent={exerciseContent}
+                  onContentChange={setExerciseContent}
+                />
               )}
             </div>
           </div>
