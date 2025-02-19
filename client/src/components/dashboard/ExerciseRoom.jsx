@@ -22,10 +22,23 @@ const ExerciseRoom = ({ sessionId, readOnly = false, initialContent = DEFAULT_CO
         sessionId,
         isTeacher: !readOnly
       });
+
+      // Request current exercise content when joining
+      newSocket.emit('get-exercise-content', { sessionId });
     }
 
     // Listen for exercise updates
     newSocket.on('exercise-update', (data) => {
+      if (data && data.content !== undefined) {
+        setContent(data.content);
+        if (onContentChange) {
+          onContentChange(data.content);
+        }
+      }
+    });
+
+    // Listen for current content response
+    newSocket.on('current-exercise-content', (data) => {
       if (data && data.content !== undefined) {
         setContent(data.content);
         if (onContentChange) {

@@ -1,6 +1,9 @@
 const { Server } = require('socket.io');
 let io;
 
+// Add this at the top with other declarations
+const exerciseContents = new Map(); // Store exercise content by sessionId
+
 module.exports = {
     init: (httpServer) => {
         io = new Server(httpServer, {
@@ -25,8 +28,19 @@ module.exports = {
             socket.on('exercise-update', (data) => {
                 const { sessionId, content } = data;
                 const room = `session_${sessionId}`;
+                exerciseContents.set(sessionId, content); // Store the content
                 socket.to(room).emit('exercise-update', { content });
                 console.log(`Exercise content updated in room ${room}`);
+            });
+
+            // Add new handler for getting exercise content
+            socket.on('get-exercise-content', (data) => {
+                const { sessionId } = data;
+                const content = exerciseContents.get(sessionId);
+                if (content) {
+                    socket.emit('current-exercise-content', { content });
+                    console.log(`Sent stored exercise content for session ${sessionId}`);
+                }
             });
 
             // Handle student joining classroom
