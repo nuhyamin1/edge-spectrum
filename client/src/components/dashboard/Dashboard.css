@@ -38,4 +38,13 @@
 
 .blue-border {
   @apply border border-blue-100;
+}
+
+/* Add these styles to maintain icon sizes */
+.sidebar-icon {
+  min-width: 1.5rem; /* or your desired size */
+  min-height: 1.5rem; /* or your desired size */
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0; /* Prevents icon from shrinking */
 } 

@@ -12,7 +12,7 @@ const StudentMainPage = () => {
   const [activeSessions, setActiveSessions] = useState([]); // New state for active sessions
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
-  const [visibleMaterials, setVisibleMaterials] = useState(4); // Show first 4 materials
+  const [visibleMaterials, setVisibleMaterials] = useState(6); // Show first 4 materials
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,12 +77,12 @@ const StudentMainPage = () => {
   };
 
   const handleSeeMore = () => {
-    setVisibleMaterials(prev => prev + 4); // Show 4 more materials when clicked
+    setVisibleMaterials(prev => prev + 8); // Show 4 more materials when clicked
   };
 
   return (
     <Layout userType="student">
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-400 p-8 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-400 p-8 relative overflow-hidden rounded-2xl">
         {/* Animated background elements */}
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 left-0 w-80 h-80 bg-blue-300/20 rounded-full blur-3xl animate-pulse delay-75" />

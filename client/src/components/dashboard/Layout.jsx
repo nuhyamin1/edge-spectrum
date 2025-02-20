@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   UserCircleIcon, 
@@ -18,8 +18,15 @@ import { useAuth } from '../../context/AuthContext';
 const Layout = ({ children, userType }) => {
   const location = useLocation();
   const { user } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const isClassroomView = location.pathname.includes('/classroom/');
+
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
 
   const teacherMenus = [
     { path: '/dashboard', label: 'Overview', icon: HomeIcon },
@@ -109,15 +116,17 @@ const Layout = ({ children, userType }) => {
                     : 'text-blue-200/80 hover:bg-blue-800/20 hover:pl-5 border-l-4 border-transparent'
                 }`}
               >
-                <menu.icon className={`w-6 h-6 ${isSidebarOpen ? 'mr-3' : ''} transition-all duration-300`} />
-                <span className="relative whitespace-nowrap">
-                  {isSidebarOpen ? (
-                    menu.label
-                  ) : (
-                    <span className="hidden">{menu.label}</span>
-                  )}
-                  <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-blue-300 transition-all duration-300"></span>
-                </span>
+                <div className="flex items-center">
+                  <menu.icon className={`sidebar-icon ${isSidebarOpen ? 'mr-3' : ''} transition-all duration-300`} />
+                  <span className="relative whitespace-nowrap">
+                    {isSidebarOpen ? (
+                      menu.label
+                    ) : (
+                      <span className="hidden">{menu.label}</span>
+                    )}
+                    <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-blue-300 transition-all duration-300"></span>
+                  </span>
+                </div>
                 {/* Tooltip for collapsed state */}
                 {!isSidebarOpen && (
                   <div className="absolute left-20 bg-blue-800 text-white px-2 py-1 rounded-md text-sm 
@@ -251,6 +260,37 @@ const Layout = ({ children, userType }) => {
             <div className="space-y-8">
               {children}
             </div>
+
+            {/* Info and Contact Section */}
+            <footer className="mt-32 border-t border-blue-100 pt-8 pb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-blue-900">About Us</h3>
+                  <p className="text-blue-600 text-sm leading-relaxed">
+                    PF Speaking Master is dedicated to revolutionizing language learning through innovative technology and interactive experiences.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-blue-900">Contact Us</h3>
+                  <div className="space-y-2 text-sm text-blue-600">
+                    <p>Email: support@pfspeakingmaster.com</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                    <p>Hours: Mon-Fri 9:00 AM - 6:00 PM EST</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-blue-900">Quick Links</h3>
+                  <div className="space-y-2 text-sm">
+                    <p><a href="/help" className="text-blue-600 hover:text-blue-800 transition-colors">Help Center</a></p>
+                    <p><a href="/privacy" className="text-blue-600 hover:text-blue-800 transition-colors">Privacy Policy</a></p>
+                    <p><a href="/terms" className="text-blue-600 hover:text-blue-800 transition-colors">Terms of Service</a></p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 text-center text-sm text-blue-500">
+                © {new Date().getFullYear()} PF Speaking Master. All rights reserved.
+              </div>
+            </footer>
           </div>
         </div>
       </div>
