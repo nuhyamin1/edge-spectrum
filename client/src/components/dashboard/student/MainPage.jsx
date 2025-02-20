@@ -82,12 +82,12 @@ const StudentMainPage = () => {
 
   return (
     <Layout userType="student">
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-300 p-8 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-400 p-8 relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 left-0 w-80 h-80 bg-blue-300/20 rounded-full blur-3xl animate-pulse delay-75" />
         
-        <div className="space-y-12 relative z-10">
+        <div className="space-y-32 relative z-10">
           {/* Materials Section */}
           <section>
             <div className="relative mb-8">
@@ -152,19 +152,26 @@ const StudentMainPage = () => {
               ))}
             </div>
 
-            {/* See More Button */}
+            {/* See More Link */}
             {materials.length > visibleMaterials && (
               <div className="flex justify-center mt-10">
                 <button
                   onClick={handleSeeMore}
-                  className="flex items-center gap-3 bg-gradient-to-br from-blue-300 to-blue-400 
-                  text-white px-10 py-3.5 rounded-xl hover:shadow-2xl 
-                  transition-all duration-300 shadow-lg hover:-translate-y-0.5
-                  transform hover:scale-105 group"
+                  className="flex items-center gap-2 relative group"
                 >
-                  <span>Load More</span>
-                  <ChevronDownIcon className="w-6 h-6 animate-bounce group-hover:animate-none 
-                    group-hover:transition-transform group-hover:duration-300 group-hover:translate-y-1" />
+                  <span className="text-lg bg-gradient-to-r from-blue-600 to-blue-400 
+                    bg-clip-text text-transparent font-medium hover:from-blue-700 
+                    hover:to-blue-500 transition-all duration-300">
+                    See more materials
+                  </span>
+                  <ChevronDownIcon className="w-5 h-5 text-blue-500 group-hover:text-blue-700
+                    transition-all duration-300 transform 
+                    animate-float group-hover:translate-y-1" />
+                  
+                  {/* Animated underline effect */}
+                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 
+                    bg-gradient-to-r from-blue-600/50 to-blue-400/50 
+                    group-hover:w-full transition-all duration-500 ease-out" />
                 </button>
               </div>
             )}
@@ -180,35 +187,77 @@ const StudentMainPage = () => {
           </section>
 
           {/* Sessions Section */}
-          <section className="space-y-14">
+          <section className="space-y-12">
             <div className="relative mb-8">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 
                 bg-clip-text text-transparent">
                 Learning Sessions
-              </h2>
+              </h1>
+              {/* Decorative element */}
+              <div className="absolute -left-4 -top-4 w-20 h-20 bg-blue-200/30 rounded-full 
+                blur-2xl animate-pulse z-0" />
             </div>
-            <div className="space-y-14">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgba(147,197,253,0.15)]">
-                <SessionsSection 
-                  title="Active Sessions"
-                  sessions={activeSessions}
-                  type="active"
-                />
+            
+            <div className="space-y-6 relative">
+              {/* Active Sessions */}
+              <div className="group">
+                <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-8 
+                  shadow-[0_8px_30px_rgba(147,197,253,0.2)]
+                  hover:shadow-[0_15px_35px_rgba(147,197,253,0.25)]
+                  transition-all duration-500 ease-out
+                  border border-blue-100/50 relative overflow-hidden">
+                  {/* Gradient accent */}
+                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b 
+                    from-green-400 to-blue-400 rounded-l" />
+                  <SessionsSection 
+                    title="Active Sessions"
+                    sessions={activeSessions}
+                    type="active"
+                  />
+                </div>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgba(147,197,253,0.15)]">
-                <SessionsSection 
-                  title="Upcoming Sessions"
-                  sessions={upcomingSessions}
-                  type="upcoming"
-                />
+
+              {/* Upcoming Sessions */}
+              <div className="group">
+                <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-8
+                  shadow-[0_8px_30px_rgba(147,197,253,0.2)]
+                  hover:shadow-[0_15px_35px_rgba(147,197,253,0.25)]
+                  transition-all duration-500 ease-out
+                  border border-blue-100/50 relative overflow-hidden">
+                  {/* Gradient accent */}
+                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b 
+                    from-blue-400 to-purple-400 rounded-l" />
+                  <SessionsSection 
+                    title="Upcoming Sessions"
+                    sessions={upcomingSessions}
+                    type="upcoming"
+                  />
+                </div>
               </div>
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgba(147,197,253,0.15)]">
-                <SessionsSection 
-                  title="Completed Sessions"
-                  sessions={completedSessions}
-                  type="completed"
-                />
+
+              {/* Completed Sessions */}
+              <div className="group">
+                <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-8
+                  shadow-[0_8px_30px_rgba(147,197,253,0.2)]
+                  hover:shadow-[0_15px_35px_rgba(147,197,253,0.25)]
+                  transition-all duration-500 ease-out
+                  border border-blue-100/50 relative overflow-hidden">
+                  {/* Gradient accent */}
+                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b 
+                    from-gray-400 to-blue-300 rounded-l" />
+                  <SessionsSection 
+                    title="Completed Sessions"
+                    sessions={completedSessions}
+                    type="completed"
+                  />
+                </div>
               </div>
+
+              {/* Decorative background elements */}
+              <div className="absolute -right-40 top-1/3 w-80 h-80 bg-blue-200/20 
+                rounded-full blur-3xl animate-pulse-slow" />
+              <div className="absolute -left-40 bottom-1/4 w-80 h-80 bg-blue-300/20 
+                rounded-full blur-3xl animate-pulse-slow delay-1000" />
             </div>
           </section>
         </div>
