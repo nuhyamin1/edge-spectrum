@@ -87,7 +87,7 @@ const AuthLayout = ({ children }) => {
 
   return (
     <MotionConfig reducedMotion="user">
-<div className="min-h-screen flex relative">
+<div className="min-h-screen flex relative position-fixed top-0">
         {/* Left side - Website Description */}
         <div className="hidden lg:flex lg:w-[60%] bg-blue-300 p-12 flex-col justify-between">
           {/* Curved separator - updated with SVG for smooth curve */}
@@ -106,9 +106,9 @@ const AuthLayout = ({ children }) => {
           </div>
           
           <div className="relative max-w-2xl">
-            <h1 className="text-7xl font-black text-black mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <h1 className="text-8xl font-black text-black mb-8" style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: '900 !important' }}>
               PF Speaking Master
-            </h1>
+          </h1>
             
             {/* Animation Container */}
             <div className="flex space-x-8 mb-8">
@@ -214,7 +214,7 @@ const AuthLayout = ({ children }) => {
         </div>
 
         {/* Right side - Auth Form */}
-        <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
+        <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto" style={{ position: 'fixed', top: '50%', transform: 'translateY(-50%)', right: 0 }}>
           {children}
         </div>
       </div>
