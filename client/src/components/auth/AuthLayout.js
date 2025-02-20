@@ -1,57 +1,89 @@
-import { motion, MotionConfig } from 'framer-motion';
+import { MotionConfig } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-
-const pageVariants = {
-  initial: {
-    opacity: 0,
-    y: 20,
-    scale: 0.98
-  },
-  in: {
-    opacity: 1,
-    y: 0,
-    scale: 1
-  },
-  exit: {
-    opacity: 0,
-    y: -20,
-    scale: 0.98
-  }
-};
-
-const pageTransition = {
-  type: "spring",
-  stiffness: 400,
-  damping: 25,
-  duration: 0.3
-};
-
-// Faster staggered animation for children elements
-const containerVariants = {
-  initial: {
-    opacity: 0,
-    y: 20
-  },
-  in: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    }
-  },
-  exit: {
-    opacity: 0,
-    y: -20,
-    transition: {
-      staggerChildren: 0.03,
-      staggerDirection: -1
-    }
-  }
-};
+import Lottie from 'lottie-react';
+import speakingAnimation from '../../animations/speaking-animation.json';
+import classroomAnimation from '../../animations/classroom.json';
+import narrationAudio from '../../assets/pf-speaking-master.mp3';
+import React, { useEffect, useRef, useState } from 'react';
 
 const AuthLayout = ({ children }) => {
   const location = useLocation();
+  const audioRef = useRef(null);
+  const animationRef = useRef(null);
+  const classroomAnimationRef = useRef(null);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const interactionHandledRef = useRef(false);
+
+  // Function to synchronize audio and animation playback
+  const startMediaTogether = (e) => {
+    // Prevent event from bubbling up
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    if (interactionHandledRef.current) return;
+    
+    console.log("Starting media playback...");
+    if (audioRef.current && animationRef.current) {
+      // Play audio with error handling
+      const playPromise = audioRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log("Audio started successfully");
+            // Ensure animation is playing
+            if (animationRef.current) {
+              animationRef.current.play();
+            }
+            interactionHandledRef.current = true;
+            setUserInteracted(true);
+          })
+          .catch(error => {
+            console.error("Audio playback failed:", error);
+            // If audio fails, still try to play animation
+            if (animationRef.current) {
+              animationRef.current.play();
+            }
+            interactionHandledRef.current = true;
+            setUserInteracted(true);
+          });
+      }
+    }
+  };
+
+  // Initialize animation to first frame
+  useEffect(() => {
+    if (animationRef.current) {
+      animationRef.current.goToAndStop(0, true);
+    }
+  }, []);
+
+  // Global click handler (fallback)
+  useEffect(() => {
+    const handleGlobalInteraction = () => {
+      if (!interactionHandledRef.current) {
+        startMediaTogether();
+      }
+    };
+    
+    document.addEventListener('click', handleGlobalInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleGlobalInteraction);
+    };
+  }, []);
+
+  // Reset on unmount or route change
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      interactionHandledRef.current = false;
+    };
+  }, [location.pathname]);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -59,14 +91,51 @@ const AuthLayout = ({ children }) => {
         {/* Left side - Website Description */}
         <div className="hidden lg:flex lg:w-[60%] bg-blue-300 p-12 flex-col justify-between relative">
           {/* Curved separator */}
-          <div className="absolute right-0 top-0 h-full w-32 overflow-hidden">
-            <div className="absolute top-0 right-0 h-full w-[200%] bg-gradient-to-br from-gray-50 to-gray-100 transform translate-x-1/2 rounded-l-[100%]" />
-          </div>
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-blue-300" style={{ clipPath: 'polygon(100% 0, 0% 100%, 100% 100%)' }}></div>
 
           <div className="relative max-w-2xl">
             <h1 className="text-4xl font-black text-black mb-6">
               PF Speaking Master
             </h1>
+            
+            {/* Animation Container */}
+            <div className="flex space-x-8 mb-8">
+              {/* Speaking Animation */}
+              <div className="w-1/2 relative">
+                <Lottie
+                  lottieRef={animationRef}
+                  animationData={speakingAnimation}
+                  loop={true}
+                  autoplay={true}
+                  style={{ width: '100%', height: '300px' }}
+                />
+                <audio 
+                  ref={audioRef} 
+                  src={narrationAudio} 
+                  preload="auto"
+                  loop={true}
+                />
+                
+                {!userInteracted && (
+                  <button 
+                    onClick={(e) => startMediaTogether(e)}
+                    className="absolute inset-0 z-10"
+                  />
+                )}
+              </div>
+
+              {/* Classroom Animation */}
+              <div className="w-1/2">
+                <Lottie
+                  lottieRef={classroomAnimationRef}
+                  animationData={classroomAnimation}
+                  loop={true}
+                  autoplay={true}
+                  style={{ width: '100%', height: '300px' }}
+                />
+              </div>
+            </div>
+
             <p className="text-xl text-black/90 mb-8">
               Transform your learning journey with our comprehensive virtual learning platform.
             </p>
@@ -133,25 +202,81 @@ const AuthLayout = ({ children }) => {
         </div>
 
         {/* Right side - Auth Form */}
-        <motion.div
-          key={location.pathname}
-          initial="initial"
-          animate="in"
-          exit="exit"
-          variants={pageVariants}
-          transition={pageTransition}
-          className="w-full lg:w-[40%] flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-gray-100"
-        >
-          <motion.div
-            variants={containerVariants}
-            className="w-full max-w-md"
-          >
-            {children}
-          </motion.div>
-        </motion.div>
+        <div className="flex-1 flex items-center justify-center p-8">
+          {children}
+        </div>
       </div>
+
+      {/* CSS Styles */}
+      <style jsx>{`
+        .speaking-animation {
+          position: relative;
+          height: 200px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .person {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .head {
+          width: 50px;
+          height: 50px;
+          background: #2c3e50;
+          border-radius: 50%;
+        }
+
+        .body {
+          width: 80px;
+          height: 100px;
+          background: #2c3e50;
+          border-radius: 20px 20px 0 0;
+          margin-top: 10px;
+        }
+
+        .speech-bubble {
+          position: absolute;
+          left: 60%;
+          width: 100px;
+          height: 60px;
+          background: white;
+          border-radius: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: float 2s infinite;
+        }
+
+        .wave {
+          width: 60px;
+          height: 20px;
+          background: repeating-linear-gradient(
+            to right,
+            #3498db 0%,
+            #3498db 10%,
+            transparent 10%,
+            transparent 20%
+          );
+          animation: wave 1s infinite linear;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
+        @keyframes wave {
+          0% { background-position: 0 0; }
+          100% { background-position: 20px 0; }
+        }
+      `}</style>
     </MotionConfig>
   );
 };
 
-export default AuthLayout; 
+export default AuthLayout;
