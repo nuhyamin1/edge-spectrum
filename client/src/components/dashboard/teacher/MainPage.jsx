@@ -91,21 +91,33 @@ const TeacherMainPage = () => {
   const handleSeeMore = () => {
     setVisibleMaterials(prev => prev + 4); // Show 4 more materials when clicked
   };
-
   return (
     <Layout userType="teacher">
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 p-6">
-        <div className="space-y-12">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-300 p-8 relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 left-0 w-80 h-80 bg-blue-300/20 rounded-full blur-3xl animate-pulse delay-75" />
+        
+        <div className="space-y-12 relative z-10">
           {/* Materials Section */}
           <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-extrabold text-blue-800">
-                Semester Materials
-              </h2>
+            <div className="flex items-center justify-between mb-8">
+              <div className="relative">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
+                  Semester Materials
+                </h2>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-300 to-transparent rounded-full" />
+              </div>
               <button
                 onClick={() => navigate('/dashboard/create-material')}
-                className="bg-blue-300 text-white px-6 py-2.5 rounded-lg hover:bg-blue-400 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="bg-gradient-to-br from-blue-300 to-blue-400 text-white px-8 py-3 rounded-xl 
+                hover:from-blue-400 hover:to-blue-500 transition-all duration-300 
+                shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5
+                flex items-center gap-2 group"
               >
+                <span className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
+                  <PencilIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+                </span>
                 Create Material
               </button>
             </div>
@@ -113,37 +125,40 @@ const TeacherMainPage = () => {
               {materials.slice(0, visibleMaterials).map((material) => (
                 <div
                   key={material._id}
-                  className="bg-white/90 backdrop-blur-sm rounded-xl p-6 
-                  border-2 border-transparent hover:border-blue-300/50
-                  transition-all duration-300 group flex flex-col min-h-[200px]
-                  shadow-[0_4px_20px_-1px_rgba(0,0,0,0.1)] 
-                  hover:shadow-[0_8px_30px_rgb(219,234,254,0.3)]
+                  className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 
+                  border-l-4 border-blue-300 hover:border-blue-400
+                  transition-all duration-300 group flex flex-col min-h-[220px]
+                  shadow-[0_8px_30px_rgba(147,197,253,0.15)]
+                  hover:shadow-[0_12px_40px_rgba(147,197,253,0.25)]
                   hover:transform hover:-translate-y-1
-                  relative overflow-hidden"
+                  relative overflow-hidden isolate"
                 >
-                  {/* Add decorative highlight effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-100/10 to-blue-300/10 opacity-0 
-                    group-hover:opacity-100 transition-opacity duration-300" 
-                  />
-                  <div className="absolute -inset-x-1 -inset-y-1 bg-gradient-to-r from-transparent via-blue-200/20 to-transparent 
-                    group-hover:animate-shimmer" 
-                  />
+                  {/* Glossy overlay effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 
+                    group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  
+                  {/* Animated border gradient */}
+                  <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-r from-blue-200/50 to-blue-300/50 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
+                    animate-[shimmer_2s_infinite]" />
 
                   <div 
                     onClick={() => navigate(`/dashboard/material/${material._id}`)}
                     className="cursor-pointer flex-1 relative"
                   >
-                    <h3 className="text-xl font-semibold text-blue-800 mb-3 
-                      group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-xl font-bold text-blue-900 mb-3 
+                      group-hover:text-blue-700 transition-colors">
                       {material.title}
                     </h3>
-                    <p className="text-sm text-blue-600 mb-3 font-medium">{material.subject}</p>
-                    <p className="text-slate-600 text-sm line-clamp-4 leading-relaxed">
+                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full mb-4">
+                      {material.subject}
+                    </span>
+                    <p className="text-slate-700/90 text-sm line-clamp-4 leading-relaxed">
                       {material.description}
                     </p>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-blue-100 flex justify-end space-x-2 relative">
+                  <div className="mt-4 pt-4 border-t border-blue-100/50 flex justify-end space-x-2 relative">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -151,11 +166,12 @@ const TeacherMainPage = () => {
                       }}
                       className="p-2.5 text-blue-500 hover:text-blue-700 
                       rounded-lg transition-all duration-300 
-                      hover:bg-blue-50/80 hover:shadow-lg
-                      active:scale-95"
+                      hover:bg-blue-50/80 hover:shadow-md
+                      active:scale-95 relative overflow-hidden"
                       title="Copy material link"
                     >
-                      <DocumentDuplicateIcon className="w-5 h-5" />
+                      <div className="absolute inset-0 bg-blue-500/0 hover:bg-blue-500/10 transition-colors" />
+                      <DocumentDuplicateIcon className="w-5 h-5 relative z-10" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -190,56 +206,70 @@ const TeacherMainPage = () => {
 
             {/* See More Button */}
             {materials.length > visibleMaterials && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-10">
                 <button
                   onClick={handleSeeMore}
-                  className="flex items-center gap-2 bg-blue-300/80 backdrop-blur-sm text-white 
-                  px-8 py-3 rounded-lg hover:bg-blue-400 transition-all duration-300 
-                  shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  className="flex items-center gap-3 bg-gradient-to-br from-blue-300 to-blue-400 
+                  text-white px-10 py-3.5 rounded-xl hover:shadow-2xl 
+                  transition-all duration-300 shadow-lg hover:-translate-y-0.5
+                  transform hover:scale-105 group"
                 >
-                  See More
-                  <ChevronDownIcon className="w-5 h-5 animate-bounce" />
+                  <span>Load More</span>
+                  <ChevronDownIcon className="w-6 h-6 animate-bounce group-hover:animate-none 
+                    group-hover:transition-transform group-hover:duration-300 group-hover:translate-y-1" />
                 </button>
               </div>
             )}
 
             {materials.length === 0 && (
-              <p className="text-slate-500 text-center py-8 bg-white/50 backdrop-blur-sm rounded-lg">
-                No materials available yet.
-              </p>
+              <div className="text-center py-12 bg-white/50 backdrop-blur-sm rounded-2xl 
+                border-2 border-dashed border-blue-200">
+                <p className="text-slate-500/90 text-lg font-light">
+                  No materials found. Start by creating your first content!
+                </p>
+              </div>
             )}
           </section>
 
           {/* Sessions Section */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-extrabold text-blue-800">
-                Sessions
-              </h2>
+          <section className="space-y-14">
+            <div className="flex items-center justify-between mb-8">
+              <div className="relative">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 
+                  bg-clip-text text-transparent">
+                  Teaching Sessions
+                </h2>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-300 to-transparent rounded-full" />
+              </div>
               <button
                 onClick={() => navigate('/dashboard/create-session')}
-                className="bg-blue-300 text-white px-6 py-2.5 rounded-lg hover:bg-blue-400 
-                transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="bg-gradient-to-br from-blue-300 to-blue-400 text-white px-8 py-3 rounded-xl 
+                hover:from-blue-400 hover:to-blue-500 transition-all duration-300 
+                shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5
+                flex items-center gap-2 group"
               >
+                <span className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
+                  <PencilIcon className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+                </span>
                 Create Session
               </button>
             </div>
-            <div className="space-y-12">
-              <div>
+            <div className="space-y-14">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgba(147,197,253,0.15)]">
                 <SessionsSection 
                   title="Active Sessions"
                   sessions={activeSessions}
                   type="active"
                 />
               </div>
-              <div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgba(147,197,253,0.15)]">
                 <SessionsSection 
                   title="Upcoming Sessions"
                   sessions={upcomingSessions}
                   type="upcoming"
                 />
               </div>
-              <div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgba(147,197,253,0.15)]">
                 <SessionsSection 
                   title="Completed Sessions"
                   sessions={completedSessions}
