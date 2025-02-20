@@ -87,27 +87,31 @@ const AuthLayout = ({ children }) => {
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen flex relative bg-gradient-to-tr from-blue-50 to-white">
+      <div className="min-h-screen flex relative">
         {/* Left side - Website Description */}
         <div className="hidden lg:flex lg:w-[60%] bg-gradient-to-br from-blue-400 to-blue-300 p-12 flex-col justify-between relative overflow-hidden">
-          {/* Animated floating elements */}
+          {/* Existing animated floating elements */}
           <div className="absolute top-0 left-0 w-full h-full">
             <div className="absolute -top-24 -left-24 w-48 h-48 bg-white/10 rounded-full" />
             <div className="absolute top-1/3 right-0 w-32 h-32 bg-white/15 rounded-full blur-lg" />
             <div className="absolute bottom-16 left-48 w-64 h-64 bg-blue-200/20 rounded-full blur-xl" />
           </div>
-  
-          {/* Curved separator with gradient */}
-          <div className="absolute top-0 right-0 h-full w-24 overflow-hidden">
-            <svg className="h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#63b3ed', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#ffffff', stopOpacity: 1 }} />
-                </linearGradient>
-              </defs>
-              <path d="M 0,0 C 40,50 60,50 100,100 L 100,0 Z" fill="url(#gradient)" />
-            </svg>
+
+          {/* Curved separator with more pronounced curve */}
+          <div className="absolute top-0 right-0 h-full">
+            <div className="h-full w-[100px]">
+              <svg
+                className="h-full w-full"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M0 0 C 60 50, 60 50, 0 100 L100 100 L100 0 Z"
+                  fill="white"
+                  className="drop-shadow-xl"
+                />
+              </svg>
+            </div>
           </div>
           
           <div className="relative max-w-2xl z-10">
@@ -119,7 +123,6 @@ const AuthLayout = ({ children }) => {
             <div className="flex space-x-8 mb-8 transform transition-all duration-300">
               {/* Speaking Animation */}
               <div className="w-1/2 relative group">
-                <div className="rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105">
                   <Lottie
                     lottieRef={animationRef}
                     animationData={speakingAnimation}
@@ -140,12 +143,10 @@ const AuthLayout = ({ children }) => {
                       className="absolute inset-0 z-10"
                     />
                   )}
-                </div>
               </div>
   
               {/* Classroom Animation */}
               <div className="w-1/2 group">
-                <div className="rounded-2xl overflow-hidden shadow-2xl transition-transform duration-300 group-hover:scale-105">
                   <Lottie
                     lottieRef={classroomAnimationRef}
                     animationData={classroomAnimation}
@@ -153,7 +154,6 @@ const AuthLayout = ({ children }) => {
                     autoplay={true}
                     style={{ width: '100%', height: '300px' }}
                   />
-                </div>
               </div>
             </div>
   
