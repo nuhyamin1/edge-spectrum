@@ -105,8 +105,7 @@ const TeacherMainPage = () => {
               <div className="relative">
                 <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
                   Semester Materials
-                </h2>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-300 to-transparent rounded-full" />
+                </h2>           
               </div>
               <button
                 onClick={() => navigate('/dashboard/create-material')}
@@ -239,7 +238,6 @@ const TeacherMainPage = () => {
                   bg-clip-text text-transparent">
                   Teaching Sessions
                 </h2>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-300 to-transparent rounded-full" />
               </div>
               <button
                 onClick={() => navigate('/dashboard/create-session')}

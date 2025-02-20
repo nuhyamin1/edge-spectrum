@@ -105,17 +105,108 @@ const Layout = ({ children, userType }) => {
             {location.pathname === '/dashboard' && (
               <div className="mb-8 bg-gradient-to-r from-blue-50 to-white rounded-2xl shadow-sm border border-blue-100 p-8 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDA3NWZmIiBzdHJva2Utd2lkdGg9IjAuNSIvPjwvc3ZnPg==')]"></div>
-                <div className="max-w-3xl relative">
+                <div className="relative">
                   <h1 className="font-['Inter'] text-4xl font-black text-blue-900 mb-3">
                     <span className="relative inline-block pb-2">
-                      My Dashboard
+                      PF Speaking Master
                       <span className="absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-300 to-transparent rounded-full"></span>
                     </span>
                   </h1>
-                  <p className="font-['Inter'] text-lg font-medium text-blue-700/90 tracking-wide capitalize">
-                    {user?.name || 'Welcome back!'}
-                    <span className="ml-2 animate-pulse">👋</span>
-                  </p>
+                  {/* Enhanced Platform Description - Full Width */}
+                  <div className="relative mt-10 p-8 bg-gradient-to-r from-blue-200 via-blue-100 to-blue-50 rounded-3xl shadow-xl overflow-hidden transform transition-transform duration-500 hover:scale-[1.02]">
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTBweCIgaGVpZ2h0PSI1MHB4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0id2hpdGUiLz48L3N2Zz4=')] opacity-10" />
+                    <div className="relative z-10">
+                      <h2 className="text-3xl font-extrabold text-blue-900 mb-4 max-w-3xl mx-auto">
+                        Transform Your Language Learning Journey
+                      </h2>
+                      <p className="text-lg text-blue-700 leading-relaxed mb-8 max-w-3xl mx-auto">
+                        Experience a revolutionary way to master speaking with real-time interaction, instant feedback, and cutting-edge technology. Whether you're a teacher or student, PF Speaking Master brings the language classroom to life in the digital world.
+                      </p>
+                      {/* Four column grid for larger screens */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-blue-200 transform transition-all duration-500 hover:bg-white hover:shadow-2xl">
+                          <h3 className="text-xl font-semibold text-blue-800 mb-3 flex items-center">
+                            <span className="text-blue-500 mr-2">🎯</span>
+                            Interactive Learning Experience
+                          </h3>
+                          <ul className="space-y-3 text-blue-600 text-sm">
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Real-time video communication for authentic conversation practice
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Live pronunciation feedback and correction
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Interactive exercises and discussion rooms
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-blue-200 transform transition-all duration-500 hover:bg-white hover:shadow-2xl">
+                          <h3 className="text-2xl font-semibold text-blue-800 mb-3 flex items-center">
+                            <span className="text-blue-500 mr-2">💡</span>
+                            Advanced Learning Tools
+                          </h3>
+                          <ul className="space-y-3 text-blue-600 text-sm">
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Screen sharing for enhanced demonstrations
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Digital whiteboard for visual explanations
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Breakout rooms for small group practice
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-blue-200 transform transition-all duration-500 hover:bg-white hover:shadow-2xl">
+                          <h3 className="text-2xl font-semibold text-blue-800 mb-3 flex items-center">
+                            <span className="text-blue-500 mr-2">📊</span>
+                            Progress Tracking
+                          </h3>
+                          <ul className="space-y-3 text-blue-600 text-sm">
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Detailed feedback on pronunciation and fluency
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Record and review speaking sessions
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Track improvement over time
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-blue-200 transform transition-all duration-500 hover:bg-white hover:shadow-2xl">
+                          <h3 className="text-2xl font-semibold text-blue-800 mb-3 flex items-center">
+                            <span className="text-blue-500 mr-2">🌟</span>
+                            Engagement Features
+                          </h3>
+                          <ul className="space-y-3 text-blue-600 text-sm">
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Hand raise and participation tracking
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Real-time discussion and feedback
+                            </li>
+                            <li className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                              Interactive exercises and games
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
