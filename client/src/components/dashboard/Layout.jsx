@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { UserCircleIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
+import { 
+  UserCircleIcon, 
+  Bars3Icon, 
+  XMarkIcon, 
+  ChevronLeftIcon,
+  HomeIcon,
+  DocumentPlusIcon,
+  PlusCircleIcon,
+  CalendarIcon,
+  ClipboardIcon,
+  AcademicCapIcon,
+  CheckCircleIcon
+} from '@heroicons/react/24/solid';
 import { useAuth } from '../../context/AuthContext';
 
 const Layout = ({ children, userType }) => {
@@ -10,23 +22,23 @@ const Layout = ({ children, userType }) => {
   const isClassroomView = location.pathname.includes('/classroom/');
 
   const teacherMenus = [
-    { path: '/dashboard', label: 'Overview' },
-    { path: '/dashboard/create-material', label: 'Create Material' },
-    { path: '/dashboard/create-session', label: 'Create Session' },
-    { path: '/dashboard/sessions', label: 'Session List' },
-    { path: '/dashboard/assignments', label: 'Assignments' }
+    { path: '/dashboard', label: 'Overview', icon: HomeIcon },
+    { path: '/dashboard/create-material', label: 'Create Material', icon: DocumentPlusIcon },
+    { path: '/dashboard/create-session', label: 'Create Session', icon: PlusCircleIcon },
+    { path: '/dashboard/sessions', label: 'Session List', icon: CalendarIcon },
+    { path: '/dashboard/assignments', label: 'Assignments', icon: ClipboardIcon }
   ];
 
   const studentMenus = [
-    { path: '/dashboard', label: 'Overview' },
-    { path: '/dashboard/available-sessions', label: 'Available Sessions' },
-    { path: '/dashboard/assignments', label: 'Assignments' }
+    { path: '/dashboard', label: 'Overview', icon: HomeIcon },
+    { path: '/dashboard/available-sessions', label: 'Available Sessions', icon: AcademicCapIcon },
+    { path: '/dashboard/assignments', label: 'Assignments', icon: CheckCircleIcon }
   ];
 
   const menus = userType === 'teacher' ? teacherMenus : studentMenus;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-100 to-blue-50">
+    <div className="flex min-h-screen bg-gradient-to-br from-blue-400 to-blue-50">
       {/* Mobile Menu Button */}
       {!isClassroomView && (
         <button
@@ -44,10 +56,18 @@ const Layout = ({ children, userType }) => {
       {/* Sidebar */}
       {!isClassroomView && (
         <div
-          className={`fixed md:static inset-y-0 left-0 z-40 w-64 transform ${
-            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } md:translate-x-0 transition-transform duration-300 ease-in-out bg-blue-900 shadow-2xl shadow-blue-100/50`}
+          className={`fixed md:static inset-y-0 left-0 z-40 transform 
+            ${isSidebarOpen ? 'w-64' : 'w-20'} 
+            transition-all duration-300 ease-in-out bg-blue-900 shadow-2xl shadow-blue-100/50`}
         >
+          {/* Collapse Button (Desktop Only) */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="hidden md:flex absolute -right-3 top-8 bg-blue-800 text-white p-1 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          >
+            <ChevronLeftIcon className={`w-5 h-5 transform transition-transform ${isSidebarOpen ? '' : 'rotate-180'}`} />
+          </button>
+
           {/* Profile Section */}
           <Link
             to="/dashboard/profile"
@@ -66,12 +86,14 @@ const Layout = ({ children, userType }) => {
                 )}
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-blue-900"></div>
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-blue-100">
-                  {user?.name || 'User Name'}
-                </span>
-                <span className="text-sm text-blue-300/80 capitalize">{userType}</span>
-              </div>
+              {isSidebarOpen && (
+                <div className="flex flex-col">
+                  <span className="font-bold text-blue-100">
+                    {user?.name || 'User Name'}
+                  </span>
+                  <span className="text-sm text-blue-300/80 capitalize">{userType}</span>
+                </div>
+              )}
             </div>
           </Link>
 
@@ -87,10 +109,22 @@ const Layout = ({ children, userType }) => {
                     : 'text-blue-200/80 hover:bg-blue-800/20 hover:pl-5 border-l-4 border-transparent'
                 }`}
               >
-                <span className="relative">
-                  {menu.label}
+                <menu.icon className={`w-6 h-6 ${isSidebarOpen ? 'mr-3' : ''} transition-all duration-300`} />
+                <span className="relative whitespace-nowrap">
+                  {isSidebarOpen ? (
+                    menu.label
+                  ) : (
+                    <span className="hidden">{menu.label}</span>
+                  )}
                   <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-blue-300 transition-all duration-300"></span>
                 </span>
+                {/* Tooltip for collapsed state */}
+                {!isSidebarOpen && (
+                  <div className="absolute left-20 bg-blue-800 text-white px-2 py-1 rounded-md text-sm 
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                    {menu.label}
+                  </div>
+                )}
               </Link>
             ))}
           </nav>
@@ -98,7 +132,9 @@ const Layout = ({ children, userType }) => {
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${!isClassroomView && isSidebarOpen ? 'md:ml-0' : ''}`}>
+      <div className={`flex-1 transition-all duration-300 ${
+        !isClassroomView && isSidebarOpen ? 'md:ml-0' : ''
+      }`}>
         <div className="h-full px-4 py-8 md:px-8">
           <div className="max-w-6xl mx-auto">
             {/* Welcome Section */}
