@@ -90,9 +90,21 @@ const AuthLayout = ({ children }) => {
       <div className="min-h-screen flex relative">
         {/* Left side - Website Description */}
         <div className="hidden lg:flex lg:w-[60%] bg-blue-300 p-12 flex-col justify-between relative">
-          {/* Curved separator */}
-          <div className="absolute right-0 top-0 bottom-0 w-24 bg-blue-300" style={{ clipPath: 'polygon(100% 0, 0% 100%, 100% 100%)' }}></div>
-
+          {/* Curved separator - updated with SVG for smooth curve */}
+          <div className="absolute top-0 right-0 h-full w-24 overflow-hidden">
+            <svg
+              className="h-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              style={{ width: '100%', height: '100%' }}
+            >
+              <path
+                d="M 0,0 C 40,50 60,50 100,100 L 100,0 Z"
+                fill="#E5E7EB"  // This should match your white background color
+              />
+            </svg>
+          </div>
+          
           <div className="relative max-w-2xl">
             <h1 className="text-4xl font-black text-black mb-6">
               PF Speaking Master
