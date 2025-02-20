@@ -107,7 +107,24 @@ const AuthLayout = ({ children }) => {
               >
                 <path
                   d="M0 0 C 60 50, 60 50, 0 100 L100 100 L100 0 Z"
-                  fill="white"
+                  fill="#34aaff"
+                  className="drop-shadow-xl"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Curved separator with more pronounced curve */}
+          <div className="absolute top-0 right-0 h-full">
+            <div className="h-full w-[100px]">
+              <svg
+                className="h-full w-full"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M0 0 C 120 50, 120 50, 0 60 L100 100 L100 0 Z"
+                  fill="#fafafa"
                   className="drop-shadow-xl"
                 />
               </svg>
