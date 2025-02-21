@@ -27,6 +27,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { AnimatePresence, MotionConfig } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
+import LandingPage from './components/LandingPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -56,6 +57,7 @@ const AppRoutes = () => {
     <MotionConfig reducedMotion="user">
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify/:token" element={<EmailVerification />} />
