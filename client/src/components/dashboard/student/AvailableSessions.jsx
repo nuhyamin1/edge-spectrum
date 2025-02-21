@@ -284,28 +284,31 @@ const AvailableSessions = () => {
 
   return (
     <Layout userType="student">
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Available Sessions</h2>
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-200">Available Sessions</h2>
         </div>
         
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-700">
           {sessions.length === 0 ? (
-            <div className="p-6 text-center text-gray-600">
+            <div className="p-6 text-center text-gray-400">
               No available sessions at the moment
             </div>
           ) : (
             sessions.map((session) => {
               const isEnrolled = enrolledSessions.includes(session._id);
-              const status = session.status || 'scheduled'; // Default to 'scheduled' if status is undefined
+              const status = session.status || 'scheduled';
               const isActive = status === 'active';
               const isCompleted = status === 'completed';
+              
               return (
-                <div key={session._id} className="p-6 hover:bg-gray-50">
+                <div key={session._id} 
+                  className="relative group p-6 hover:bg-gray-800/30 transition-all duration-300"
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex-1 text-left">
                       <div className="flex items-center space-x-2">
-                        <h3 className="text-lg font-semibold text-gray-800">{session.title}</h3>
+                        <h3 className="text-lg font-semibold text-gray-200">{session.title}</h3>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           isActive ? 'bg-green-100 text-green-800' :
                           isCompleted ? 'bg-gray-100 text-gray-800' :
@@ -314,11 +317,11 @@ const AvailableSessions = () => {
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-400 mt-1">
                         {session.subject} • Taught by {session.teacher?.name || 'Unknown Teacher'}
                       </p>
                       <p className="text-sm text-gray-500 mt-2">{session.description}</p>
-                      <div className="mt-2 text-sm text-gray-600">
+                      <div className="mt-2 text-sm text-gray-400">
                         <span>Duration: {session.duration} mins</span>
                         <span className="mx-2">•</span>
                         <span>Grace Period: {session.gracePeriod || 5} mins</span>
@@ -328,17 +331,17 @@ const AvailableSessions = () => {
                           href={session.materials} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 mt-2 inline-block"
+                          className="text-sm text-blue-400 hover:text-blue-300 mt-2 inline-block"
                         >
                           View Materials
                         </a>
                       )}
                       {session.status === 'active' && (
                         <div className="mt-2">
-                          <p className="text-sm font-medium text-blue-600">
+                          <p className="text-sm font-medium text-blue-400">
                             Session is active!
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-400">
                             Grace period: {gracePeriodTimers[session._id] ? 
                               formatTimeLeft(gracePeriodTimers[session._id].timeLeft) :
                               `${session.gracePeriod} minutes`}
@@ -352,29 +355,34 @@ const AvailableSessions = () => {
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-400">
                         {new Date(session.dateTime).toLocaleString()}
                       </p>
-                      {isEnrolled && isActive ? (
-                        <button 
-                          onClick={() => handleJoinSession(session)}
-                          className="mt-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                        >
-                          Join Live Session
-                        </button>
-                      ) : !isCompleted && (
-                        <button 
-                          className={`mt-2 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                            isEnrolled 
-                              ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500 text-white'
-                              : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 text-white'
-                          }`}
-                          onClick={() => handleEnrollment(session._id, isEnrolled)}
-                          disabled={isCompleted}
-                        >
-                          {isEnrolled ? 'Leave Session' : 'Join Session'}
-                        </button>
-                      )}
+                      <div className="flex flex-col gap-2">
+                        {!isCompleted && (
+                          <button
+                            onClick={() => handleEnrollment(session._id, isEnrolled)}
+                            className={`px-4 py-2 rounded-lg transition-all duration-300
+                              ${isEnrolled ? 
+                                'bg-red-400/10 text-red-400 border border-red-400/20 hover:bg-red-400/20 hover:border-red-400/50' :
+                                'bg-green-400/10 text-green-400 border border-green-400/20 hover:bg-green-400/20 hover:border-green-400/50'
+                              }`}
+                          >
+                            {isEnrolled ? 'Leave' : 'Enroll'}
+                          </button>
+                        )}
+
+                        {isActive && isEnrolled && (
+                          <button
+                            onClick={() => handleJoinSession(session)}
+                            className="px-4 py-2 rounded-lg bg-neon-blue/10 text-neon-blue
+                              border border-neon-blue/20 hover:bg-neon-blue/20 hover:border-neon-blue/50
+                              transition-all duration-300"
+                          >
+                            Join Live
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

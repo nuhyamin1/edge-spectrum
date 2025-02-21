@@ -26,7 +26,7 @@ const styles = {
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
     borderRadius: 1,
     p: 1
   },
@@ -35,14 +35,14 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    mr: 1
+    color: '#E5E7EB',
   },
   linkItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: '#f0f7ff',
+    backgroundColor: 'rgba(96, 165, 250, 0.1)',
     borderRadius: 1,
     p: 1
   },
@@ -51,7 +51,7 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: '#1976d2',
+    color: '#60A5FA',
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline'
@@ -60,9 +60,9 @@ const styles = {
   fileInput: {
     mb: 2,
     p: 2,
-    border: '1px dashed #ccc',
+    border: '1px dashed rgba(75, 85, 99, 0.5)',
     borderRadius: 1,
-    backgroundColor: '#fafafa'
+    backgroundColor: 'rgba(31, 41, 55, 0.3)'
   },
   status: {
     px: 2,
@@ -72,26 +72,26 @@ const styles = {
     typography: 'body2',
   },
   pending: {
-    backgroundColor: '#fff3e0',
-    color: '#ed6c02',
+    backgroundColor: 'rgba(237, 108, 2, 0.1)',
+    color: '#ED6C02',
   },
   submitted: {
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
+    backgroundColor: 'rgba(25, 118, 210, 0.1)',
+    color: '#1976D2',
   },
   submitted_late: {
-    backgroundColor: '#fff3cd',
+    backgroundColor: 'rgba(133, 100, 4, 0.1)',
     color: '#856404',
     fontWeight: 'bold',
-    border: '2px solid #ffeeba',
+    border: '2px solid rgba(255, 238, 186, 0.2)',
   },
   accepted: {
-    backgroundColor: '#e8f5e9',
-    color: '#2e7d32',
+    backgroundColor: 'rgba(46, 125, 50, 0.1)',
+    color: '#2E7D32',
   },
   rejected: {
-    backgroundColor: '#fbe9e7',
-    color: '#d32f2f',
+    backgroundColor: 'rgba(211, 47, 47, 0.1)',
+    color: '#D32F2F',
   },
   countdown: {
     display: 'inline-flex',
@@ -103,20 +103,20 @@ const styles = {
     width: 'fit-content',
   },
   countdownWarning: {
-    backgroundColor: '#fff3cd',
+    backgroundColor: 'rgba(133, 100, 4, 0.1)',
     color: '#856404',
   },
   countdownDanger: {
-    backgroundColor: '#ffebee',
-    color: '#c62828',
+    backgroundColor: 'rgba(198, 40, 40, 0.1)',
+    color: '#C62828',
   },
   countdownNormal: {
-    backgroundColor: '#e8f5e9',
-    color: '#2e7d32',
+    backgroundColor: 'rgba(46, 125, 50, 0.1)',
+    color: '#2E7D32',
   },
   countdownExpired: {
-    backgroundColor: '#ffebee',
-    color: '#c62828',
+    backgroundColor: 'rgba(198, 40, 40, 0.1)',
+    color: '#C62828',
     fontWeight: 'bold',
   },
 };
@@ -345,125 +345,165 @@ const StudentAssignments = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>My Assignments</Typography>
-      
-      {assignments.map((assignment) => (
-        <Card key={assignment._id} sx={{ mb: 3, width: '100%' }}>
-          <CardContent>
-            {/* Header Section */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Typography variant="h6">{assignment.title}</Typography>
-                {renderCountdown(assignment.dueDate)}
-              </Box>
-              
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Teacher: {assignment.teacherId?.name}
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary">
-                Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
-              </Typography>
-            </Box>
+    <Box p={3} sx={{ backgroundColor: 'transparent' }}>
+      <Typography variant="h4" gutterBottom sx={{ color: '#F3F4F6' }}>
+        My Assignments
+      </Typography>
 
-            {/* Status Section */}
-            <Box sx={{ mb: 2 }}>
-              <Typography
+      <Grid container spacing={3}>
+        {assignments.map((assignment) => {
+          const studentDetails = getAssignmentDetails(assignment);
+          return (
+            <Grid item xs={12} key={assignment._id}>
+              <Card 
                 sx={{
-                  ...getStatusStyle(getAssignmentDetails(assignment)?.status),
-                  display: 'inline-block'
+                  backgroundColor: 'rgba(31, 41, 55, 0.5)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(75, 85, 99, 0.5)',
+                  transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&:hover': {
+                    border: '1px solid rgba(96, 165, 250, 0.5)',
+                    boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
+                  },
                 }}
               >
-                Status: {getStatusDisplay(getAssignmentDetails(assignment)?.status)}
-              </Typography>
-            </Box>
+                {/* Glossy overlay effect */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), transparent)',
+                    opacity: 0,
+                    transition: 'opacity 0.3s',
+                    pointerEvents: 'none',
+                    '.MuiCard-root:hover &': {
+                      opacity: 1
+                    }
+                  }}
+                />
 
-            {/* Mark and Feedback Section - Only show if they exist */}
-            {getAssignmentDetails(assignment)?.mark && (
-              <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                  Mark: {getAssignmentDetails(assignment)?.mark}/100
-                </Typography>
-              </Box>
-            )}
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Box>
+                      <Typography variant="h6" gutterBottom sx={{ color: '#F3F4F6' }}>
+                        {assignment.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 1 }}>
+                        {assignment.description}
+                      </Typography>
+                    </Box>
+                    {renderCountdown(assignment.dueDate)}
+                  </Box>
 
-            {getAssignmentDetails(assignment)?.feedback && (
-              <Box sx={{ mb: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Feedback:
-                </Typography>
-                <Typography variant="body1">
-                  {getAssignmentDetails(assignment)?.feedback}
-                </Typography>
-              </Box>
-            )}
+                  {studentDetails && (
+                    <Box sx={{ mt: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                        <Box sx={getStatusStyle(studentDetails.status)}>
+                          {getStatusDisplay(studentDetails.status)}
+                        </Box>
+                        {studentDetails.mark && (
+                          <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
+                            Mark: {studentDetails.mark}/100
+                          </Typography>
+                        )}
+                      </Box>
 
-            {getAssignmentDetails(assignment)?.rejectionReason && (
-              <Box sx={{ mb: 2, p: 2, bgcolor: '#fff3cd', borderRadius: 1 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Rejection Reason:
-                </Typography>
-                <Typography variant="body1" color="error">
-                  {getAssignmentDetails(assignment)?.rejectionReason}
-                </Typography>
-              </Box>
-            )}
+                      {studentDetails.feedback && (
+                        <Alert severity="info" sx={{ mb: 2, backgroundColor: 'rgba(25, 118, 210, 0.1)', color: '#1976D2' }}>
+                          {studentDetails.feedback}
+                        </Alert>
+                      )}
 
-            {/* Action Section */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleOpenSubmit(assignment)}
-                disabled={getAssignmentDetails(assignment)?.status === 'accepted'}
-              >
-                {getAssignmentDetails(assignment)?.status === 'accepted' 
-                  ? 'Submitted & Accepted' 
-                  : 'Submit Assignment'}
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      ))}
+                      {studentDetails.rejectionReason && (
+                        <Alert severity="error" sx={{ mb: 2, backgroundColor: 'rgba(211, 47, 47, 0.1)', color: '#D32F2F' }}>
+                          {studentDetails.rejectionReason}
+                        </Alert>
+                      )}
+                    </Box>
+                  )}
 
-      {/* Submit Assignment Dialog */}
-      <Dialog
-        open={openSubmitDialog}
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                    <Button
+                      onClick={() => handleOpenSubmit(assignment)}
+                      disabled={studentDetails?.status === 'accepted'}
+                      sx={{
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        color: '#60A5FA',
+                        '&:hover': {
+                          backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                        },
+                        '&.Mui-disabled': {
+                          backgroundColor: 'rgba(31, 41, 55, 0.3)',
+                          color: '#6B7280',
+                        },
+                      }}
+                    >
+                      {studentDetails?.status === 'accepted' ? 'Accepted' : 'Submit'}
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
+
+      <Dialog 
+        open={openSubmitDialog} 
         onClose={() => setOpenSubmitDialog(false)}
-        maxWidth="sm"
-        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(75, 85, 99, 0.5)',
+          }
+        }}
       >
-        <DialogTitle>Submit Assignment</DialogTitle>
+        <DialogTitle sx={{ color: '#F3F4F6' }}>
+          Submit Assignment
+        </DialogTitle>
         <DialogContent>
-          <Box mb={2}>
-            <Typography variant="body2" color="textSecondary" gutterBottom>
-              Maximum files allowed: {selectedAssignment?.maxFiles}
-            </Typography>
-            <Typography variant="body2" color="textSecondary" gutterBottom>
-              Maximum links allowed: {selectedAssignment?.maxLinks}
-            </Typography>
-          </Box>
-          
           <Box sx={styles.fileInput}>
             <input
               type="file"
               multiple
               onChange={handleFileChange}
-              accept=".pdf,.docx,.ppt,.pptx"
+              accept=".pdf,.doc,.docx,.txt"
+              style={{ color: '#9CA3AF' }}
             />
           </Box>
-          
-          {selectedFiles.map((file, index) => (
-            <Box key={index} sx={styles.submissionItem}>
-              <Typography variant="body2" sx={styles.fileName}>
-                {file.name}
-              </Typography>
+
+          {links.map((link, index) => (
+            <Box key={index} sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <TextField
+                fullWidth
+                value={link}
+                onChange={(e) => handleLinkChange(index, e.target.value)}
+                placeholder="Add link (optional)"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: '#F3F4F6',
+                    '& fieldset': {
+                      borderColor: 'rgba(75, 85, 99, 0.5)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(96, 165, 250, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#60A5FA',
+                    },
+                  },
+                }}
+              />
               <IconButton 
-                size="small"
-                onClick={() => {
-                  const newFiles = selectedFiles.filter((_, i) => i !== index);
-                  setSelectedFiles(newFiles);
+                onClick={() => handleRemoveLink(index)}
+                sx={{ 
+                  color: '#EF4444',
+                  '&:hover': {
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  }
                 }}
               >
                 <ClearIcon />
@@ -471,64 +511,92 @@ const StudentAssignments = () => {
             </Box>
           ))}
 
-          <Box mt={2}>
-            <Typography variant="subtitle1" gutterBottom>Links:</Typography>
-            {links.map((link, index) => (
-              <Box key={index} sx={styles.linkItem}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label={`Link ${index + 1}`}
-                  value={link}
-                  onChange={(e) => handleLinkChange(index, e.target.value)}
-                />
-                <IconButton 
-                  onClick={() => handleRemoveLink(index)}
-                  disabled={links.length === 1}
-                  size="small"
-                >
-                  <ClearIcon />
-                </IconButton>
-              </Box>
-            ))}
-            {links.length < selectedAssignment?.maxLinks && (
-              <Button
-                startIcon={<AddIcon />}
-                onClick={handleAddLink}
-                sx={{ mt: 1 }}
-              >
-                Add Link
-              </Button>
-            )}
-          </Box>
+          {links.length < selectedAssignment?.maxLinks && (
+            <Button
+              startIcon={<AddIcon />}
+              onClick={handleAddLink}
+              sx={{
+                color: '#60A5FA',
+                '&:hover': {
+                  backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                },
+              }}
+            >
+              Add Link
+            </Button>
+          )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenSubmitDialog(false)}>Cancel</Button>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(75, 85, 99, 0.5)' }}>
           <Button 
-            onClick={handleSubmitClick} 
-            color="primary"
-            disabled={selectedFiles.length === 0 && links.every(link => !link.trim())}
+            onClick={() => setOpenSubmitDialog(false)}
+            sx={{
+              color: '#9CA3AF',
+              '&:hover': {
+                backgroundColor: 'rgba(75, 85, 99, 0.2)',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit}
+            variant="contained"
+            sx={{
+              backgroundColor: 'rgba(96, 165, 250, 0.1)',
+              color: '#60A5FA',
+              '&:hover': {
+                backgroundColor: 'rgba(96, 165, 250, 0.2)',
+              },
+            }}
           >
             Submit
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Late Submission Confirmation Dialog */}
-      <Dialog open={confirmLateSubmit} onClose={() => setConfirmLateSubmit(false)}>
-        <DialogTitle>Overdue Assignment Submission</DialogTitle>
+      <Dialog
+        open={confirmLateSubmit}
+        onClose={() => setConfirmLateSubmit(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(75, 85, 99, 0.5)',
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: '#F3F4F6' }}>
+          Late Submission
+        </DialogTitle>
         <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            This assignment is overdue. Your submission will be marked as late.
-          </Alert>
-          <Typography>
-            Are you sure you want to proceed with the submission?
+          <Typography sx={{ color: '#9CA3AF' }}>
+            This assignment is past due. Your submission will be marked as late. Do you want to continue?
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmLateSubmit(false)}>Cancel</Button>
-          <Button onClick={handleConfirmLateSubmit} variant="contained" color="warning">
-            Submit Overdue Assignment
+        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(75, 85, 99, 0.5)' }}>
+          <Button 
+            onClick={() => setConfirmLateSubmit(false)}
+            sx={{
+              color: '#9CA3AF',
+              '&:hover': {
+                backgroundColor: 'rgba(75, 85, 99, 0.2)',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmLateSubmit}
+            variant="contained"
+            sx={{
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              color: '#EF4444',
+              '&:hover': {
+                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+              },
+            }}
+          >
+            Submit Anyway
           </Button>
         </DialogActions>
       </Dialog>

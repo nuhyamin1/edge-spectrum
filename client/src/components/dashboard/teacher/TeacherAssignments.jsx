@@ -31,9 +31,8 @@ const styles = {
   assignmentCard: {
     width: '100%',
     mb: 3,
-    transition: 'box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out',
+    transition: 'all 0.2s ease-in-out',
     '&:hover': {
-      boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
       transform: 'translateY(-4px)',
     },
   },
@@ -66,7 +65,8 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 0.5,
-    bgcolor: '#f0f7ff',
+    bgcolor: 'rgba(96, 165, 250, 0.1)',
+    color: '#60A5FA',
     px: 1.5,
     py: 0.75,
     borderRadius: '16px',
@@ -83,7 +83,7 @@ const styles = {
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'rgba(31, 41, 55, 0.5)',
     borderRadius: 1,
     p: 1
   },
@@ -92,14 +92,15 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    mr: 1
+    mr: 1,
+    color: '#E5E7EB'
   },
   linkItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: '#f0f7ff',
+    backgroundColor: 'rgba(96, 165, 250, 0.1)',
     borderRadius: 1,
     p: 1
   },
@@ -108,7 +109,7 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: '#1976d2',
+    color: '#60A5FA',
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline'
@@ -280,13 +281,23 @@ const TeacherAssignments = () => {
   };
 
   return (
-    <Box p={3}>
+    <Box p={3} sx={{ backgroundColor: 'transparent' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Assignments</Typography>
+        <Typography variant="h4" sx={{ color: '#F3F4F6' }}>
+          Assignments
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setOpenDialog(true)}
+          sx={{
+            backgroundColor: 'rgba(31, 41, 55, 0.5)',
+            borderColor: 'rgba(75, 85, 99, 0.5)',
+            color: '#60A5FA',
+            '&:hover': {
+              backgroundColor: 'rgba(31, 41, 55, 0.8)',
+            }
+          }}
         >
           Create Assignment
         </Button>
@@ -298,24 +309,58 @@ const TeacherAssignments = () => {
           return (
             <Paper 
               key={assignment._id}
-              elevation={2}
-              sx={styles.assignmentCard}
+              elevation={0}
+              sx={{
+                ...styles.assignmentCard,
+                backgroundColor: 'rgba(31, 41, 55, 0.5)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(75, 85, 99, 0.5)',
+                '&:hover': {
+                  border: '1px solid rgba(96, 165, 250, 0.5)',
+                  boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
+                },
+                position: 'relative',
+                overflow: 'hidden'
+              }}
             >
+              {/* Glossy overlay effect */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), transparent)',
+                  opacity: 0,
+                  transition: 'opacity 0.3s',
+                  pointerEvents: 'none',
+                  '.MuiPaper-root:hover &': {
+                    opacity: 1
+                  }
+                }}
+              />
+
               <CardContent 
-                sx={styles.cardContent}
+                sx={{
+                  ...styles.cardContent,
+                  '&:last-child': { pb: 3 }
+                }}
                 onClick={() => navigate(`/teacher/assignments/${assignment._id}`)}
               >
                 <Box sx={styles.headerSection}>
                   <Box sx={styles.titleSection}>
-                    <AssignmentIcon color="primary" />
-                    <Typography variant="h6" fontWeight="bold">
+                    <AssignmentIcon sx={{ color: '#60A5FA' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#F3F4F6' }}>
                       {assignment.title}
                     </Typography>
                   </Box>
                   <IconButton
-                    color="error"
                     onClick={(e) => handleDeleteAssignment(assignment._id, e)}
                     size="small"
+                    sx={{
+                      color: '#EF4444',
+                      '&:hover': {
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)'
+                      }
+                    }}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -324,8 +369,8 @@ const TeacherAssignments = () => {
                 <Box sx={styles.descriptionSection}>
                   <Typography
                     variant="body1"
-                    color="textSecondary"
                     sx={{
+                      color: '#9CA3AF',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       display: '-webkit-box',
@@ -337,12 +382,12 @@ const TeacherAssignments = () => {
                   </Typography>
                 </Box>
                 
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: 2, borderColor: 'rgba(75, 85, 99, 0.5)' }} />
                 
                 <Box sx={styles.metaSection}>
                   <Box sx={styles.dateChip}>
-                    <CalendarIcon fontSize="small" color="primary" />
-                    <Typography variant="body2" fontWeight="medium">
+                    <CalendarIcon fontSize="small" sx={{ color: '#60A5FA' }} />
+                    <Typography variant="body2" sx={{ fontWeight: 'medium', color: '#60A5FA' }}>
                       Due: {formatDueDate(assignment.dueDate)}
                     </Typography>
                   </Box>
@@ -351,30 +396,43 @@ const TeacherAssignments = () => {
                     <Chip
                       label={`Total: ${stats.total}`}
                       size="small"
-                      sx={styles.statChip}
+                      sx={{
+                        ...styles.statChip,
+                        backgroundColor: 'rgba(31, 41, 55, 0.5)',
+                        color: '#E5E7EB'
+                      }}
                     />
                     {stats.submitted > 0 && (
                       <Chip
                         label={`Submitted: ${stats.submitted}`}
                         size="small"
-                        color="primary"
-                        sx={styles.statChip}
+                        sx={{
+                          ...styles.statChip,
+                          backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                          color: '#60A5FA'
+                        }}
                       />
                     )}
                     {stats.accepted > 0 && (
                       <Chip
                         label={`Accepted: ${stats.accepted}`}
                         size="small"
-                        color="success"
-                        sx={styles.statChip}
+                        sx={{
+                          ...styles.statChip,
+                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                          color: '#22C55E'
+                        }}
                       />
                     )}
                     {stats.rejected > 0 && (
                       <Chip
                         label={`Rejected: ${stats.rejected}`}
                         size="small"
-                        color="error"
-                        sx={styles.statChip}
+                        sx={{
+                          ...styles.statChip,
+                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                          color: '#EF4444'
+                        }}
                       />
                     )}
                   </Box>

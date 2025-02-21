@@ -30,17 +30,27 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     p: 2,
+    backgroundColor: 'rgba(31, 41, 55, 0.5)',
+    backdropFilter: 'blur(8px)',
+    border: '1px solid rgba(75, 85, 99, 0.5)',
+    borderRadius: 2,
+    transition: 'all 0.3s ease',
     '&:hover': {
-      backgroundColor: '#f5f5f5',
+      backgroundColor: 'rgba(31, 41, 55, 0.7)',
+      border: '1px solid rgba(96, 165, 250, 0.5)',
+      boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
     },
   },
   avatar: {
     width: 50,
     height: 50,
     mr: 2,
+    bgcolor: 'rgba(96, 165, 250, 0.2)',
+    color: '#60A5FA',
   },
   studentInfo: {
     flex: 1,
+    color: '#F3F4F6',
   },
   status: {
     px: 2,
@@ -48,29 +58,30 @@ const styles = {
     borderRadius: 1,
     display: 'inline-block',
     typography: 'body2',
+    fontWeight: 'medium',
   },
   pending: {
-    backgroundColor: '#fff3e0',
-    color: '#ed6c02',
+    backgroundColor: 'rgba(237, 108, 2, 0.1)',
+    color: '#ED6C02',
   },
   submitted: {
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
+    backgroundColor: 'rgba(25, 118, 210, 0.1)',
+    color: '#1976D2',
   },
   accepted: {
-    backgroundColor: '#e8f5e9',
-    color: '#2e7d32',
+    backgroundColor: 'rgba(46, 125, 50, 0.1)',
+    color: '#2E7D32',
   },
   rejected: {
-    backgroundColor: '#fbe9e7',
-    color: '#d32f2f',
+    backgroundColor: 'rgba(211, 47, 47, 0.1)',
+    color: '#D32F2F',
   },
   submissionItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
     borderRadius: 1,
     p: 1,
   },
@@ -79,18 +90,19 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    color: '#E5E7EB',
   },
   linkItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: '#f0f7ff',
+    backgroundColor: 'rgba(96, 165, 250, 0.1)',
     borderRadius: 1,
     p: 1,
   },
   link: {
-    color: '#1976d2',
+    color: '#60A5FA',
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline',
@@ -100,7 +112,7 @@ const styles = {
     mt: 3,
     mb: 3,
     p: 2,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'rgba(31, 41, 55, 0.3)',
     borderRadius: 1,
   },
 };
@@ -261,83 +273,111 @@ const AssignmentDetails = () => {
   if (!assignment) return null;
 
   return (
-    <Box p={3}>
+    <Box p={3} sx={{ backgroundColor: 'transparent' }}>
       <Box sx={styles.header}>
         <Box>
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h4" gutterBottom sx={{ color: '#F3F4F6' }}>
             {assignment.title}
           </Typography>
-          <Typography variant="body1" color="textSecondary">
+          <Typography variant="body1" sx={{ color: '#9CA3AF' }}>
             Due: {new Date(assignment.dueDate).toLocaleDateString()}
           </Typography>
-          <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
+          <Typography variant="body1" sx={{ color: '#9CA3AF', mt: 1 }}>
             {assignment.description}
           </Typography>
         </Box>
-        <Button variant="outlined" onClick={() => navigate('/dashboard/assignments')}>
+        <Button 
+          variant="outlined" 
+          onClick={() => navigate('/dashboard/assignments')}
+          sx={{
+            color: '#60A5FA',
+            borderColor: 'rgba(96, 165, 250, 0.5)',
+            '&:hover': {
+              borderColor: '#60A5FA',
+              backgroundColor: 'rgba(96, 165, 250, 0.1)',
+            },
+          }}
+        >
           Back to Assignments
         </Button>
       </Box>
 
-      <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+      <Typography variant="h6" gutterBottom sx={{ mt: 4, color: '#F3F4F6' }}>
         Student Submissions
       </Typography>
 
       <Grid container spacing={2}>
         {assignment.submissions.map((submission) => (
           <Grid item xs={12} key={submission._id}>
-            <Card>
-              <Box sx={styles.studentCard}>
-                {submission.student.profilePicture?.data ? (
-                  <img
-                    src={submission.student.profilePicture.data}
-                    alt={`${submission.student.name}'s profile`}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <UserCircleIcon className="w-10 h-10 text-gray-400" />
-                )}
-                <Box sx={styles.studentInfo}>
-                  <Typography variant="h6">
-                    {submission.student.name}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    {getStatusDisplay(submission)}
-                    {submission.mark && (
-                      <Typography variant="body2">
-                        Mark: {submission.mark}/100
-                      </Typography>
-                    )}
-                  </Box>
+            <Box sx={styles.studentCard}>
+              {submission.student.profilePicture?.data ? (
+                <img
+                  src={submission.student.profilePicture.data}
+                  alt={`${submission.student.name}'s profile`}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <UserCircleIcon className="w-10 h-10 text-gray-400" />
+              )}
+              <Box sx={styles.studentInfo}>
+                <Typography variant="h6" sx={{ color: '#F3F4F6' }}>
+                  {submission.student.name}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  {getStatusDisplay(submission)}
+                  {submission.mark && (
+                    <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
+                      Mark: {submission.mark}/100
+                    </Typography>
+                  )}
                 </Box>
-                <Button
-                  variant="contained"
-                  onClick={() => handleOpenReview(submission)}
-                  sx={{ ml: 2 }}
-                  disabled={!submission.submissions || submission.submissions.length === 0}
-                >
-                  {submission.submissions && submission.submissions.length > 0 ? 'Review' : 'No Submission'}
-                </Button>
               </Box>
-            </Card>
+              <Button
+                variant="contained"
+                onClick={() => handleOpenReview(submission)}
+                sx={{
+                  ml: 2,
+                  backgroundColor: submission.submissions?.length > 0 ? 'rgba(96, 165, 250, 0.1)' : 'rgba(31, 41, 55, 0.3)',
+                  color: submission.submissions?.length > 0 ? '#60A5FA' : '#9CA3AF',
+                  '&:hover': {
+                    backgroundColor: submission.submissions?.length > 0 ? 'rgba(96, 165, 250, 0.2)' : 'rgba(31, 41, 55, 0.4)',
+                  },
+                  '&.Mui-disabled': {
+                    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+                    color: '#6B7280',
+                  },
+                }}
+                disabled={!submission.submissions || submission.submissions.length === 0}
+              >
+                {submission.submissions && submission.submissions.length > 0 ? 'Review' : 'No Submission'}
+              </Button>
+            </Box>
           </Grid>
         ))}
       </Grid>
 
+      {/* Review Dialog */}
       <Dialog
         open={openReviewDialog}
         onClose={() => setOpenReviewDialog(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(75, 85, 99, 0.5)',
+          },
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ color: '#F3F4F6' }}>
           Review {selectedSubmission?.student.name}'s Submission
         </DialogTitle>
         <DialogContent>
           {selectedSubmission && (
             <>
               <Box sx={styles.submissionsSection}>
-                <Typography variant="subtitle1" gutterBottom>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#F3F4F6' }}>
                   Submitted Files and Links:
                 </Typography>
                 {selectedSubmission.submissions?.map((submission, index) => (
@@ -351,6 +391,13 @@ const AssignmentDetails = () => {
                           size="small"
                           variant="contained"
                           onClick={() => handleDownloadSubmission(index)}
+                          sx={{
+                            backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                            color: '#60A5FA',
+                            '&:hover': {
+                              backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                            },
+                          }}
                         >
                           Download
                         </Button>
@@ -361,12 +408,12 @@ const AssignmentDetails = () => {
                           Link {index + 1}
                         </Typography>
                         <Link
-                          href={submission.content}
+                          href={submission.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           sx={styles.link}
                         >
-                          {submission.content}
+                          Open Link
                         </Link>
                       </Box>
                     )}
@@ -374,70 +421,148 @@ const AssignmentDetails = () => {
                 ))}
               </Box>
 
-              <Box sx={{ mt: 3 }}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Status"
-                  value={reviewData.status}
-                  onChange={(e) =>
-                    setReviewData({ ...reviewData, status: e.target.value })
-                  }
-                  sx={{ mb: 2 }}
-                >
-                  <MenuItem value="accepted">Accept</MenuItem>
-                  <MenuItem value="rejected">Reject</MenuItem>
-                </TextField>
+              <TextField
+                select
+                fullWidth
+                label="Status"
+                value={reviewData.status}
+                onChange={(e) => setReviewData({ ...reviewData, status: e.target.value })}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: '#F3F4F6',
+                    '& fieldset': {
+                      borderColor: 'rgba(75, 85, 99, 0.5)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(96, 165, 250, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#60A5FA',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#9CA3AF',
+                  },
+                }}
+              >
+                <MenuItem value="accepted">Accept</MenuItem>
+                <MenuItem value="rejected">Reject</MenuItem>
+              </TextField>
 
-                <TextField
-                  fullWidth
-                  label="Mark (0-100)"
-                  type="number"
-                  value={reviewData.mark}
-                  onChange={(e) =>
-                    setReviewData({ ...reviewData, mark: e.target.value })
-                  }
-                  sx={{ mb: 2 }}
-                  InputProps={{ inputProps: { min: 0, max: 100 } }}
-                />
+              <TextField
+                fullWidth
+                label="Mark (0-100)"
+                type="number"
+                value={reviewData.mark}
+                onChange={(e) => setReviewData({ ...reviewData, mark: e.target.value })}
+                margin="normal"
+                required
+                InputProps={{
+                  inputProps: { min: 0, max: 100 }
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: '#F3F4F6',
+                    '& fieldset': {
+                      borderColor: 'rgba(75, 85, 99, 0.5)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(96, 165, 250, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#60A5FA',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#9CA3AF',
+                  },
+                }}
+              />
 
+              <TextField
+                fullWidth
+                label="Feedback"
+                multiline
+                rows={4}
+                value={reviewData.feedback}
+                onChange={(e) => setReviewData({ ...reviewData, feedback: e.target.value })}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    color: '#F3F4F6',
+                    '& fieldset': {
+                      borderColor: 'rgba(75, 85, 99, 0.5)',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'rgba(96, 165, 250, 0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#60A5FA',
+                    },
+                  },
+                  '& .MuiInputLabel-root': {
+                    color: '#9CA3AF',
+                  },
+                }}
+              />
+
+              {reviewData.status === 'rejected' && (
                 <TextField
                   fullWidth
-                  label="Feedback"
+                  label="Rejection Reason"
                   multiline
-                  rows={4}
-                  value={reviewData.feedback}
-                  onChange={(e) =>
-                    setReviewData({ ...reviewData, feedback: e.target.value })
-                  }
-                  sx={{ mb: 2 }}
+                  rows={2}
+                  value={reviewData.rejectionReason}
+                  onChange={(e) => setReviewData({ ...reviewData, rejectionReason: e.target.value })}
+                  margin="normal"
+                  required
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      color: '#F3F4F6',
+                      '& fieldset': {
+                        borderColor: 'rgba(75, 85, 99, 0.5)',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: 'rgba(96, 165, 250, 0.5)',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#60A5FA',
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: '#9CA3AF',
+                    },
+                  }}
                 />
-
-                {reviewData.status === 'rejected' && (
-                  <TextField
-                    fullWidth
-                    label="Rejection Reason"
-                    multiline
-                    rows={2}
-                    value={reviewData.rejectionReason}
-                    onChange={(e) =>
-                      setReviewData({
-                        ...reviewData,
-                        rejectionReason: e.target.value,
-                      })
-                    }
-                  />
-                )}
-              </Box>
+              )}
             </>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenReviewDialog(false)}>Cancel</Button>
-          <Button
+        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(75, 85, 99, 0.5)' }}>
+          <Button 
+            onClick={() => setOpenReviewDialog(false)}
+            sx={{
+              color: '#9CA3AF',
+              '&:hover': {
+                backgroundColor: 'rgba(75, 85, 99, 0.2)',
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
             onClick={handleReviewAssignment}
             variant="contained"
-            color="primary"
+            sx={{
+              backgroundColor: 'rgba(96, 165, 250, 0.1)',
+              color: '#60A5FA',
+              '&:hover': {
+                backgroundColor: 'rgba(96, 165, 250, 0.2)',
+              },
+            }}
           >
             Submit Review
           </Button>
