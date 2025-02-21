@@ -97,14 +97,14 @@ const TeacherMainPage = () => {
         {/* Materials Section */}
         <section>
           <div className="relative mb-8 flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-gray-100">
+            <h2 className="text-3xl font-bold text-gray-900">
               Semester Materials
             </h2>
             <button
               onClick={() => navigate('/dashboard/create-material')}
-              className="bg-gray-800 text-neon-blue px-6 py-2.5 rounded-lg 
-              hover:bg-gray-700 transition-all duration-300 
-              flex items-center gap-2 group border border-gray-700"
+              className="bg-blue-400 text-white px-6 py-2.5 rounded-lg 
+              hover:bg-blue-500 transition-all duration-300 
+              flex items-center gap-2 group border border-blue-300"
             >
               <PencilIcon className="w-5 h-5" />
               Create Material
@@ -115,13 +115,13 @@ const TeacherMainPage = () => {
             {materials.slice(0, visibleMaterials).map((material) => (
               <div
                 key={material._id}
-                className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-                border border-gray-700 hover:border-neon-blue/50
+                className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
+                border border-blue-200 hover:border-blue-400
                 transition-all duration-100 group flex flex-col
-                hover:shadow-lg hover:shadow-neon-blue/20"
+                hover:shadow-lg hover:shadow-blue-400/20"
               >
                 {/* Glossy overlay effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 
                   group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
                 
                 {/* Animated border gradient
@@ -133,19 +133,19 @@ const TeacherMainPage = () => {
                   onClick={() => navigate(`/dashboard/material/${material._id}`)}
                   className="cursor-pointer flex-1 relative"
                 >
-                  <h3 className="text-xl font-bold text-blue-900 mb-3 
-                    group-hover:text-blue-700 transition-colors">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 
+                    group-hover:text-blue-600 transition-colors">
                     {material.title}
                   </h3>
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full mb-4">
+                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
                     {material.subject}
                   </span>
-                  <p className="text-gray-400 text-sm line-clamp-4 leading-relaxed">
+                  <p className="text-gray-600 text-sm line-clamp-4 leading-relaxed">
                     {material.description}
                   </p>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-blue-100/50 flex justify-end space-x-2 relative">
+                <div className="mt-4 pt-4 border-t border-blue-100 flex justify-end space-x-2 relative">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -153,11 +153,10 @@ const TeacherMainPage = () => {
                     }}
                     className="p-2.5 text-blue-500 hover:text-blue-700 
                     rounded-lg transition-all duration-300 
-                    hover:bg-blue-50/80 hover:shadow-md
+                    hover:bg-blue-50 hover:shadow-md
                     active:scale-95 relative overflow-hidden"
                     title="Copy material link"
                   >
-                    <div className="absolute inset-0 bg-blue-500/0 hover:bg-blue-500/10 transition-colors" />
                     <DocumentDuplicateIcon className="w-5 h-5 relative z-10" />
                   </button>
                   <button
@@ -167,7 +166,7 @@ const TeacherMainPage = () => {
                     }}
                     className="p-2.5 text-blue-500 hover:text-blue-700 
                     rounded-lg transition-all duration-300 
-                    hover:bg-blue-50/80 hover:shadow-lg
+                    hover:bg-blue-50 hover:shadow-md
                     active:scale-95"
                     title="Edit material"
                   >
@@ -180,7 +179,7 @@ const TeacherMainPage = () => {
                     }}
                     className="p-2.5 text-red-500 hover:text-red-700 
                     rounded-lg transition-all duration-300 
-                    hover:bg-red-50/80 hover:shadow-lg
+                    hover:bg-red-50 hover:shadow-md
                     active:scale-95"
                     title="Delete material"
                   >
@@ -195,7 +194,7 @@ const TeacherMainPage = () => {
             <div className="flex justify-center mt-8">
               <button
                 onClick={handleSeeMore}
-                className="text-neon-blue hover:text-neon-blue/80 transition-colors
+                className="text-blue-600 hover:text-blue-700 transition-colors
                 flex items-center gap-2"
               >
                 See more materials
@@ -208,14 +207,14 @@ const TeacherMainPage = () => {
         {/* Sessions Section */}
         <section className="space-y-8">
           <div className="relative mb-8 flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-gray-100">
+            <h2 className="text-3xl font-bold text-gray-900">
               Teaching Sessions
             </h2>
             <button
               onClick={() => navigate('/dashboard/create-session')}
-              className="bg-gray-800 text-neon-blue px-6 py-2.5 rounded-lg 
-              hover:bg-gray-700 transition-all duration-300 
-              flex items-center gap-2 group border border-gray-700"
+              className="bg-blue-400 text-white px-6 py-2.5 rounded-lg 
+              hover:bg-blue-500 transition-all duration-300 
+              flex items-center gap-2 group border border-blue-300"
             >
               <PencilIcon className="w-5 h-5" />
               Create Session
@@ -224,8 +223,8 @@ const TeacherMainPage = () => {
 
           <div className="space-y-6">
             {/* Active Sessions */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-              border border-gray-700 hover:border-neon-blue/50
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
+              border border-blue-200 hover:border-blue-400
               transition-all duration-300">
               <SessionsSection 
                 title="Active Sessions"
@@ -235,8 +234,8 @@ const TeacherMainPage = () => {
             </div>
 
             {/* Upcoming Sessions */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-              border border-gray-700 hover:border-neon-blue/50
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
+              border border-blue-200 hover:border-blue-400
               transition-all duration-300">
               <SessionsSection 
                 title="Upcoming Sessions"
@@ -246,8 +245,8 @@ const TeacherMainPage = () => {
             </div>
 
             {/* Completed Sessions */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-              border border-gray-700 hover:border-neon-blue/50
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
+              border border-blue-200 hover:border-blue-400
               transition-all duration-300">
               <SessionsSection 
                 title="Completed Sessions"

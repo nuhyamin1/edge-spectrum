@@ -48,7 +48,7 @@ const Layout = ({ children, userType }) => {
   const menus = userType === 'teacher' ? teacherMenus : studentMenus;
 
   return (
-    <div className="flex min-h-screen bg-gray-900 text-gray-100">
+    <div className="flex min-h-screen bg-blue-300 text-gray-900">
       {/* Mobile Menu Button */}
       {!isClassroomView && (
         <button
@@ -56,9 +56,9 @@ const Layout = ({ children, userType }) => {
           className="fixed top-4 left-4 z-50 p-2 rounded-full bg-gray-800 shadow-lg md:hidden hover:bg-gray-700 transition-all duration-300"
         >
           {isSidebarOpen ? (
-            <XMarkIcon className="w-6 h-6 text-neon-blue" />
+            <XMarkIcon className="w-6 h-6 text-blue-400" />
           ) : (
-            <Bars3Icon className="w-6 h-6 text-neon-blue" />
+            <Bars3Icon className="w-6 h-6 text-blue-400" />
           )}
         </button>
       )}
@@ -68,12 +68,12 @@ const Layout = ({ children, userType }) => {
         <div
           className={`fixed md:static inset-y-0 left-0 z-40 transform 
             ${isSidebarOpen ? 'w-64' : 'w-20'} 
-            transition-all duration-300 ease-in-out bg-gray-800 shadow-2xl shadow-neon-blue/20`}
+            transition-all duration-300 ease-in-out bg-blue-50 shadow-2xl shadow-blue-400/20`}
         >
           {/* Collapse Button (Desktop Only) */}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hidden md:flex absolute -right-3 top-8 bg-gray-700 text-neon-blue p-1 rounded-full shadow-lg hover:bg-gray-600 transition-colors"
+            className="hidden md:flex absolute -right-3 top-8 bg-blue-100 text-blue-400 p-1 rounded-full shadow-lg hover:bg-blue-200 transition-colors"
           >
             <ChevronLeftIcon className={`w-5 h-5 transform transition-transform ${isSidebarOpen ? '' : 'rotate-180'}`} />
           </button>
@@ -81,7 +81,7 @@ const Layout = ({ children, userType }) => {
           {/* Profile Section */}
           <Link
             to="/dashboard/profile"
-            className="block p-6 hover:bg-gray-700/50 transition-colors duration-300 border-b border-gray-700"
+            className="block p-6 hover:bg-blue-100/50 transition-colors duration-300 border-b border-blue-200"
           >
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -89,19 +89,19 @@ const Layout = ({ children, userType }) => {
                   <img
                     src={user.profilePicture.data}
                     alt="Profile"
-                    className="w-12 h-12 rounded-full object-cover ring-2 ring-neon-blue/50"
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-400/50"
                   />
                 ) : (
-                  <UserCircleIcon className="w-12 h-12 text-neon-blue/80" />
+                  <UserCircleIcon className="w-12 h-12 text-blue-400/80" />
                 )}
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-800"></div>
               </div>
               {isSidebarOpen && (
                 <div className="flex flex-col">
-                  <span className="font-bold text-gray-100">
+                  <span className="font-bold text-gray-900">
                     {user?.name || 'User Name'}
                   </span>
-                  <span className="text-sm text-neon-blue/80 capitalize">{userType}</span>
+                  <span className="text-sm text-blue-600 capitalize">{userType}</span>
                 </div>
               )}
             </div>
@@ -115,8 +115,8 @@ const Layout = ({ children, userType }) => {
                 to={menu.path}
                 className={`flex items-center px-4 py-3 rounded-lg transition-all duration-300 group ${
                   location.pathname === menu.path
-                    ? 'bg-neon-blue/20 text-neon-blue font-semibold'
-                    : 'text-gray-300 hover:bg-gray-700/50 hover:text-neon-blue'
+                    ? 'bg-blue-100 text-blue-600 font-semibold'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                 }`}
               >
                 <div className="flex items-center">
@@ -124,12 +124,12 @@ const Layout = ({ children, userType }) => {
                   {isSidebarOpen && (
                     <span className="relative">
                       {menu.label}
-                      <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-neon-blue transition-all duration-300"></span>
+                      <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-blue-400 transition-all duration-300"></span>
                     </span>
                   )}
                 </div>
                 {!isSidebarOpen && (
-                  <div className="absolute left-20 bg-gray-700 text-neon-blue px-2 py-1 rounded-md text-sm 
+                  <div className="absolute left-20 bg-blue-100 text-blue-600 px-2 py-1 rounded-md text-sm 
                     opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                     {menu.label}
                   </div>
@@ -141,32 +141,32 @@ const Layout = ({ children, userType }) => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 bg-gray-900">
+      <div className="flex-1 bg-blue-300">
         <div className="h-full px-4 py-8 md:px-8">
           <div className="max-w-6xl mx-auto">
             {/* Welcome Section */}
             {location.pathname === '/dashboard' && (
-              <div className="mb-8 bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl shadow-lg p-8 relative overflow-hidden">
+              <div className="mb-8 bg-gradient-to-r from-blue-200 to-blue-100 rounded-2xl shadow-lg p-8 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBmZjAwIiBzdHJva2Utd2lkdGg9IjAuNSIvPjwvc3ZnPg==')]"></div>
                 <div className="relative">
-                  <h1 className="text-5xl font-extrabold text-neon-blue mb-4">
+                  <h1 className="text-5xl font-extrabold text-blue-600 mb-4">
                     Welcome to PF Speaking Master
                   </h1>
-                  <p className="text-lg text-gray-300 mb-8">
+                  <p className="text-lg text-gray-700 mb-8">
                     Master speaking with real-time feedback and interactive tools designed for immersive learning.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gray-800/50 p-6 rounded-xl shadow-md hover:shadow-neon-blue/50 transition-shadow duration-300">
-                      <h3 className="text-xl font-semibold text-neon-blue mb-2">Real-Time Feedback</h3>
-                      <p className="text-gray-400">Get instant pronunciation and fluency insights.</p>
+                    <div className="bg-blue-200 p-6 rounded-xl shadow-md hover:shadow-blue-400/50 transition-shadow duration-300">
+                      <h3 className="text-xl font-semibold text-blue-600 mb-2">Real-Time Feedback</h3>
+                      <p className="text-gray-700">Get instant pronunciation and fluency insights.</p>
                     </div>
-                    <div className="bg-gray-800/50 p-6 rounded-xl shadow-md hover:shadow-neon-blue/50 transition-shadow duration-300">
-                      <h3 className="text-xl font-semibold text-neon-blue mb-2">Interactive Sessions</h3>
-                      <p className="text-gray-400">Join live sessions with teachers and peers.</p>
+                    <div className="bg-blue-200 p-6 rounded-xl shadow-md hover:shadow-blue-400/50 transition-shadow duration-300">
+                      <h3 className="text-xl font-semibold text-blue-600 mb-2">Interactive Sessions</h3>
+                      <p className="text-gray-700">Join live sessions with teachers and peers.</p>
                     </div>
-                    <div className="bg-gray-800/50 p-6 rounded-xl shadow-md hover:shadow-neon-blue/50 transition-shadow duration-300">
-                      <h3 className="text-xl font-semibold text-neon-blue mb-2">Progress Tracking</h3>
-                      <p className="text-gray-400">Monitor your improvement with detailed analytics.</p>
+                    <div className="bg-blue-200 p-6 rounded-xl shadow-md hover:shadow-blue-400/50 transition-shadow duration-300">
+                      <h3 className="text-xl font-semibold text-blue-600 mb-2">Progress Tracking</h3>
+                      <p className="text-gray-700">Monitor your improvement with detailed analytics.</p>
                     </div>
                   </div>
                 </div>
@@ -179,31 +179,31 @@ const Layout = ({ children, userType }) => {
             </div>
 
             {/* Footer */}
-            <footer className="mt-16 border-t border-gray-700 pt-8 pb-8 bg-gray-900">
+            <footer className="mt-16 border-t border-blue-200 pt-8 pb-8 bg-blue-200">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-neon-blue">About Us</h3>
-                  <p className="text-gray-400 text-sm">
+                  <h3 className="text-xl font-semibold text-blue-600">About Us</h3>
+                  <p className="text-gray-700 text-sm">
                     Transforming language learning with cutting-edge technology.
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-neon-blue">Contact Us</h3>
-                  <div className="space-y-2 text-sm text-gray-400">
+                  <h3 className="text-xl font-semibold text-blue-600">Contact Us</h3>
+                  <div className="space-y-2 text-sm text-gray-700">
                     <p><EnvelopeIcon className="w-5 h-5 inline mr-2" /> support@pfspeakingmaster.com</p>
                     <p><PhoneIcon className="w-5 h-5 inline mr-2" /> +1 (555) 123-4567</p>
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-neon-blue">Quick Links</h3>
+                  <h3 className="text-xl font-semibold text-blue-600">Quick Links</h3>
                   <div className="space-y-2 text-sm">
-                    <p><a href="/help" className="text-gray-400 hover:text-neon-blue transition-colors">Help Center</a></p>
-                    <p><a href="/privacy" className="text-gray-400 hover:text-neon-blue transition-colors">Privacy Policy</a></p>
-                    <p><a href="/terms" className="text-gray-400 hover:text-neon-blue transition-colors">Terms of Service</a></p>
+                    <p><a href="/help" className="text-gray-700 hover:text-blue-600 transition-colors">Help Center</a></p>
+                    <p><a href="/privacy" className="text-gray-700 hover:text-blue-600 transition-colors">Privacy Policy</a></p>
+                    <p><a href="/terms" className="text-gray-700 hover:text-blue-600 transition-colors">Terms of Service</a></p>
                   </div>
                 </div>
               </div>
-              <div className="mt-8 text-center text-sm text-gray-500">
+              <div className="mt-8 text-center text-sm text-gray-600">
                 © {new Date().getFullYear()} PF Speaking Master. All rights reserved.
               </div>
             </footer>
