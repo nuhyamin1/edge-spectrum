@@ -7,6 +7,7 @@ import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './QuillEditor.css';
 import ImageResize from 'quill-image-resize-module-react';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 // Custom image blot definition
 const Image = Quill.import('formats/image');
@@ -444,62 +445,125 @@ const CreateMaterial = () => {
   return (
     <Layout userType="teacher">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold mb-6">Create New Material</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <input
-              type="text"
-              name="title"
-              placeholder="Title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="mb-6 flex items-center text-gray-400 hover:text-neon-blue transition-colors"
+        >
+          <ArrowLeftIcon className="w-5 h-5 mr-1" />
+          Back to Dashboard
+        </button>
 
-            <input
-              type="text"
-              name="subject"
-              placeholder="Subject"
-              value={formData.subject}
-              onChange={handleChange}
-              required
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+        <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden 
+          border border-gray-700 group hover:border-neon-blue/50
+          transition-all duration-300 hover:shadow-lg hover:shadow-neon-blue/20">
+          
+          {/* Glossy overlay effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
+            group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          
+          {/* Animated border gradient */}
+          <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
+            opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
+            animate-once" />
 
-            <textarea
-              name="description"
-              placeholder="Description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-              rows={3}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-gray-100 group-hover:text-neon-blue transition-colors mb-6">
+              Create New Material
+            </h2>
 
-            <div className="quill-container">
-              <ReactQuill
-                theme="snow"
-                value={formData.content}
-                onChange={handleContentChange}
-                modules={modules}
-                placeholder="Write your content here..."
-                className="h-64 mb-12 quill"
-                ref={quillRef}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input
+                type="text"
+                name="title"
+                placeholder="Title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                text-gray-100 placeholder-gray-500
+                focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                transition-all duration-300"
               />
-            </div>
 
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Create Material
-              </button>
-            </div>
-          </form>
+              <input
+                type="text"
+                name="subject"
+                placeholder="Subject"
+                value={formData.subject}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                text-gray-100 placeholder-gray-500
+                focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                transition-all duration-300"
+              />
+
+              <textarea
+                name="description"
+                placeholder="Description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                rows={3}
+                className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                text-gray-100 placeholder-gray-500
+                focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                transition-all duration-300 resize-none"
+              />
+
+              <div className="relative">
+                <div className="quill-container bg-gray-900/30 rounded-lg border border-gray-700
+                  focus-within:border-neon-blue focus-within:ring-1 focus-within:ring-neon-blue
+                  transition-all duration-300">
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content}
+                    onChange={handleContentChange}
+                    modules={modules}
+                    placeholder="Write your content here..."
+                    className="h-64 mb-12"
+                    ref={quillRef}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-700/50">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 py-2 bg-gray-800 text-gray-400 rounded-lg 
+                  hover:bg-gray-700 transition-all duration-300 
+                  border border-gray-700 hover:border-gray-400/50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-gray-800 text-neon-blue rounded-lg 
+                  hover:bg-gray-700 transition-all duration-300 
+                  border border-gray-700 hover:border-neon-blue/50
+                  hover:shadow-lg hover:shadow-neon-blue/20"
+                >
+                  Create Material
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          onEdit={handleEditImage}
+          onDelete={handleDeleteImage}
+        />
+      )}
+
+      {/* Image Resize Modal */}
       <ImageResizeModal
         isOpen={isImageModalOpen}
         onClose={() => {
@@ -512,15 +576,6 @@ const CreateMaterial = () => {
         initialDimensions={selectedImage?.dimensions}
         initialAlignment={selectedImage?.alignment}
       />
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={() => setContextMenu(null)}
-          onEdit={handleEditImage}
-          onDelete={handleDeleteImage}
-        />
-      )}
     </Layout>
   );
 };

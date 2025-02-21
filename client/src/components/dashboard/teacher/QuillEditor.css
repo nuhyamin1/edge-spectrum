@@ -55,3 +55,98 @@
     transform: scale(1);
   }
 }
+
+/* Quill Editor Dark Theme */
+.quill-container .ql-toolbar {
+  background-color: rgba(17, 24, 39, 0.5) !important;
+  border-color: rgb(55, 65, 81) !important;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.quill-container .ql-container {
+  background-color: rgba(17, 24, 39, 0.3) !important;
+  border-color: rgb(55, 65, 81) !important;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  min-height: 200px;
+}
+
+.quill-container .ql-editor {
+  color: rgb(229, 231, 235) !important;
+}
+
+.quill-container .ql-editor.ql-blank::before {
+  color: rgb(156, 163, 175) !important;
+}
+
+/* Toolbar buttons */
+.ql-snow.ql-toolbar button,
+.ql-snow .ql-toolbar button {
+  color: rgb(156, 163, 175) !important;
+}
+
+.ql-snow.ql-toolbar button:hover,
+.ql-snow .ql-toolbar button:hover,
+.ql-snow.ql-toolbar button.ql-active,
+.ql-snow .ql-toolbar button.ql-active {
+  color: rgb(96, 165, 250) !important; /* neon-blue */
+}
+
+.ql-snow.ql-toolbar button:hover .ql-stroke,
+.ql-snow .ql-toolbar button:hover .ql-stroke,
+.ql-snow.ql-toolbar button.ql-active .ql-stroke,
+.ql-snow .ql-toolbar button.ql-active .ql-stroke {
+  stroke: rgb(96, 165, 250) !important; /* neon-blue */
+}
+
+.ql-snow.ql-toolbar button:hover .ql-fill,
+.ql-snow .ql-toolbar button:hover .ql-fill,
+.ql-snow.ql-toolbar button.ql-active .ql-fill,
+.ql-snow .ql-toolbar button.ql-active .ql-fill {
+  fill: rgb(96, 165, 250) !important; /* neon-blue */
+}
+
+/* Toolbar icons */
+.ql-snow .ql-stroke {
+  stroke: rgb(156, 163, 175) !important;
+}
+
+.ql-snow .ql-fill {
+  fill: rgb(156, 163, 175) !important;
+}
+
+/* Dropdown menus */
+.ql-snow .ql-picker {
+  color: rgb(156, 163, 175) !important;
+}
+
+.ql-snow .ql-picker-options {
+  background-color: rgb(31, 41, 55) !important;
+  border-color: rgb(55, 65, 81) !important;
+}
+
+.ql-snow .ql-picker-item:hover {
+  color: rgb(96, 165, 250) !important; /* neon-blue */
+  background-color: rgba(96, 165, 250, 0.1) !important;
+}
+
+/* Links */
+.ql-snow .ql-tooltip {
+  background-color: rgb(31, 41, 55) !important;
+  border-color: rgb(55, 65, 81) !important;
+  color: rgb(229, 231, 235) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.ql-snow .ql-tooltip input[type=text] {
+  background-color: rgba(17, 24, 39, 0.5) !important;
+  border-color: rgb(55, 65, 81) !important;
+  color: rgb(229, 231, 235) !important;
+}
+
+/* Image resize handles */
+.image-resizer {
+  border-color: rgb(96, 165, 250) !important; /* neon-blue */
+  background-color: rgb(96, 165, 250) !important;
+}

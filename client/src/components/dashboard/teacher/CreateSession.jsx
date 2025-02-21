@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../../context/AuthContext';
 import axios from '../../../utils/axios';
 import Layout from '../Layout';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 const CreateSession = () => {
   const navigate = useNavigate();
@@ -95,128 +96,181 @@ const CreateSession = () => {
   return (
     <Layout userType="teacher">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-6">Create New Session</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <input
-                type="text"
-                name="title"
-                value={session.title}
-                onChange={handleChange}
-                required
-                placeholder="Title"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="mb-6 flex items-center text-gray-400 hover:text-neon-blue transition-colors"
+        >
+          <ArrowLeftIcon className="w-5 h-5 mr-1" />
+          Back to Dashboard
+        </button>
 
-            <div>
-              <input
-                type="text"
-                name="subject"
-                value={session.subject}
-                onChange={handleChange}
-                required
-                placeholder="Subject"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+        <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden 
+          border border-gray-700 group hover:border-neon-blue/50
+          transition-all duration-300 hover:shadow-lg hover:shadow-neon-blue/20">
+          
+          {/* Glossy overlay effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
+            group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          
+          {/* Animated border gradient */}
+          <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
+            opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
+            animate-once" />
 
-            <div>
-              <textarea
-                name="description"
-                value={session.description}
-                onChange={handleChange}
-                required
-                placeholder="Description"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-gray-100 group-hover:text-neon-blue transition-colors mb-6">
+              Create New Session
+            </h2>
 
-            <div>
-              <input
-                type="datetime-local"
-                name="dateTime"
-                value={session.dateTime}
-                onChange={handleChange}
-                required
-                placeholder="Date and Time"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <input
-                  type="number"
-                  name="duration"
-                  value={session.duration}
+                  type="text"
+                  name="title"
+                  value={session.title}
                   onChange={handleChange}
                   required
-                  min="1"
-                  placeholder="Duration (minutes)"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Title"
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
                 />
               </div>
 
               <div>
                 <input
-                  type="number"
-                  name="gracePeriod"
-                  value={session.gracePeriod}
+                  type="text"
+                  name="subject"
+                  value={session.subject}
                   onChange={handleChange}
                   required
-                  min="0"
-                  placeholder="Grace Period (minutes)"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Subject"
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
                 />
               </div>
-            </div>
 
-            <div>
-              <div className="mt-1 flex space-x-2">
-                <select
-                  onChange={handleMaterialSelect}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              <div>
+                <textarea
+                  name="description"
+                  value={session.description}
+                  onChange={handleChange}
+                  required
+                  placeholder="Description"
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300 min-h-[100px]"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="datetime-local"
+                  name="dateTime"
+                  value={session.dateTime}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <input
+                    type="number"
+                    name="duration"
+                    value={session.duration}
+                    onChange={handleChange}
+                    required
+                    min="1"
+                    placeholder="Duration (minutes)"
+                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                    text-gray-100 placeholder-gray-500
+                    focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                    transition-all duration-300"
+                  />
+                </div>
+
+                <div>
+                  <input
+                    type="number"
+                    name="gracePeriod"
+                    value={session.gracePeriod}
+                    onChange={handleChange}
+                    required
+                    min="0"
+                    placeholder="Grace Period (minutes)"
+                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                    text-gray-100 placeholder-gray-500
+                    focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                    transition-all duration-300"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="mt-1 flex space-x-2">
+                  <select
+                    onChange={handleMaterialSelect}
+                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                    text-gray-100
+                    focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                    transition-all duration-300"
+                  >
+                    <option value="">Select a material</option>
+                    {materials.map((material) => (
+                      <option key={material._id} value={material._id}>
+                        {material.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <input
+                  type="text"
+                  name="materials"
+                  value={session.materials}
+                  onChange={handleChange}
+                  placeholder="Material URL will be automatically filled"
+                  className="mt-2 w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-400 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
+                  readOnly
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700/50">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 py-2 bg-gray-800 text-gray-400 rounded-lg 
+                  hover:bg-gray-700 transition-all duration-300 
+                  border border-gray-700 hover:border-gray-400/50"
                 >
-                  <option value="">Select a material</option>
-                  {materials.map((material) => (
-                    <option key={material._id} value={material._id}>
-                      {material.title}
-                    </option>
-                  ))}
-                </select>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`px-6 py-2 bg-gray-800 text-neon-blue rounded-lg 
+                  hover:bg-gray-700 transition-all duration-300 
+                  border border-gray-700 hover:border-neon-blue/50
+                  hover:shadow-lg hover:shadow-neon-blue/20
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {loading ? 'Creating...' : 'Create Session'}
+                </button>
               </div>
-              <input
-                type="text"
-                name="materials"
-                value={session.materials}
-                onChange={handleChange}
-                placeholder="Material URL will be automatically filled"
-                className="mt-2 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                readOnly
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  loading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {loading ? 'Creating...' : 'Create Session'}
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </Layout>

@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { api } from '../../../context/AuthContext';
 import { useAuth } from '../../../context/AuthContext';
 import Layout from '../Layout';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 const EditSession = () => {
   const { id } = useParams();
@@ -90,7 +91,7 @@ const EditSession = () => {
     return (
       <Layout userType="teacher">
         <div className="flex justify-center items-center h-64">
-          <div className="text-gray-600">Loading session...</div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-blue"></div>
         </div>
       </Layout>
     );
@@ -98,92 +99,133 @@ const EditSession = () => {
 
   return (
     <Layout userType="teacher">
-      <div className="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Edit Session</h2>
-          <button
-            onClick={() => navigate('/dashboard/sessions')}
-            className="text-gray-600 hover:text-gray-800"
-          >
-            Back to Sessions
-          </button>
+      <div className="max-w-2xl mx-auto">
+        <button
+          onClick={() => navigate('/dashboard/sessions')}
+          className="mb-6 flex items-center text-gray-400 hover:text-neon-blue transition-colors"
+        >
+          <ArrowLeftIcon className="w-5 h-5 mr-1" />
+          Back to Sessions
+        </button>
+
+        <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden 
+          border border-gray-700 group hover:border-neon-blue/50
+          transition-all duration-300 hover:shadow-lg hover:shadow-neon-blue/20">
+          
+          {/* Glossy overlay effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
+            group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+          
+          {/* Animated border gradient */}
+          <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
+            opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
+            animate-once" />
+
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-gray-100 group-hover:text-neon-blue transition-colors mb-6">
+              Edit Session
+            </h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  name="title"
+                  value={session.title}
+                  onChange={handleChange}
+                  placeholder="Title"
+                  required
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  name="subject"
+                  value={session.subject}
+                  onChange={handleChange}
+                  placeholder="Subject"
+                  required
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
+                />
+              </div>
+
+              <div>
+                <textarea
+                  name="description"
+                  value={session.description}
+                  onChange={handleChange}
+                  placeholder="Description"
+                  rows="4"
+                  required
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300 resize-none"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="datetime-local"
+                  name="dateTime"
+                  value={session.dateTime}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
+                />
+              </div>
+
+              <div>
+                <input
+                  type="url"
+                  name="materials"
+                  value={session.materials || ''}
+                  onChange={handleChange}
+                  placeholder="Materials Link (Optional) - https://"
+                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
+                  text-gray-100 placeholder-gray-500
+                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
+                  transition-all duration-300"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-700/50">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard/sessions')}
+                  className="px-6 py-2 bg-gray-800 text-gray-400 rounded-lg 
+                  hover:bg-gray-700 transition-all duration-300 
+                  border border-gray-700 hover:border-gray-400/50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`px-6 py-2 bg-gray-800 text-neon-blue rounded-lg 
+                  hover:bg-gray-700 transition-all duration-300 
+                  border border-gray-700 hover:border-neon-blue/50
+                  hover:shadow-lg hover:shadow-neon-blue/20
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
-            <input
-              type="text"
-              name="title"
-              value={session.title}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Subject</label>
-            <input
-              type="text"
-              name="subject"
-              value={session.subject}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
-            <textarea
-              name="description"
-              value={session.description}
-              onChange={handleChange}
-              rows="4"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Date and Time</label>
-            <input
-              type="datetime-local"
-              name="dateTime"
-              value={session.dateTime}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Materials Link (Optional)
-            </label>
-            <input
-              type="url"
-              name="materials"
-              value={session.materials || ''}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="https://"
-            />
-          </div>
-
-          <div className="pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full ${
-                loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
-              } text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
       </div>
     </Layout>
   );

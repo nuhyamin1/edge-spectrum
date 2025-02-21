@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarIcon, ClockIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, UserGroupIcon, BookOpenIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const MAX_DISPLAY_ITEMS = 3;
 
@@ -49,63 +50,99 @@ const SessionsSection = ({ title, sessions, type }) => {
   const hasMore = sessions.length > MAX_DISPLAY_ITEMS;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">{title}</h2>
-      <div className="space-y-4">
-        {displayedSessions.map((session) => (
-          <div
-            key={session._id}
-            onClick={() => handleSessionClick(session._id)}
-            className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">{session.title}</h3>
-                <p className="text-sm text-blue-600 mb-2">{session.subject}</p>
-              </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(session.status)}`}>
-                {session.status}
-              </span>
-            </div>
-            
-            <p className="text-gray-600 text-sm mb-3">{session.description}</p>
-            
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <div className="flex items-center">
-                <CalendarIcon className="w-4 h-4 mr-1" />
-                {formatDate(session.dateTime)}
-              </div>
-              <div className="flex items-center">
-                <ClockIcon className="w-4 h-4 mr-1" />
-                {session.duration} mins
-              </div>
-              <div className="flex items-center">
-                <ClockIcon className="w-4 h-4 mr-1" />
-                {session.gracePeriod || 5} mins grace
-              </div>
-              {session.enrolledStudents && (
-                <div className="flex items-center">
-                  <UserGroupIcon className="w-4 h-4 mr-1" />
-                  {session.enrolledStudents.length} students
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-        {sessions.length === 0 && (
-          <p className="text-gray-500 text-center py-4">No {type} sessions available.</p>
-        )}
-        {hasMore && (
-          <div className="text-center pt-4">
-            <button
-              onClick={handleViewMore}
-              className="px-4 py-2 text-blue-600 hover:text-blue-800 font-medium"
+    <div>
+      <h3 className="text-xl font-semibold text-gray-100 mb-4">{title}</h3>
+      {sessions.length === 0 ? (
+        <p className="text-gray-400">No {type} sessions</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {sessions.map((session) => (
+            <div
+              key={session._id}
+              className="relative bg-gray-800/30 backdrop-blur-sm rounded-xl p-5 
+              border border-gray-700 hover:border-neon-blue/50
+              transition-all duration-300 group
+              hover:shadow-lg hover:shadow-neon-blue/20"
             >
-              View More Sessions
-            </button>
-          </div>
-        )}
-      </div>
+              {/* Glossy overlay effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
+                group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
+{/*               
+              Animated border gradient
+              <div className="absolute -inset-[2px] rounded-[14px] bg-gradient-to-r from-blue-200/30 to-blue-300/30 
+                opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
+                animate-once" /> */}
+
+              <div className="relative">
+                {/* Session Title with Icon */}
+                <div className="flex items-start justify-between mb-3">
+                  <h4 className="text-lg font-semibold text-gray-100 group-hover:text-neon-blue transition-colors">
+                    {session.title}
+                  </h4>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium
+                    ${type === 'active' ? 'bg-green-500/20 text-green-400' : 
+                      type === 'upcoming' ? 'bg-blue-500/20 text-blue-400' : 
+                      'bg-gray-500/20 text-gray-400'}`}>
+                    {type === 'active' ? 'In Progress' : 
+                     type === 'upcoming' ? 'Scheduled' : 'Completed'}
+                  </span>
+                </div>
+
+                {/* Session Details */}
+                <div className="space-y-2">
+                  {/* Date & Time */}
+                  <div className="flex items-center text-gray-300 text-sm">
+                    <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
+                    {new Date(session.dateTime).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </div>
+                  
+                  <div className="flex items-center text-gray-300 text-sm">
+                    <ClockIcon className="w-4 h-4 mr-2 text-gray-400" />
+                    {new Date(session.dateTime).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                    {session.endTime && ` - ${new Date(session.endTime).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}`}
+                  </div>
+
+                  {/* Subject & Topic */}
+                  <div className="flex items-center text-gray-300 text-sm">
+                    <BookOpenIcon className="w-4 h-4 mr-2 text-gray-400" />
+                    {session.subject} - {session.topic}
+                  </div>
+
+                  {/* Participants */}
+                  <div className="flex items-center text-gray-300 text-sm">
+                    <UserGroupIcon className="w-4 h-4 mr-2 text-gray-400" />
+                    {session.participants?.length || 0} Participants
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <div className="mt-4 pt-4 border-t border-gray-700/50">
+                  <Link
+                    to={`/dashboard/session/${session._id}`}
+                    className="inline-flex items-center text-neon-blue hover:text-neon-blue/80 
+                    transition-colors text-sm font-medium"
+                  >
+                    {type === 'active' ? 'Join Session' : 
+                     type === 'upcoming' ? 'View Details' : 'View Summary'}
+                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

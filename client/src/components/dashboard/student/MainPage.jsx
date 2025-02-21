@@ -82,185 +82,126 @@ const StudentMainPage = () => {
 
   return (
     <Layout userType="student">
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-200 to-blue-400 p-8 relative overflow-hidden rounded-2xl">
-        {/* Animated background elements */}
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 left-0 w-80 h-80 bg-blue-300/20 rounded-full blur-3xl animate-pulse delay-75" />
-        
-        <div className="space-y-32 relative z-10">
-          {/* Materials Section */}
-          <section>
-            <div className="relative mb-8">
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
-                Semester Materials
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {materials.slice(0, visibleMaterials).map((material) => (
-                <div
-                  key={material._id}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 
-                  border-l-4 border-blue-300 hover:border-blue-400
-                  transition-all duration-300 group flex flex-col min-h-[220px]
-                  shadow-[0_8px_30px_rgba(147,197,253,0.15)]
-                  hover:shadow-[0_12px_40px_rgba(147,197,253,0.25)]
-                  hover:transform hover:-translate-y-1
-                  relative overflow-hidden isolate"
-                >
-                  {/* Glossy overlay effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 
-                    group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  
-                  {/* Animated border gradient */}
-                  <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-r from-blue-200/50 to-blue-300/50 
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
-                    animate-[shimmer_2s_infinite]" />
+      <div className="space-y-8">
+        {/* Materials Section */}
+        <section>
+          <div className="relative mb-8">
+            <h2 className="text-3xl font-bold text-gray-100">
+              Semester Materials
+            </h2>
+          </div>
 
-                  <div 
-                    onClick={() => navigate(`/dashboard/material/${material._id}`)}
-                    className="cursor-pointer flex-1 relative"
-                  >
-                    <h3 className="text-xl font-bold text-blue-900 mb-3 
-                      group-hover:text-blue-700 transition-colors">
-                      {material.title}
-                    </h3>
-                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full mb-4">
-                      {material.subject}
-                    </span>
-                    <p className="text-slate-700/90 text-sm line-clamp-4 leading-relaxed">
-                      {material.description}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-blue-100/50 flex justify-end space-x-2 relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyMaterialLink(material._id);
-                      }}
-                      className="p-2.5 text-blue-500 hover:text-blue-700 
-                      rounded-lg transition-all duration-300 
-                      hover:bg-blue-50/80 hover:shadow-md
-                      active:scale-95 relative overflow-hidden"
-                      title="Copy material link"
-                    >
-                      <div className="absolute inset-0 bg-blue-500/0 hover:bg-blue-500/10 transition-colors" />
-                      <DocumentDuplicateIcon className="w-5 h-5 relative z-10" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {materials.slice(0, visibleMaterials).map((material) => (
+              <div
+                key={material._id}
+                className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+                border border-gray-700 hover:border-neon-blue/50
+                transition-all duration-300 group flex flex-col
+                hover:shadow-lg hover:shadow-neon-blue/20"
+              >
+                {/* Glossy overlay effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
+                  group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
+                
+                {/* Animated border gradient
+                <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
+                  animate-once" /> */}
 
-            {/* See More Link */}
-            {materials.length > visibleMaterials && (
-              <div className="flex justify-center mt-10">
-                <button
-                  onClick={handleSeeMore}
-                  className="flex items-center gap-2 relative group"
+                <div 
+                  onClick={() => navigate(`/dashboard/material/${material._id}`)}
+                  className="cursor-pointer flex-1 relative"
                 >
-                  <span className="text-lg bg-gradient-to-r from-blue-600 to-blue-400 
-                    bg-clip-text text-transparent font-medium hover:from-blue-700 
-                    hover:to-blue-500 transition-all duration-300">
-                    See more materials
+                  <h3 className="text-xl font-bold text-gray-100 mb-3 
+                    group-hover:text-neon-blue transition-colors">
+                    {material.title}
+                  </h3>
+                  <span className="inline-block px-3 py-1 bg-gray-700/50 text-gray-300 text-sm font-medium rounded-full mb-4">
+                    {material.subject}
                   </span>
-                  <ChevronDownIcon className="w-5 h-5 text-blue-500 group-hover:text-blue-700
-                    transition-all duration-300 transform 
-                    animate-float group-hover:translate-y-1" />
-                  
-                  {/* Animated underline effect */}
-                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 
-                    bg-gradient-to-r from-blue-600/50 to-blue-400/50 
-                    group-hover:w-full transition-all duration-500 ease-out" />
-                </button>
+                  <p className="text-gray-400 text-sm line-clamp-4 leading-relaxed">
+                    {material.description}
+                  </p>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-700/50 flex justify-end space-x-2 relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyMaterialLink(material._id);
+                    }}
+                    className="p-2.5 text-gray-400 hover:text-neon-blue 
+                    rounded-lg transition-all duration-300 
+                    hover:bg-gray-700/50 hover:shadow-md
+                    active:scale-95 relative overflow-hidden"
+                    title="Copy material link"
+                  >
+                    <div className="absolute inset-0 bg-gray-600/0 hover:bg-gray-600/10 transition-colors" />
+                    <DocumentDuplicateIcon className="w-5 h-5 relative z-10" />
+                  </button>
+                </div>
               </div>
-            )}
+            ))}
+          </div>
 
-            {materials.length === 0 && (
-              <div className="text-center py-12 bg-white/50 backdrop-blur-sm rounded-2xl 
-                border-2 border-dashed border-blue-200">
-                <p className="text-slate-500/90 text-lg font-light">
-                  No materials available yet.
-                </p>
-              </div>
-            )}
-          </section>
-
-          {/* Sessions Section */}
-          <section className="space-y-12">
-            <div className="relative mb-8">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 
-                bg-clip-text text-transparent">
-                Learning Sessions
-              </h1>
-              {/* Decorative element */}
-              <div className="absolute -left-4 -top-4 w-20 h-20 bg-blue-200/30 rounded-full 
-                blur-2xl animate-pulse z-0" />
+          {materials.length > visibleMaterials && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={handleSeeMore}
+                className="text-neon-blue hover:text-neon-blue/80 transition-colors
+                flex items-center gap-2"
+              >
+                See more materials
+                <ChevronDownIcon className="w-5 h-5" />
+              </button>
             </div>
-            
-            <div className="space-y-6 relative">
-              {/* Active Sessions */}
-              <div className="group">
-                <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-8 
-                  shadow-[0_8px_30px_rgba(147,197,253,0.2)]
-                  hover:shadow-[0_15px_35px_rgba(147,197,253,0.25)]
-                  transition-all duration-500 ease-out
-                  border border-blue-100/50 relative overflow-hidden">
-                  {/* Gradient accent */}
-                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b 
-                    from-green-400 to-blue-400 rounded-l" />
-                  <SessionsSection 
-                    title="Active Sessions"
-                    sessions={activeSessions}
-                    type="active"
-                  />
-                </div>
-              </div>
+          )}
+        </section>
 
-              {/* Upcoming Sessions */}
-              <div className="group">
-                <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-8
-                  shadow-[0_8px_30px_rgba(147,197,253,0.2)]
-                  hover:shadow-[0_15px_35px_rgba(147,197,253,0.25)]
-                  transition-all duration-500 ease-out
-                  border border-blue-100/50 relative overflow-hidden">
-                  {/* Gradient accent */}
-                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b 
-                    from-blue-400 to-purple-400 rounded-l" />
-                  <SessionsSection 
-                    title="Upcoming Sessions"
-                    sessions={upcomingSessions}
-                    type="upcoming"
-                  />
-                </div>
-              </div>
+        {/* Sessions Section */}
+        <section className="space-y-8">
+          <div className="relative mb-8">
+            <h2 className="text-3xl font-bold text-gray-100">
+              Learning Sessions
+            </h2>
+          </div>
 
-              {/* Completed Sessions */}
-              <div className="group">
-                <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-8
-                  shadow-[0_8px_30px_rgba(147,197,253,0.2)]
-                  hover:shadow-[0_15px_35px_rgba(147,197,253,0.25)]
-                  transition-all duration-500 ease-out
-                  border border-blue-100/50 relative overflow-hidden">
-                  {/* Gradient accent */}
-                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b 
-                    from-gray-400 to-blue-300 rounded-l" />
-                  <SessionsSection 
-                    title="Completed Sessions"
-                    sessions={completedSessions}
-                    type="completed"
-                  />
-                </div>
-              </div>
-
-              {/* Decorative background elements */}
-              <div className="absolute -right-40 top-1/3 w-80 h-80 bg-blue-200/20 
-                rounded-full blur-3xl animate-pulse-slow" />
-              <div className="absolute -left-40 bottom-1/4 w-80 h-80 bg-blue-300/20 
-                rounded-full blur-3xl animate-pulse-slow delay-1000" />
+          <div className="space-y-6">
+            {/* Active Sessions */}
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+              border border-gray-700 hover:border-neon-blue/50
+              transition-all duration-300">
+              <SessionsSection 
+                title="Active Sessions"
+                sessions={activeSessions}
+                type="active"
+              />
             </div>
-          </section>
-        </div>
+
+            {/* Upcoming Sessions */}
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+              border border-gray-700 hover:border-neon-blue/50
+              transition-all duration-300">
+              <SessionsSection 
+                title="Upcoming Sessions"
+                sessions={upcomingSessions}
+                type="upcoming"
+              />
+            </div>
+
+            {/* Completed Sessions */}
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+              border border-gray-700 hover:border-neon-blue/50
+              transition-all duration-300">
+              <SessionsSection 
+                title="Completed Sessions"
+                sessions={completedSessions}
+                type="completed"
+              />
+            </div>
+          </div>
+        </section>
       </div>
     </Layout>
   );
