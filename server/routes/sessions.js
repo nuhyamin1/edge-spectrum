@@ -65,7 +65,7 @@ router.get('/enrolled', auth, async (req, res) => {
 // Create a new session (teachers only)
 router.post('/', auth, isTeacher, async (req, res) => {
     try {
-        const { title, subject, description, dateTime, materials, duration, gracePeriod } = req.body;
+        const { title, subject, description, dateTime, materials, duration, gracePeriod, semester } = req.body;
         
         // Validate required fields
         if (!duration || duration < 1) {
@@ -76,6 +76,10 @@ router.post('/', auth, isTeacher, async (req, res) => {
             return res.status(400).json({ error: 'Grace period must be 0 or more minutes' });
         }
 
+        if (!semester) {
+            return res.status(400).json({ error: 'Semester is required' });
+        }
+
         const session = new Session({
             title,
             subject,
@@ -84,6 +88,7 @@ router.post('/', auth, isTeacher, async (req, res) => {
             duration,
             gracePeriod,
             materials,
+            semester,
             teacher: req.user._id,
             status: 'scheduled' // Set default status
         });
@@ -424,6 +429,50 @@ router.post('/:id/attendance', auth, async (req, res) => {
     } catch (error) {
         console.error('Error updating attendance:', error);
         res.status(500).json({ error: 'Failed to update attendance status' });
+    }
+});
+
+// Duplicate a session for a new semester
+router.post('/:id/duplicate', auth, isTeacher, async (req, res) => {
+    try {
+        const { semesterId } = req.body;
+        const originalSession = await Session.findById(req.params.id);
+        
+        if (!originalSession) {
+            return res.status(404).json({ error: 'Original session not found' });
+        }
+
+        // Create new session with reference to original
+        const newSession = new Session({
+            title: originalSession.title,
+            subject: originalSession.subject,
+            description: originalSession.description,
+            semester: semesterId,
+            originalSession: originalSession._id,
+            duration: originalSession.duration,
+            gracePeriod: originalSession.gracePeriod,
+            materials: originalSession.materials,
+            teacher: req.user._id,
+            dateTime: req.body.dateTime // New date for the duplicated session
+        });
+
+        await newSession.save();
+        res.status(201).json(newSession);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get sessions by semester
+router.get('/semester/:semesterId', auth, async (req, res) => {
+    try {
+        const sessions = await Session.find({ semester: req.params.semesterId })
+            .populate('teacher', 'name email')
+            .populate('semester')
+            .sort({ dateTime: 'asc' });
+        res.json(sessions);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 

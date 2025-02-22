@@ -15,6 +15,15 @@ const sessionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    semester: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Semester',
+        required: true
+    },
+    originalSession: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Session'
+    },
     dateTime: {
         type: Date,
         required: true
@@ -51,6 +60,24 @@ const sessionSchema = new mongoose.Schema({
     endedAt: {
         type: Date
     },
+    sessionHistory: [{
+        semester: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Semester'
+        },
+        enrolledCount: Number,
+        materials: String,
+        messages: [{
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            content: String,
+            timestamp: Date
+        }],
+        startedAt: Date,
+        endedAt: Date
+    }],
     createdAt: {
         type: Date,
         default: Date.now

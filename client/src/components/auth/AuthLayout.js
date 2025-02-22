@@ -89,7 +89,7 @@ const AuthLayout = ({ children }) => {
     <MotionConfig reducedMotion="user">
       <div className="min-h-screen flex relative">
         {/* Left side - Website Description */}
-        <div className="hidden lg:flex lg:w-[60%] bg-gradient-to-br from-blue-400 to-blue-300 p-12 flex-col justify-between relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-[60%] bg-gradient-to-br from-blue-400/70 to-blue-300/70 p-12 flex-col justify-between relative overflow-hidden">
           {/* Existing animated floating elements */}
           <div className="absolute top-0 left-0 w-full h-full">
             <div className="absolute -top-24 -left-24 w-48 h-48 bg-white/10 rounded-full" />

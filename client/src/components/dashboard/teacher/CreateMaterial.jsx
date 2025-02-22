@@ -447,27 +447,18 @@ const CreateMaterial = () => {
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => navigate('/dashboard')}
-          className="mb-6 flex items-center text-gray-400 hover:text-neon-blue transition-colors"
+          className="mb-6 flex items-center text-blue-500 hover:text-blue-600 transition-colors"
         >
-          <ArrowLeftIcon className="w-5 h-5 mr-1" />
+          <ArrowLeftIcon className="w-5 h-5 mr-2" />
           Back to Dashboard
         </button>
 
-        <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden 
-          border border-gray-700 group hover:border-neon-blue/50
-          transition-all duration-300 hover:shadow-lg hover:shadow-neon-blue/20">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden 
+          border border-blue-200 group hover:border-blue-400
+          transition-all duration-300 hover:shadow-lg hover:shadow-blue-400/20">
           
-          {/* Glossy overlay effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
-            group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-          
-          {/* Animated border gradient */}
-          <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
-            opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
-            animate-once" />
-
           <div className="p-6">
-            <h2 className="text-2xl font-bold text-gray-100 group-hover:text-neon-blue transition-colors mb-6">
+            <h2 className="text-2xl font-bold text-blue-900 group-hover:text-blue-600 transition-colors mb-6">
               Create New Material
             </h2>
 
@@ -479,10 +470,10 @@ const CreateMaterial = () => {
                 value={formData.title}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                text-gray-100 placeholder-gray-500
-                focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                transition-all duration-300"
+                className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                  text-blue-900 placeholder-blue-300
+                  focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                  transition-all duration-300"
               />
 
               <input
@@ -492,10 +483,10 @@ const CreateMaterial = () => {
                 value={formData.subject}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                text-gray-100 placeholder-gray-500
-                focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                transition-all duration-300"
+                className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                  text-blue-900 placeholder-blue-300
+                  focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                  transition-all duration-300"
               />
 
               <textarea
@@ -505,15 +496,15 @@ const CreateMaterial = () => {
                 onChange={handleChange}
                 required
                 rows={3}
-                className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                text-gray-100 placeholder-gray-500
-                focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                transition-all duration-300 resize-none"
+                className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                  text-blue-900 placeholder-blue-300
+                  focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                  transition-all duration-300 resize-none"
               />
 
               <div className="relative">
-                <div className="quill-container bg-gray-900/30 rounded-lg border border-gray-700
-                  focus-within:border-neon-blue focus-within:ring-1 focus-within:ring-neon-blue
+                <div className="quill-container bg-white rounded-lg border border-blue-200
+                  focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400
                   transition-all duration-300">
                   <ReactQuill
                     theme="snow"
@@ -527,22 +518,22 @@ const CreateMaterial = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-700/50">
+              <div className="flex justify-end space-x-3 pt-6 border-t border-blue-200">
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-2 bg-gray-800 text-gray-400 rounded-lg 
-                  hover:bg-gray-700 transition-all duration-300 
-                  border border-gray-700 hover:border-gray-400/50"
+                  className="px-6 py-2 bg-white text-blue-500 rounded-lg 
+                  hover:bg-blue-50 transition-all duration-300 
+                  border border-blue-200 hover:border-blue-400"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-gray-800 text-neon-blue rounded-lg 
-                  hover:bg-gray-700 transition-all duration-300 
-                  border border-gray-700 hover:border-neon-blue/50
-                  hover:shadow-lg hover:shadow-neon-blue/20"
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg 
+                  hover:bg-blue-600 transition-all duration-300 
+                  border border-blue-400 
+                  hover:shadow-lg hover:shadow-blue-400/20"
                 >
                   Create Material
                 </button>
@@ -550,32 +541,32 @@ const CreateMaterial = () => {
             </form>
           </div>
         </div>
-      </div>
 
-      {/* Context Menu */}
-      {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={() => setContextMenu(null)}
-          onEdit={handleEditImage}
-          onDelete={handleDeleteImage}
+        {/* Context Menu */}
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            onEdit={handleEditImage}
+            onDelete={handleDeleteImage}
+          />
+        )}
+
+        {/* Image Resize Modal */}
+        <ImageResizeModal
+          isOpen={isImageModalOpen}
+          onClose={() => {
+            setIsImageModalOpen(false);
+            setPendingImageUpload(null);
+            setSelectedImage(null);
+            setSelectedRange(null);
+          }}
+          onConfirm={handleImageResize}
+          initialDimensions={selectedImage?.dimensions}
+          initialAlignment={selectedImage?.alignment}
         />
-      )}
-
-      {/* Image Resize Modal */}
-      <ImageResizeModal
-        isOpen={isImageModalOpen}
-        onClose={() => {
-          setIsImageModalOpen(false);
-          setPendingImageUpload(null);
-          setSelectedImage(null);
-          setSelectedRange(null);
-        }}
-        onConfirm={handleImageResize}
-        initialDimensions={selectedImage?.dimensions}
-        initialAlignment={selectedImage?.alignment}
-      />
+      </div>
     </Layout>
   );
 };

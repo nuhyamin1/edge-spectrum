@@ -6,6 +6,7 @@ const path = require('path');
 const http = require('http');
 const socketService = require('./services/socket');
 const fs = require('fs');
+const semesterRoutes = require('./routes/semesters');
 
 // Load environment variables
 dotenv.config();
@@ -43,6 +44,7 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/users', require('./routes/users')); // Fixed path to users routes
 app.use('/api/assignments', require('./routes/assignments')); // Add assignments route
 app.use('/api/posts', require('./routes/posts')); // Add this line for posts routes
+app.use('/api/semesters', semesterRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -11,18 +11,21 @@ const CreateSession = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [materials, setMaterials] = useState([]);
-  const [session, setSession] = useState({
+  const [semesters, setSemesters] = useState([]);
+  const [formData, setFormData] = useState({
     title: '',
     subject: '',
     description: '',
     dateTime: '',
     duration: '',
     gracePeriod: '',
-    materials: ''
+    materials: '',
+    semester: ''
   });
 
   useEffect(() => {
     fetchMaterials();
+    fetchSemesters();
   }, []);
 
   const fetchMaterials = async () => {
@@ -35,59 +38,52 @@ const CreateSession = () => {
     }
   };
 
-  const handleChange = (e) => {
+  const fetchSemesters = async () => {
+    try {
+      const response = await axios.get('/api/semesters');
+      console.log('Fetched semesters:', response.data);
+      setSemesters(response.data);
+    } catch (error) {
+      console.error('Error fetching semesters:', error);
+      toast.error('Failed to load semesters');
+    }
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setSession(prev => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleMaterialSelect = (e) => {
-    const materialId = e.target.value;
-    if (materialId) {
-      const materialUrl = `${window.location.origin}/dashboard/material/${materialId}`;
-      setSession(prev => ({
-        ...prev,
-        materials: materialUrl
-      }));
-    } else {
-      setSession(prev => ({
-        ...prev,
-        materials: ''
-      }));
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    if (parseInt(session.duration) < 1) {
-      toast.error('Duration must be at least 1 minute');
-      setLoading(false);
-      return;
-    }
-
-    if (parseInt(session.gracePeriod) < 0) {
-      toast.error('Grace period must be 0 or more minutes');
-      setLoading(false);
-      return;
-    }
-
-    const sessionData = {
-      ...session,
-      duration: parseInt(session.duration),
-      gracePeriod: parseInt(session.gracePeriod)
-    };
-
     try {
-      await axios.post('/api/sessions', sessionData);
+      if (!formData.semester) {
+        setLoading(false);
+        toast.error('Please select a semester');
+        return;
+      }
+
+      console.log('Sending session data:', {
+        ...formData,
+        teacher: user._id
+      });
+
+      const response = await axios.post('/api/sessions', {
+        ...formData,
+        teacher: user._id
+      });
+
       toast.success('Session created successfully');
-      navigate('/dashboard');
+      navigate('/dashboard/sessions');
     } catch (error) {
       console.error('Error creating session:', error);
-      toast.error('Failed to create session');
+      console.error('Error response:', error.response?.data);
+      toast.error(error.response?.data?.error || 'Failed to create session');
     } finally {
       setLoading(false);
     }
@@ -95,176 +91,198 @@ const CreateSession = () => {
 
   return (
     <Layout userType="teacher">
-      <div className="max-w-2xl mx-auto">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="mb-6 flex items-center text-gray-400 hover:text-neon-blue transition-colors"
-        >
-          <ArrowLeftIcon className="w-5 h-5 mr-1" />
-          Back to Dashboard
-        </button>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-blue-500 hover:text-blue-600 transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5 mr-2" />
+            Back
+          </button>
+        </div>
 
-        <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden 
-          border border-gray-700 group hover:border-neon-blue/50
-          transition-all duration-300 hover:shadow-lg hover:shadow-neon-blue/20">
-          
-          {/* Glossy overlay effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
-            group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-          
-          {/* Animated border gradient */}
-          <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
-            opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
-            animate-once" />
-
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-gray-100 group-hover:text-neon-blue transition-colors mb-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden 
+          border border-blue-200 group hover:border-blue-400
+          transition-all duration-300 hover:shadow-lg hover:shadow-blue-400/20">
+          <div className="p-6 border-b border-blue-200">
+            <h2 className="text-2xl font-bold text-blue-900 group-hover:text-blue-600 transition-colors">
               Create New Session
             </h2>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
+                <label className="block text-sm font-medium text-blue-900 mb-1">
+                  Title
+                </label>
                 <input
                   type="text"
                   name="title"
-                  value={session.title}
-                  onChange={handleChange}
+                  value={formData.title}
+                  onChange={handleInputChange}
                   required
-                  placeholder="Title"
-                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                  text-gray-100 placeholder-gray-500
-                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                  transition-all duration-300"
+                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                    text-blue-900
+                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                    transition-all duration-300"
                 />
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-blue-900 mb-1">
+                  Subject
+                </label>
                 <input
                   type="text"
                   name="subject"
-                  value={session.subject}
-                  onChange={handleChange}
+                  value={formData.subject}
+                  onChange={handleInputChange}
                   required
-                  placeholder="Subject"
-                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                  text-gray-100 placeholder-gray-500
-                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                  transition-all duration-300"
+                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                    text-blue-900
+                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                    transition-all duration-300"
                 />
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-blue-900 mb-1">
+                  Description
+                </label>
                 <textarea
                   name="description"
-                  value={session.description}
-                  onChange={handleChange}
+                  value={formData.description}
+                  onChange={handleInputChange}
                   required
-                  placeholder="Description"
-                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                  text-gray-100 placeholder-gray-500
-                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                  transition-all duration-300 min-h-[100px]"
+                  rows={4}
+                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                    text-blue-900
+                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                    transition-all duration-300"
                 />
               </div>
 
               <div>
-                <input
-                  type="datetime-local"
-                  name="dateTime"
-                  value={session.dateTime}
-                  onChange={handleChange}
+                <label className="block text-sm font-medium text-blue-900 mb-1">
+                  Semester
+                </label>
+                <select
+                  name="semester"
+                  value={formData.semester}
+                  onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                  text-gray-100
-                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                  transition-all duration-300"
-                />
+                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                    text-blue-900
+                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                    transition-all duration-300"
+                >
+                  <option value="">Select Semester</option>
+                  {semesters.map((semester) => (
+                    <option key={semester._id} value={semester._id}>
+                      {semester.year} ({semester.term})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Date and Time
+                  </label>
                   <input
-                    type="number"
-                    name="duration"
-                    value={session.duration}
-                    onChange={handleChange}
+                    type="datetime-local"
+                    name="dateTime"
+                    value={formData.dateTime}
+                    onChange={handleInputChange}
                     required
-                    min="1"
-                    placeholder="Duration (minutes)"
-                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                    text-gray-100 placeholder-gray-500
-                    focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                    transition-all duration-300"
+                    className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                      text-blue-900
+                      focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                      transition-all duration-300"
                   />
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Duration (minutes)
+                  </label>
                   <input
                     type="number"
-                    name="gracePeriod"
-                    value={session.gracePeriod}
-                    onChange={handleChange}
+                    name="duration"
+                    value={formData.duration}
+                    onChange={handleInputChange}
                     required
-                    min="0"
-                    placeholder="Grace Period (minutes)"
-                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                    text-gray-100 placeholder-gray-500
-                    focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                    transition-all duration-300"
+                    min="1"
+                    className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                      text-blue-900
+                      focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                      transition-all duration-300"
                   />
                 </div>
               </div>
 
               <div>
-                <div className="mt-1 flex space-x-2">
-                  <select
-                    onChange={handleMaterialSelect}
-                    className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                    text-gray-100
-                    focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                    transition-all duration-300"
-                  >
-                    <option value="">Select a material</option>
-                    {materials.map((material) => (
-                      <option key={material._id} value={material._id}>
-                        {material.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <label className="block text-sm font-medium text-blue-900 mb-1">
+                  Grace Period (minutes)
+                </label>
                 <input
-                  type="text"
-                  name="materials"
-                  value={session.materials}
-                  onChange={handleChange}
-                  placeholder="Material URL will be automatically filled"
-                  className="mt-2 w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
-                  text-gray-400 placeholder-gray-500
-                  focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
-                  transition-all duration-300"
-                  readOnly
+                  type="number"
+                  name="gracePeriod"
+                  value={formData.gracePeriod}
+                  onChange={handleInputChange}
+                  required
+                  min="0"
+                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                    text-blue-900
+                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                    transition-all duration-300"
                 />
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700/50">
+              <div>
+                <label className="block text-sm font-medium text-blue-900 mb-1">
+                  Materials
+                </label>
+                <select
+                  name="materials"
+                  value={formData.materials}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                    text-blue-900
+                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                    transition-all duration-300"
+                >
+                  <option value="">Select Material</option>
+                  {materials.map((material) => (
+                    <option key={material._id} value={material._id}>
+                      {material.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-blue-200">
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-2 bg-gray-800 text-gray-400 rounded-lg 
-                  hover:bg-gray-700 transition-all duration-300 
-                  border border-gray-700 hover:border-gray-400/50"
+                  className="px-6 py-2 bg-white text-blue-500 rounded-lg 
+                    hover:bg-blue-50 transition-all duration-300 
+                    border border-blue-200 hover:border-blue-400"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-6 py-2 bg-gray-800 text-neon-blue rounded-lg 
-                  hover:bg-gray-700 transition-all duration-300 
-                  border border-gray-700 hover:border-neon-blue/50
-                  hover:shadow-lg hover:shadow-neon-blue/20
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`px-6 py-2 bg-blue-500 text-white rounded-lg 
+                    hover:bg-blue-600 transition-all duration-300 
+                    border border-blue-400 
+                    hover:shadow-lg hover:shadow-blue-400/20
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {loading ? 'Creating...' : 'Create Session'}
                 </button>

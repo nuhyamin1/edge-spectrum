@@ -22,31 +22,14 @@ import StudentProfile from './components/dashboard/student/StudentProfile';
 import TeacherAssignments from './components/dashboard/teacher/TeacherAssignments';
 import StudentAssignments from './components/dashboard/student/StudentAssignments';
 import AssignmentDetails from './components/dashboard/teacher/AssignmentDetails';
-import Layout from './components/dashboard/Layout'; 
+import Layout from './components/dashboard/Layout';
+import SemesterManagement from './components/dashboard/teacher/SemesterManagement';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import LandingPage from './components/LandingPage';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { AnimatePresence, MotionConfig } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import LandingPage from './components/LandingPage';
-
-// Protected Route Component
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/dashboard" />;
-  }
-  
-  return children;
-};
 
 // AppRoutes component to contain all routes
 const AppRoutes = () => {
@@ -60,20 +43,26 @@ const AppRoutes = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/verify/:token" element={<EmailVerification />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
           
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute allowedRoles={['teacher', 'student']}>
-                {user?.role === 'teacher' ? <TeacherMainPage /> : <StudentMainPage />}
+              <ProtectedRoute>
+                <TeacherMainPage />
               </ProtectedRoute>
             }
           />
 
-          {/* Teacher Routes */}
+          <Route
+            path="/dashboard/student"
+            element={
+              <ProtectedRoute>
+                <StudentMainPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/dashboard/create-session"
             element={
@@ -101,7 +90,6 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Material Routes */}
           <Route
             path="/dashboard/create-material"
             element={
@@ -123,13 +111,12 @@ const AppRoutes = () => {
           <Route
             path="/dashboard/material/:id"
             element={
-              <ProtectedRoute allowedRoles={['teacher', 'student']}>
+              <ProtectedRoute>
                 <MaterialView />
               </ProtectedRoute>
             }
           />
 
-          {/* Session View Route */}
           <Route
             path="/dashboard/session/:id"
             element={
@@ -139,7 +126,6 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Student Routes */}
           <Route
             path="/dashboard/available-sessions"
             element={
@@ -158,7 +144,6 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Classroom Routes */}
           <Route
             path="/teacher/classroom/:sessionId"
             element={
@@ -168,7 +153,6 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Profile Routes */}
           <Route
             path="/dashboard/profile"
             element={
@@ -180,7 +164,6 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Assignment Routes */}
           <Route
             path="/dashboard/assignments"
             element={
@@ -192,7 +175,6 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Assignment Details Route */}
           <Route
             path="/teacher/assignments/:id"
             element={
@@ -200,6 +182,15 @@ const AppRoutes = () => {
                 <Layout userType="teacher">
                   <AssignmentDetails />
                 </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/semester-management"
+            element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <SemesterManagement />
               </ProtectedRoute>
             }
           />
