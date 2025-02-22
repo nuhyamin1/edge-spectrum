@@ -40,9 +40,10 @@ const Layout = ({ children, userType }) => {
     { path: '/dashboard', label: 'Overview', icon: HomeIcon },
     { path: '/dashboard/materials', label: 'Material List', icon: DocumentTextIcon },
     { path: '/dashboard/sessions', label: 'Session List', icon: CalendarIcon },
+    { path: '/dashboard/assignments', label: 'Assignments', icon: ClipboardIcon },
+    { divider: true },
     { path: '/dashboard/create-material', label: 'Create Material', icon: DocumentPlusIcon },
     { path: '/dashboard/create-session', label: 'Create Session', icon: PlusCircleIcon },
-    { path: '/dashboard/assignments', label: 'Assignments', icon: ClipboardIcon }
   ];
 
   const studentMenus = [
@@ -117,31 +118,37 @@ const Layout = ({ children, userType }) => {
           {/* Menu Items */}
           <nav className="p-4 space-y-2 mt-4">
             {menus.map((menu) => (
-              <Link
-                key={menu.path}
-                to={menu.path}
-                className={`flex items-center px-4 py-3 rounded-lg transition-all duration-300 group ${
-                  location.pathname === menu.path
-                    ? 'bg-blue-100 text-blue-600 font-semibold'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                }`}
-              >
-                <div className="flex items-center">
-                  <menu.icon className={`w-6 h-6 ${isSidebarOpen ? 'mr-3' : ''} transition-all duration-300`} />
-                  {isSidebarOpen && (
-                    <span className="relative">
-                      {menu.label}
-                      <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-blue-400 transition-all duration-300"></span>
-                    </span>
-                  )}
+              menu.divider ? (
+                <div key="divider" className="px-4 py-2">
+                  <div className="h-px bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200 rounded-full opacity-50" />
                 </div>
-                {!isSidebarOpen && (
-                  <div className="absolute left-20 bg-blue-100 text-blue-600 px-2 py-1 rounded-md text-sm 
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                    {menu.label}
+              ) : (
+                <Link
+                  key={menu.path}
+                  to={menu.path}
+                  className={`flex items-center px-4 py-3 rounded-lg transition-all duration-300 group ${
+                    location.pathname === menu.path
+                      ? 'bg-blue-100 text-blue-600 font-semibold'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <menu.icon className={`w-6 h-6 ${isSidebarOpen ? 'mr-3' : ''} transition-all duration-300`} />
+                    {isSidebarOpen && (
+                      <span className="relative">
+                        {menu.label}
+                        <span className="absolute -bottom-1 left-0 w-0 group-hover:w-full h-0.5 bg-blue-400 transition-all duration-300"></span>
+                      </span>
+                    )}
                   </div>
-                )}
-              </Link>
+                  {!isSidebarOpen && (
+                    <div className="absolute left-20 bg-blue-100 text-blue-600 px-2 py-1 rounded-md text-sm 
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                      {menu.label}
+                    </div>
+                  )}
+                </Link>
+              )
             ))}
             {currentUserType === 'teacher' && (
               <Link
