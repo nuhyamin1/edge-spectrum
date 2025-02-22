@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   HomeIcon,
   DocumentPlusIcon,
+  DocumentTextIcon,
   PlusCircleIcon,
   CalendarIcon,
   ClipboardIcon,
@@ -37,15 +38,17 @@ const Layout = ({ children, userType }) => {
 
   const teacherMenus = [
     { path: '/dashboard', label: 'Overview', icon: HomeIcon },
+    { path: '/dashboard/materials', label: 'Material List', icon: DocumentTextIcon },
+    { path: '/dashboard/sessions', label: 'Session List', icon: CalendarIcon },
     { path: '/dashboard/create-material', label: 'Create Material', icon: DocumentPlusIcon },
     { path: '/dashboard/create-session', label: 'Create Session', icon: PlusCircleIcon },
-    { path: '/dashboard/sessions', label: 'Session List', icon: CalendarIcon },
     { path: '/dashboard/assignments', label: 'Assignments', icon: ClipboardIcon }
   ];
 
   const studentMenus = [
-    { path: '/dashboard', label: 'Overview', icon: HomeIcon },
-    { path: '/dashboard/available-sessions', label: 'Available Sessions', icon: AcademicCapIcon },
+    { path: '/dashboard/student', label: 'Overview', icon: HomeIcon },
+    { path: '/dashboard/student/materials', label: 'Materials', icon: DocumentTextIcon },
+    { path: '/dashboard/available-sessions', label: 'Sessions', icon: AcademicCapIcon },
     { path: '/dashboard/assignments', label: 'Assignments', icon: CheckCircleIcon }
   ];
 

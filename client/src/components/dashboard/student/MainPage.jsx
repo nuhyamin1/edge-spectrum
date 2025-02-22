@@ -3,14 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../Layout';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
+import { DocumentDuplicateIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import SessionsSection from '../SessionsSection';
+import '../Dashboard.css';
 
 const StudentMainPage = () => {
   const [materials, setMaterials] = useState([]);
-  const [activeSessions, setActiveSessions] = useState([]);
+  const [activeSessions, setActiveSessions] = useState([]); // New state for active sessions
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
-  const [visibleMaterials, setVisibleMaterials] = useState(6);
+  const [visibleMaterials, setVisibleMaterials] = useState(6); // Show first 4 materials
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +29,7 @@ const StudentMainPage = () => {
       setMaterials(materialsRes.data);
       
       // Split sessions into active, upcoming and completed
+      const now = new Date();
       const sessions = sessionsRes.data;
       
       // Helper function to safely parse dates
@@ -40,19 +43,25 @@ const StudentMainPage = () => {
         }
       };
 
+      // Active sessions: status is "active"
       setActiveSessions(
-        sessions.filter(session => session.status === 'active')
-          .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+        sessions.filter(session => 
+          session.status === 'active'
+        ).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
       );
       
+      // Upcoming sessions: status is "scheduled"
       setUpcomingSessions(
-        sessions.filter(session => session.status === 'scheduled')
-          .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+        sessions.filter(session => 
+          session.status === 'scheduled'
+        ).sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
       );
       
+      // Completed sessions: status is "completed"
       setCompletedSessions(
-        sessions.filter(session => session.status === 'completed')
-          .sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt))
+        sessions.filter(session => 
+          session.status === 'completed'
+        ).sort((a, b) => new Date(b.endedAt) - new Date(a.endedAt))
       );
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -60,20 +69,25 @@ const StudentMainPage = () => {
     }
   };
 
+  const copyMaterialLink = (id) => {
+    const materialUrl = `${window.location.origin}/dashboard/material/${id}`;
+    navigator.clipboard.writeText(materialUrl)
+      .then(() => toast.success('Material link copied to clipboard!'))
+      .catch(() => toast.error('Failed to copy link'));
+  };
+
   const handleSeeMore = () => {
-    setVisibleMaterials(prev => prev + 6);
+    setVisibleMaterials(prev => prev + 8); // Show 4 more materials when clicked
   };
 
   return (
     <Layout userType="student">
       <div className="space-y-8">
-        {/* Welcome Section will be included via Layout component */}
-
         {/* Materials Section */}
         <section>
           <div className="relative mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Available Materials
+            <h2 className="text-3xl font-bold text-gray-100">
+              Semester Materials
             </h2>
           </div>
 
@@ -81,24 +95,52 @@ const StudentMainPage = () => {
             {materials.slice(0, visibleMaterials).map((material) => (
               <div
                 key={material._id}
-                onClick={() => navigate(`/dashboard/material/${material._id}`)}
-                className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-                border border-blue-200 hover:border-blue-400
-                transition-all duration-300 group cursor-pointer"
+                className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+                border border-gray-700 hover:border-neon-blue/50
+                transition-all duration-300 group flex flex-col
+                hover:shadow-lg hover:shadow-neon-blue/20"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 
+                {/* Glossy overlay effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
                   group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
                 
-                <h3 className="text-xl font-bold text-gray-900 mb-3 
-                  group-hover:text-blue-600 transition-colors">
-                  {material.title}
-                </h3>
-                <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
-                  {material.subject}
-                </span>
-                <p className="text-gray-600 text-sm line-clamp-4 leading-relaxed">
-                  {material.description}
-                </p>
+                {/* Animated border gradient
+                <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
+                  animate-once" /> */}
+
+                <div 
+                  onClick={() => navigate(`/dashboard/material/${material._id}`)}
+                  className="cursor-pointer flex-1 relative"
+                >
+                  <h3 className="text-xl font-bold text-gray-100 mb-3 
+                    group-hover:text-neon-blue transition-colors">
+                    {material.title}
+                  </h3>
+                  <span className="inline-block px-3 py-1 bg-gray-700/50 text-gray-300 text-sm font-medium rounded-full mb-4">
+                    {material.subject}
+                  </span>
+                  <p className="text-gray-400 text-sm line-clamp-4 leading-relaxed">
+                    {material.description}
+                  </p>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-700/50 flex justify-end space-x-2 relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyMaterialLink(material._id);
+                    }}
+                    className="p-2.5 text-gray-400 hover:text-neon-blue 
+                    rounded-lg transition-all duration-300 
+                    hover:bg-gray-700/50 hover:shadow-md
+                    active:scale-95 relative overflow-hidden"
+                    title="Copy material link"
+                  >
+                    <div className="absolute inset-0 bg-gray-600/0 hover:bg-gray-600/10 transition-colors" />
+                    <DocumentDuplicateIcon className="w-5 h-5 relative z-10" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -107,10 +149,11 @@ const StudentMainPage = () => {
             <div className="flex justify-center mt-8">
               <button
                 onClick={handleSeeMore}
-                className="text-blue-600 hover:text-blue-700 transition-colors
+                className="text-neon-blue hover:text-neon-blue/80 transition-colors
                 flex items-center gap-2"
               >
                 See more materials
+                <ChevronDownIcon className="w-5 h-5" />
               </button>
             </div>
           )}
@@ -119,15 +162,15 @@ const StudentMainPage = () => {
         {/* Sessions Section */}
         <section className="space-y-8">
           <div className="relative mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">
-              My Learning Sessions
+            <h2 className="text-3xl font-bold text-gray-100">
+              Learning Sessions
             </h2>
           </div>
 
           <div className="space-y-6">
             {/* Active Sessions */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-              border border-blue-200 hover:border-blue-400
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+              border border-gray-700 hover:border-neon-blue/50
               transition-all duration-300">
               <SessionsSection 
                 title="Active Sessions"
@@ -137,8 +180,8 @@ const StudentMainPage = () => {
             </div>
 
             {/* Upcoming Sessions */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-              border border-blue-200 hover:border-blue-400
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+              border border-gray-700 hover:border-neon-blue/50
               transition-all duration-300">
               <SessionsSection 
                 title="Upcoming Sessions"
@@ -148,8 +191,8 @@ const StudentMainPage = () => {
             </div>
 
             {/* Completed Sessions */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-              border border-blue-200 hover:border-blue-400
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
+              border border-gray-700 hover:border-neon-blue/50
               transition-all duration-300">
               <SessionsSection 
                 title="Completed Sessions"

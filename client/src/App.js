@@ -30,6 +30,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { AnimatePresence, MotionConfig } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
+import MaterialList from './components/dashboard/teacher/MaterialList';
+import Materials from './components/dashboard/student/Materials';
 
 // AppRoutes component to contain all routes
 const AppRoutes = () => {
@@ -191,6 +193,24 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute allowedRoles={['teacher']}>
                 <SemesterManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/materials"
+            element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <MaterialList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/student/materials"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <Materials />
               </ProtectedRoute>
             }
           />

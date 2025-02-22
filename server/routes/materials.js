@@ -77,4 +77,17 @@ router.delete('/:id', auth, isTeacher, async (req, res) => {
   }
 });
 
+// Add this new route for getting materials (works for both teachers and students)
+router.get('/list', auth, async (req, res) => {
+  try {
+    const materials = await Material.find()
+      .populate('createdBy', 'name')
+      .sort({ createdAt: -1 });
+    res.json(materials);
+  } catch (error) {
+    console.error('Error fetching materials:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
