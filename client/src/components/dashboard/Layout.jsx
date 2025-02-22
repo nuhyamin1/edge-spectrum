@@ -21,6 +21,10 @@ import { useAuth } from '../../context/AuthContext';
 const Layout = ({ children, userType }) => {
   const location = useLocation();
   const { user } = useAuth();
+  
+  // Add this to ensure userType is consistent
+  const currentUserType = user?.role || userType;
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('sidebarOpen');
     return saved !== null ? JSON.parse(saved) : true;
@@ -45,7 +49,7 @@ const Layout = ({ children, userType }) => {
     { path: '/dashboard/assignments', label: 'Assignments', icon: CheckCircleIcon }
   ];
 
-  const menus = userType === 'teacher' ? teacherMenus : studentMenus;
+  const menus = currentUserType === 'teacher' ? teacherMenus : studentMenus;
 
   return (
     <div className="flex min-h-screen bg-blue-300 text-gray-900">
@@ -101,7 +105,7 @@ const Layout = ({ children, userType }) => {
                   <span className="font-bold text-gray-900">
                     {user?.name || 'User Name'}
                   </span>
-                  <span className="text-sm text-blue-600 capitalize">{userType}</span>
+                  <span className="text-sm text-blue-600 capitalize">{currentUserType}</span>
                 </div>
               )}
             </div>
@@ -136,7 +140,7 @@ const Layout = ({ children, userType }) => {
                 )}
               </Link>
             ))}
-            {userType === 'teacher' && (
+            {currentUserType === 'teacher' && (
               <Link
                 to="/dashboard/semester-management"
                 className="flex items-center px-4 py-2 text-gray-300 hover:text-neon-blue transition-colors"
