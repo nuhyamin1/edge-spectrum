@@ -36,7 +36,7 @@ const Register = () => {
 
   return (
     <AuthLayout>
-      <div className="max-w-md w-full backdrop-blur-lg bg-white/80 rounded-3xl shadow-2xl p-8 space-y-6 border border-white/20">
+      <div className="max-w-md w-full space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-black text-blue-400 tracking-tight mb-3">
             PF Speaking Master
@@ -57,7 +57,7 @@ const Register = () => {
                 name="name"
                 type="text"
                 required
-                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-transparent peer"
+                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-transparent peer"
                 placeholder="Full name"
                 value={formData.name}
                 onChange={handleChange}
@@ -73,7 +73,7 @@ const Register = () => {
                 name="email"
                 type="email"
                 required
-                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-transparent peer"
+                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-transparent peer"
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
@@ -89,7 +89,7 @@ const Register = () => {
                 name="password"
                 type="password"
                 required
-                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-transparent peer"
+                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder-transparent peer"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
@@ -105,7 +105,7 @@ const Register = () => {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 appearance-none"
+                className="block w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 appearance-none"
               >
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
@@ -132,7 +132,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="relative w-full py-4 px-6 rounded-xl bg-blue-400 text-white font-medium text-sm hover:shadow-lg hover:shadow-blue-400/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
+            className="relative w-full py-4 px-6 rounded bg-blue-400 text-white font-medium text-sm hover:shadow-lg hover:shadow-blue-400/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden group"
           >
             <span className="relative z-10 flex items-center justify-center">
               {loading ? (

@@ -57,6 +57,14 @@ const Layout = ({ children, userType }) => {
 
   return (
     <div className="flex min-h-screen bg-blue-300 text-gray-900">
+      {/* Overlay for mobile */}
+      {!isClassroomView && isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-gray-900/50 z-40 md:hidden transition-opacity duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Mobile Menu Button */}
       {!isClassroomView && (
         <button
@@ -74,8 +82,9 @@ const Layout = ({ children, userType }) => {
       {/* Sidebar */}
       {!isClassroomView && (
         <div
-          className={`fixed md:static inset-y-0 left-0 z-40 transform 
-            ${isSidebarOpen ? 'w-64' : 'w-20'} 
+          className={`fixed md:static inset-y-0 left-0 z-40 
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} 
+            ${isSidebarOpen ? 'w-64' : 'md:w-20'} 
             transition-all duration-300 ease-in-out bg-blue-50 shadow-2xl shadow-blue-400/20`}
         >
           {/* Collapse Button (Desktop Only) */}
@@ -227,7 +236,7 @@ const Layout = ({ children, userType }) => {
                 </div>
               </div>
               <div className="mt-8 text-center text-sm text-gray-600">
-                © {new Date().getFullYear()} PF Speaking Master. All rights reserved.
+                &copy; {new Date().getFullYear()} PF Speaking Master. All rights reserved.
               </div>
             </footer>
           </div>
