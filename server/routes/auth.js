@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const User = require('../src/models/User');
+const axios = require('axios');
 
 // Email transporter
 const transporter = nodemailer.createTransport({
@@ -145,6 +146,71 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Google OAuth
+router.post('/google', async (req, res) => {
+  try {
+    const { email, name, picture, role } = req.body;
+    
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // User exists - generate JWT token
+      const jwtToken = jwt.sign(
+        { userId: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      return res.json({
+        token: jwtToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          profilePicture: user.profilePicture,
+          aboutMe: user.aboutMe
+        }
+      });
+    }
+
+    // Create new user
+    user = new User({
+      name,
+      email,
+      role: role || 'student',
+      profilePicture: picture,
+      isEmailVerified: true, // Google accounts are already verified
+      authProvider: 'google'
+    });
+
+    await user.save();
+
+    // Generate JWT token
+    const jwtToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      token: jwtToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture,
+        aboutMe: user.aboutMe
+      }
+    });
+  } catch (error) {
+    console.error('Google OAuth error:', error);
     res.status(500).json({ message: error.message });
   }
 });

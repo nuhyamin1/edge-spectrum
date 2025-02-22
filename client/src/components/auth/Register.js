@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AuthLayout from './AuthLayout';
+import GoogleButton from './GoogleButton';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -116,6 +117,17 @@ const Register = () => {
               </div>
             </div>
           </div>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <GoogleButton role={formData.role} />
 
           <button
             type="submit"

@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import AuthLayout from './AuthLayout';
+import GoogleButton from './GoogleButton';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -103,6 +104,17 @@ const Login = () => {
             <div className="absolute inset-0 w-full h-full bg-blue-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
           </button>
         </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        <GoogleButton />
 
         <div className="text-center">
           <Link 
