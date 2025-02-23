@@ -46,8 +46,8 @@ const MaterialView = () => {
   return (
     <Layout userType={user?.role}>
       <div className="max-w-4xl mx-auto">
-        <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden 
-          border border-gray-700 group hover:border-neon-blue/50
+        <div className="relative bg-orange-300/50 backdrop-blur-sm rounded-xl overflow-hidden 
+          border border-orange-800 group hover:border-neon-blue/50
           transition-all duration-300 hover:shadow-lg hover:shadow-neon-blue/20">
           
           {/* Glossy overlay effect */}
@@ -63,7 +63,7 @@ const MaterialView = () => {
           <div className="p-6 border-b border-gray-700/50">
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-gray-100 group-hover:text-neon-blue transition-colors">
+                <h1 className="text-3xl font-bold text-blue-700 group-hover:text-neon-blue transition-colors">
                   {material.title}
                 </h1>
                 <p className="mt-2 text-lg text-neon-blue">{material.subject}</p>
@@ -76,7 +76,7 @@ const MaterialView = () => {
                 Back to Dashboard
               </button>
             </div>
-            <p className="mt-4 text-gray-400">{material.description}</p>
+            <p className="mt-4 text-black"><i>{material.description}</i></p>
           </div>
 
           {/* Content */}

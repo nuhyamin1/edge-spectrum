@@ -10,9 +10,11 @@ import {
   ChevronDownIcon,
   AcademicCapIcon,
   UserGroupIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  MicrophoneIcon
 } from '@heroicons/react/24/outline';
 import SessionsSection from '../SessionsSection';
+import PronunciationChecker from '../PronunciationChecker';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
@@ -134,26 +136,29 @@ const TeacherMainPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-              <AcademicCapIcon className="w-6 h-6 text-blue-600" />
+              <MicrophoneIcon className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Session Management</h3>
-            <p className="text-gray-600">Create and manage interactive learning sessions with comprehensive tools.</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Real-Time Feedback</h3>
+            <p className="text-gray-600">Get instant pronunciation and fluency insights to improve your speaking skills.</p>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
               <UserGroupIcon className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Student Progress</h3>
-            <p className="text-gray-600">Track and monitor your students' learning journey and achievements.</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Interactive Sessions</h3>
+            <p className="text-gray-600">Join live sessions with teachers and peers for collaborative learning.</p>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
               <ChartBarIcon className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Analytics Dashboard</h3>
-            <p className="text-gray-600">Access detailed insights and analytics about your teaching impact.</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
+            <p className="text-gray-600">Monitor your improvement with detailed analytics and insights.</p>
           </div>
         </div>
+
+        {/* Pronunciation Checker Section */}
+        <PronunciationChecker />
 
         {/* Materials Section */}
         <section>

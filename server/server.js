@@ -45,6 +45,7 @@ app.use('/api/users', require('./routes/users')); // Fixed path to users routes
 app.use('/api/assignments', require('./routes/assignments')); // Add assignments route
 app.use('/api/posts', require('./routes/posts')); // Add this line for posts routes
 app.use('/api/semesters', semesterRoutes);
+app.use('/api/pronounce', require('./routes/pronounce')); // Add pronunciation route
 
 // Error handling middleware
 app.use((err, req, res, next) => {
