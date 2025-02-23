@@ -32,6 +32,7 @@ import { AnimatePresence, MotionConfig } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import MaterialList from './components/dashboard/teacher/MaterialList';
 import Materials from './components/dashboard/student/Materials';
+import ActiveSessions from './components/dashboard/student/ActiveSessions';
 
 // AppRoutes component to contain all routes
 const AppRoutes = () => {
@@ -204,6 +205,15 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute allowedRoles={['teacher']}>
                 <MaterialList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/active-sessions"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ActiveSessions />
               </ProtectedRoute>
             }
           />

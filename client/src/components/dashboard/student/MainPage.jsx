@@ -95,10 +95,16 @@ const StudentMainPage = () => {
               Master speaking with real-time feedback and interactive tools designed for immersive learning.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="bg-white text-blue-900 px-6 py-3 rounded-md font-medium hover:bg-blue-50 transition-colors">
+              <button 
+                onClick={() => navigate('/dashboard/active-sessions')}
+                className="bg-white text-blue-900 px-6 py-3 rounded-md font-medium hover:bg-blue-50 transition-colors"
+              >
                 Start Learning
               </button>
-              <button className="border-2 border-white text-white px-6 py-3 rounded-md font-medium hover:bg-white/10 transition-colors">
+              <button 
+                onClick={() => navigate('/dashboard/available-sessions')}
+                className="border-2 border-white text-white px-6 py-3 rounded-md font-medium hover:bg-white/10 transition-colors"
+              >
                 Find Classes
               </button>
             </div>
@@ -151,7 +157,7 @@ const StudentMainPage = () => {
                 <h3 className="font-medium text-lg mb-2">{material.title}</h3>
                 <p className="text-gray-600 text-sm mb-4">{material.description}</p>
                 <Link
-                  to={`/dashboard/student/materials/${material._id}`}
+                  to={`/dashboard/material/${material._id}`}
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
                   Learn More →
