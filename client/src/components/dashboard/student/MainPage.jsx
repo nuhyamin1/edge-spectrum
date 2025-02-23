@@ -24,7 +24,7 @@ const StudentMainPage = () => {
     try {
       const [materialsRes, sessionsRes] = await Promise.all([
         axios.get('/api/materials'),
-        axios.get('/api/sessions')
+        axios.get('/api/sessions?include=enrolledStudents')
       ]);
       
       setMaterials(materialsRes.data);

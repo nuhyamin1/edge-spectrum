@@ -51,7 +51,9 @@ const AppRoutes = () => {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <TeacherMainPage />
+                {({ user }) => (
+                  user.role === 'teacher' ? <TeacherMainPage /> : <Navigate to="/dashboard/student" replace />
+                )}
               </ProtectedRoute>
             }
           />

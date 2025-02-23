@@ -124,7 +124,7 @@ const SessionsSection = ({ title, sessions, type }) => {
                   {/* Participants */}
                   <div className="flex items-center text-gray-600 text-sm">
                     <UserGroupIcon className="w-4 h-4 mr-2 text-gray-500" />
-                    {session.participants?.length || 0} Participants
+                    {session.enrolledStudents?.length || 0} Participants
                   </div>
                 </div>
 

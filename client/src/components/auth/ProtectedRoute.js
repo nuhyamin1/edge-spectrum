@@ -20,6 +20,10 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // If allowedRoles is empty, allow access to any authenticated user
   if (allowedRoles.length === 0) {
+    // If children is a function, call it with user
+    if (typeof children === 'function') {
+      return children({ user });
+    }
     return children;
   }
 
@@ -29,6 +33,10 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to={user.role === 'teacher' ? '/dashboard' : '/dashboard/student'} replace />;
   }
 
+  // If children is a function, call it with user
+  if (typeof children === 'function') {
+    return children({ user });
+  }
   return children;
 };
 
