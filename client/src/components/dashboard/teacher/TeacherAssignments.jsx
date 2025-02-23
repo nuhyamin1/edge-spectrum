@@ -21,19 +21,28 @@ import { Add as AddIcon, Delete as DeleteIcon, CalendarToday as CalendarIcon, As
 import { useAuth, api } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import './TeacherAssignments.css';
 
 const styles = {
   listContainer: {
     width: '100%',
     maxWidth: '900px',
     margin: '0 auto',
+    padding: '20px',
   },
   assignmentCard: {
     width: '100%',
-    mb: 3,
-    transition: 'all 0.2s ease-in-out',
+    mb: 2,
+    transition: 'all 0.3s ease-in-out',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: '15px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     '&:hover': {
       transform: 'translateY(-4px)',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      backgroundColor: 'rgba(255, 255, 255, 0.08)',
     },
   },
   cardContent: {
@@ -50,33 +59,56 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
+    '& h6': {
+      fontWeight: 600,
+      color: '#059',
+    },
   },
   descriptionSection: {
     my: 2,
     pl: 4,
+    '& .ql-editor': {
+      padding: 0,
+    },
+    '& .material-content': {
+      color: 'black',
+      '& p': { marginBottom: '0.5em' },
+      '& ul, & ol': { paddingLeft: '1.5em' },
+      '& strong': { fontWeight: 'bold' },
+      '& em': { fontStyle: 'italic' },
+    }
   },
   metaSection: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     mt: 2,
+    flexWrap: 'wrap',
+    gap: 1,
   },
   dateChip: {
     display: 'flex',
     alignItems: 'center',
     gap: 0.5,
     bgcolor: 'rgba(96, 165, 250, 0.1)',
-    color: '#60A5FA',
+    color: 'red',
     px: 1.5,
     py: 0.75,
     borderRadius: '16px',
+    fontSize: '0.875rem',
   },
   statsContainer: {
     display: 'flex',
     gap: 1,
+    flexWrap: 'wrap',
   },
   statChip: {
     borderRadius: '16px',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: '#fff',
+    '&:hover': {
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    },
   },
   submissionItem: {
     display: 'flex',
@@ -84,8 +116,12 @@ const styles = {
     gap: 1,
     mb: 1,
     backgroundColor: 'rgba(31, 41, 55, 0.5)',
-    borderRadius: 1,
-    p: 1
+    borderRadius: '8px',
+    p: 1,
+    transition: 'all 0.2s ease-in-out',
+    '&:hover': {
+      backgroundColor: 'rgba(31, 41, 55, 0.7)',
+    },
   },
   fileName: {
     flex: 1,
@@ -93,28 +129,29 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     mr: 1,
-    color: '#E5E7EB'
+    color: '#E5E7EB',
   },
   linkItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
-    mb: 1,
-    backgroundColor: 'rgba(96, 165, 250, 0.1)',
-    borderRadius: 1,
-    p: 1
-  },
-  link: {
-    flex: 1,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
     color: '#60A5FA',
     textDecoration: 'none',
     '&:hover': {
-      textDecoration: 'underline'
-    }
-  }
+      textDecoration: 'underline',
+    },
+  },
+  quillEditor: {
+    marginTop: 2,
+    marginBottom: 2,
+    '& .ql-container': {
+      minHeight: '200px',
+      fontSize: '1rem',
+    },
+    '& .ql-editor': {
+      minHeight: '200px',
+    },
+  },
 };
 
 const TeacherAssignments = () => {
@@ -173,15 +210,16 @@ const TeacherAssignments = () => {
         return;
       }
 
-      const assignment = {
+      const newAssignment = {
         ...formData,
+        description: formData.description, // This contains the HTML content from Quill
         dueDate: new Date(formData.dueDate).toISOString(),
         maxFiles: parseInt(formData.maxFiles),
         maxLinks: parseInt(formData.maxLinks),
         assignToAll: assignToAll
       };
 
-      await api.post('/assignments', assignment);
+      await api.post('/assignments', newAssignment);
       setOpenDialog(false);
       setFormData({
         title: '',
@@ -312,9 +350,6 @@ const TeacherAssignments = () => {
               elevation={0}
               sx={{
                 ...styles.assignmentCard,
-                backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(75, 85, 99, 0.5)',
                 '&:hover': {
                   border: '1px solid rgba(96, 165, 250, 0.5)',
                   boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
@@ -367,19 +402,10 @@ const TeacherAssignments = () => {
                 </Box>
                 
                 <Box sx={styles.descriptionSection}>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: '#9CA3AF',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                    }}
-                  >
-                    {assignment.description}
-                  </Typography>
+                  <div 
+                    className="prose prose-invert max-w-none ql-editor material-content"
+                    dangerouslySetInnerHTML={{ __html: assignment.description }} 
+                  />
                 </Box>
                 
                 <Divider sx={{ my: 2, borderColor: 'rgba(75, 85, 99, 0.5)' }} />
@@ -455,14 +481,22 @@ const TeacherAssignments = () => {
               sx={{ mb: 2 }}
             />
 
-            <TextField
-              fullWidth
-              label="Description"
-              multiline
-              rows={4}
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>Description</Typography>
+            <ReactQuill
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              sx={{ mb: 2 }}
+              onChange={(value) => setFormData({ ...formData, description: value })}
+              style={{ height: '250px', marginBottom: '50px' }}
+              modules={{
+                toolbar: [
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  [{ 'color': [] }, { 'background': [] }],
+                  ['link'],
+                  ['clean']
+                ],
+              }}
+              theme="snow"
             />
 
             <TextField

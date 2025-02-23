@@ -18,6 +18,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { UserCircleIcon } from '@heroicons/react/24/outline';
+import 'react-quill/dist/quill.snow.css';
+import './AssignmentDetails.css';
 
 const styles = {
   header: {
@@ -25,63 +27,61 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     mb: 4,
+    backgroundColor: '#E0F2FE', // Light blue-100 ish background for header
+    p: 2,
+    borderRadius: 2,
   },
   studentCard: {
     display: 'flex',
     alignItems: 'center',
     p: 2,
-    backgroundColor: 'rgba(31, 41, 55, 0.5)',
-    backdropFilter: 'blur(8px)',
-    border: '1px solid rgba(75, 85, 99, 0.5)',
+    backgroundColor: 'rgba(96, 165, 250, 0.2)', // Lightened blue-400 variant
+    border: '1px solid rgba(96, 165, 250, 0.5)',
     borderRadius: 2,
     transition: 'all 0.3s ease',
-    '&:hover': {
-      backgroundColor: 'rgba(31, 41, 55, 0.7)',
-      border: '1px solid rgba(96, 165, 250, 0.5)',
-      boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
-    },
   },
   avatar: {
     width: 50,
     height: 50,
-    mr: 2,
-    bgcolor: 'rgba(96, 165, 250, 0.2)',
-    color: '#60A5FA',
+    mr: 4, // Kept spacing from previous fix
+    bgcolor: 'rgba(96, 165, 250, 0.5)', // Slightly darker blue-400 for contrast
+    color: '#1F2937', // Dark text
   },
   studentInfo: {
     flex: 1,
-    color: '#F3F4F6',
+    color: '#1F2937', // Dark gray-blue for text
+    pl: 2, // Kept spacing from previous fix
   },
   status: {
     px: 2,
     py: 0.5,
-    borderRadius: 1,
+    borderRadius: 20,
     display: 'inline-block',
     typography: 'body2',
     fontWeight: 'medium',
   },
   pending: {
-    backgroundColor: 'rgba(237, 108, 2, 0.1)',
-    color: '#ED6C02',
+    backgroundColor: 'rgba(251, 191, 36, 0.3)', // Light amber
+    color: '#92400E', // Dark amber
   },
   submitted: {
-    backgroundColor: 'rgba(25, 118, 210, 0.1)',
-    color: '#1976D2',
+    backgroundColor: 'rgba(96, 165, 250, 0.3)', // Light blue-400
+    color: '#1E40AF', // Dark blue
   },
   accepted: {
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-    color: '#2E7D32',
+    backgroundColor: 'rgba(74, 222, 128, 0.3)', // Light green
+    color: '#166534', // Dark green
   },
   rejected: {
-    backgroundColor: 'rgba(211, 47, 47, 0.1)',
-    color: '#D32F2F',
+    backgroundColor: 'rgba(248, 113, 113, 0.3)', // Light red
+    color: '#9B2C2C', // Dark red
   },
   submissionItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backgroundColor: 'rgba(96, 165, 250, 0.15)', // Very light blue-400
     borderRadius: 1,
     p: 1,
   },
@@ -90,19 +90,19 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: '#E5E7EB',
+    color: '#1F2937', // Dark text
   },
   linkItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
     borderRadius: 1,
     p: 1,
   },
   link: {
-    color: '#60A5FA',
+    color: '#1E40AF', // Darker blue for contrast
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline',
@@ -112,8 +112,18 @@ const styles = {
     mt: 3,
     mb: 3,
     p: 2,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backgroundColor: 'rgba(96, 165, 250, 0.15)',
     borderRadius: 1,
+  },
+  descriptionSection: {
+    my: 2,
+    pl: 4,
+    '& .ql-editor': {
+      padding: 0,
+    },
+    '& .material-content': {
+      color: '#1F2937', // Dark text for description
+    },
   },
 };
 
@@ -273,27 +283,35 @@ const AssignmentDetails = () => {
   if (!assignment) return null;
 
   return (
-    <Box p={3} sx={{ backgroundColor: 'transparent' }}>
+    <Box p={3} sx={{ backgroundColor: '#F0F9FF' }}>
       <Box sx={styles.header}>
         <Box>
-          <Typography variant="h4" gutterBottom sx={{ color: '#F3F4F6' }}>
+          <Typography variant="h4" gutterBottom sx={{ color: '#1F2937' }}>
             {assignment.title}
           </Typography>
-          <Typography variant="body1" sx={{ color: '#9CA3AF' }}>
+          <Typography variant="body1" sx={{ color: '#4B5563' }}>
             Due: {new Date(assignment.dueDate).toLocaleDateString()}
           </Typography>
-          <Typography variant="body1" sx={{ color: '#9CA3AF', mt: 1 }}>
-            {assignment.description}
-          </Typography>
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2, color: '#1F2937' }}>
+              Assignment Description
+            </Typography>
+            <Box sx={styles.descriptionSection}>
+              <div 
+                className="prose max-w-none ql-editor material-content"
+                dangerouslySetInnerHTML={{ __html: assignment.description }}
+              />
+            </Box>
+          </Box>
         </Box>
         <Button 
           variant="outlined" 
           onClick={() => navigate('/dashboard/assignments')}
           sx={{
-            color: '#60A5FA',
-            borderColor: 'rgba(96, 165, 250, 0.5)',
+            color: '#1E40AF',
+            borderColor: '#60A5FA',
             '&:hover': {
-              borderColor: '#60A5FA',
+              borderColor: '#1E40AF',
               backgroundColor: 'rgba(96, 165, 250, 0.1)',
             },
           }}
@@ -302,7 +320,7 @@ const AssignmentDetails = () => {
         </Button>
       </Box>
 
-      <Typography variant="h6" gutterBottom sx={{ mt: 4, color: '#F3F4F6' }}>
+      <Typography variant="h6" gutterBottom sx={{ mt: 4, color: '#1F2937' }}>
         Student Submissions
       </Typography>
 
@@ -317,16 +335,16 @@ const AssignmentDetails = () => {
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <UserCircleIcon className="w-10 h-10 text-gray-400" />
+                <UserCircleIcon className="w-10 h-10 text-gray-600" />
               )}
               <Box sx={styles.studentInfo}>
-                <Typography variant="h6" sx={{ color: '#F3F4F6' }}>
+                <Typography variant="h6" sx={{ color: '#1F2937' }}>
                   {submission.student.name}
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
                   {getStatusDisplay(submission)}
                   {submission.mark && (
-                    <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
+                    <Typography variant="body2" sx={{ color: '#4B5563' }}>
                       Mark: {submission.mark}/100
                     </Typography>
                   )}
@@ -337,14 +355,14 @@ const AssignmentDetails = () => {
                 onClick={() => handleOpenReview(submission)}
                 sx={{
                   ml: 2,
-                  backgroundColor: submission.submissions?.length > 0 ? 'rgba(96, 165, 250, 0.1)' : 'rgba(31, 41, 55, 0.3)',
-                  color: submission.submissions?.length > 0 ? '#60A5FA' : '#9CA3AF',
+                  backgroundColor: submission.submissions?.length > 0 ? '#60A5FA' : '#D1D5DB',
+                  color: submission.submissions?.length > 0 ? '#FFFFFF' : '#6B7280',
                   '&:hover': {
-                    backgroundColor: submission.submissions?.length > 0 ? 'rgba(96, 165, 250, 0.2)' : 'rgba(31, 41, 55, 0.4)',
+                    backgroundColor: submission.submissions?.length > 0 ? '#1E40AF' : '#B0B7C0',
                   },
                   '&.Mui-disabled': {
-                    backgroundColor: 'rgba(31, 41, 55, 0.3)',
-                    color: '#6B7280',
+                    backgroundColor: '#E5E7EB',
+                    color: '#9CA3AF',
                   },
                 }}
                 disabled={!submission.submissions || submission.submissions.length === 0}
@@ -356,7 +374,6 @@ const AssignmentDetails = () => {
         ))}
       </Grid>
 
-      {/* Review Dialog */}
       <Dialog
         open={openReviewDialog}
         onClose={() => setOpenReviewDialog(false)}
@@ -364,20 +381,19 @@ const AssignmentDetails = () => {
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: 'rgba(17, 24, 39, 0.95)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(75, 85, 99, 0.5)',
+            backgroundColor: '#F0F9FF',
+            border: '1px solid #60A5FA',
           },
         }}
       >
-        <DialogTitle sx={{ color: '#F3F4F6' }}>
+        <DialogTitle sx={{ color: '#1F2937' }}>
           Review {selectedSubmission?.student.name}'s Submission
         </DialogTitle>
         <DialogContent>
           {selectedSubmission && (
             <>
               <Box sx={styles.submissionsSection}>
-                <Typography variant="subtitle1" gutterBottom sx={{ color: '#F3F4F6' }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: '#1F2937' }}>
                   Submitted Files and Links:
                 </Typography>
                 {selectedSubmission.submissions?.map((submission, index) => (
@@ -392,10 +408,10 @@ const AssignmentDetails = () => {
                           variant="contained"
                           onClick={() => handleDownloadSubmission(index)}
                           sx={{
-                            backgroundColor: 'rgba(96, 165, 250, 0.1)',
-                            color: '#60A5FA',
+                            backgroundColor: '#60A5FA',
+                            color: '#FFFFFF',
                             '&:hover': {
-                              backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                              backgroundColor: '#1E40AF',
                             },
                           }}
                         >
@@ -431,19 +447,19 @@ const AssignmentDetails = () => {
                 required
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    color: '#F3F4F6',
+                    color: '#1F2937',
                     '& fieldset': {
-                      borderColor: 'rgba(75, 85, 99, 0.5)',
+                      borderColor: '#60A5FA',
                     },
                     '&:hover fieldset': {
-                      borderColor: 'rgba(96, 165, 250, 0.5)',
+                      borderColor: '#1E40AF',
                     },
                     '&.Mui-focused fieldset': {
-                      borderColor: '#60A5FA',
+                      borderColor: '#1E40AF',
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: '#9CA3AF',
+                    color: '#4B5563',
                   },
                 }}
               >
@@ -464,19 +480,19 @@ const AssignmentDetails = () => {
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    color: '#F3F4F6',
+                    color: '#1F2937',
                     '& fieldset': {
-                      borderColor: 'rgba(75, 85, 99, 0.5)',
+                      borderColor: '#60A5FA',
                     },
                     '&:hover fieldset': {
-                      borderColor: 'rgba(96, 165, 250, 0.5)',
+                      borderColor: '#1E40AF',
                     },
                     '&.Mui-focused fieldset': {
-                      borderColor: '#60A5FA',
+                      borderColor: '#1E40AF',
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: '#9CA3AF',
+                    color: '#4B5563',
                   },
                 }}
               />
@@ -492,19 +508,19 @@ const AssignmentDetails = () => {
                 required
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    color: '#F3F4F6',
+                    color: '#1F2937',
                     '& fieldset': {
-                      borderColor: 'rgba(75, 85, 99, 0.5)',
+                      borderColor: '#60A5FA',
                     },
                     '&:hover fieldset': {
-                      borderColor: 'rgba(96, 165, 250, 0.5)',
+                      borderColor: '#1E40AF',
                     },
                     '&.Mui-focused fieldset': {
-                      borderColor: '#60A5FA',
+                      borderColor: '#1E40AF',
                     },
                   },
                   '& .MuiInputLabel-root': {
-                    color: '#9CA3AF',
+                    color: '#4B5563',
                   },
                 }}
               />
@@ -521,19 +537,19 @@ const AssignmentDetails = () => {
                   required
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      color: '#F3F4F6',
+                      color: '#1F2937',
                       '& fieldset': {
-                        borderColor: 'rgba(75, 85, 99, 0.5)',
+                        borderColor: '#60A5FA',
                       },
                       '&:hover fieldset': {
-                        borderColor: 'rgba(96, 165, 250, 0.5)',
+                        borderColor: '#1E40AF',
                       },
                       '&.Mui-focused fieldset': {
-                        borderColor: '#60A5FA',
+                        borderColor: '#1E40AF',
                       },
                     },
                     '& .MuiInputLabel-root': {
-                      color: '#9CA3AF',
+                      color: '#4B5563',
                     },
                   }}
                 />
@@ -541,13 +557,13 @@ const AssignmentDetails = () => {
             </>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(75, 85, 99, 0.5)' }}>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #60A5FA' }}>
           <Button 
             onClick={() => setOpenReviewDialog(false)}
             sx={{
-              color: '#9CA3AF',
+              color: '#1E40AF',
               '&:hover': {
-                backgroundColor: 'rgba(75, 85, 99, 0.2)',
+                backgroundColor: 'rgba(96, 165, 250, 0.1)',
               },
             }}
           >
@@ -557,10 +573,10 @@ const AssignmentDetails = () => {
             onClick={handleReviewAssignment}
             variant="contained"
             sx={{
-              backgroundColor: 'rgba(96, 165, 250, 0.1)',
-              color: '#60A5FA',
+              backgroundColor: '#60A5FA',
+              color: '#FFFFFF',
               '&:hover': {
-                backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                backgroundColor: '#1E40AF',
               },
             }}
           >

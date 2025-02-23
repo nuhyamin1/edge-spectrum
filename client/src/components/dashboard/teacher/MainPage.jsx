@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../Layout';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
-import { PencilIcon, TrashIcon, DocumentDuplicateIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { 
+  PencilIcon, 
+  TrashIcon, 
+  DocumentDuplicateIcon, 
+  ChevronDownIcon,
+  AcademicCapIcon,
+  UserGroupIcon,
+  ChartBarIcon
+} from '@heroicons/react/24/outline';
 import SessionsSection from '../SessionsSection';
 
 const TeacherMainPage = () => {
@@ -91,20 +99,72 @@ const TeacherMainPage = () => {
   const handleSeeMore = () => {
     setVisibleMaterials(prev => prev + 6); // Show 4 more materials when clicked
   };
+
   return (
     <Layout userType="teacher">
-      <div className="space-y-8">
+      <div className="space-y-12">
+        {/* Hero Section */}
+        <div className="relative bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
+          <div className="relative px-8 py-16 md:px-12 lg:px-16">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-6">
+              Welcome to PF Speaking Master
+            </h1>
+            <p className="text-xl text-white/90 max-w-2xl mb-8">
+              Empower your students with interactive tools and real-time feedback for effective language learning.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <button 
+                onClick={() => navigate('/dashboard/create-session')}
+                className="bg-white text-blue-900 px-6 py-3 rounded-md font-medium hover:bg-blue-50 transition-colors"
+              >
+                Create Session
+              </button>
+              <button 
+                onClick={() => navigate('/dashboard/create-material')}
+                className="border-2 border-white text-white px-6 py-3 rounded-md font-medium hover:bg-white/10 transition-colors"
+              >
+                Create Material
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <AcademicCapIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Session Management</h3>
+            <p className="text-gray-600">Create and manage interactive learning sessions with comprehensive tools.</p>
+          </div>
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <UserGroupIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Student Progress</h3>
+            <p className="text-gray-600">Track and monitor your students' learning journey and achievements.</p>
+          </div>
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <ChartBarIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Analytics Dashboard</h3>
+            <p className="text-gray-600">Access detailed insights and analytics about your teaching impact.</p>
+          </div>
+        </div>
+
         {/* Materials Section */}
         <section>
-          <div className="relative mb-8 flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Semester Materials
-            </h2>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-serif text-gray-900 mb-2">Semester Materials</h2>
+              <div className="h-1 w-20 bg-blue-600 rounded"></div>
+            </div>
             <button
               onClick={() => navigate('/dashboard/create-material')}
-              className="bg-blue-400 text-white px-6 py-2.5 rounded-lg 
-              hover:bg-blue-500 transition-all duration-300 
-              flex items-center gap-2 group border border-blue-300"
+              className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
             >
               <PencilIcon className="w-5 h-5" />
               Create Material

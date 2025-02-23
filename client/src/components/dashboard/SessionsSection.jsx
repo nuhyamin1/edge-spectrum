@@ -50,28 +50,35 @@ const SessionsSection = ({ title, sessions, type }) => {
   const hasMore = sessions.length > MAX_DISPLAY_ITEMS;
 
   return (
-    <div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-4">{title}</h3>
+    <div className="h-full">
+      <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <span className="relative">
+          {title}
+          <div className="absolute -bottom-2 left-0 h-1 w-12 bg-blue-400 rounded"></div>
+        </span>
+      </h3>
+      
       {sessions.length === 0 ? (
-        <p className="text-gray-600">No {type} sessions</p>
+        <div className="flex flex-col items-center justify-center h-48 bg-white/80 backdrop-blur-xl rounded-xl border border-blue-200">
+          <p className="text-gray-500 text-center">No {type} sessions</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid gap-4">
           {sessions.map((session) => (
             <div
               key={session._id}
-              className="relative bg-white/80 backdrop-blur-sm rounded-xl p-5 
-              border border-blue-200 hover:border-blue-400
-              transition-all duration-300 group
-              hover:shadow-lg hover:shadow-blue-400/20"
+              className="group relative bg-white/80 backdrop-blur-xl rounded-xl p-5 
+                border border-blue-200 hover:border-blue-400
+                transition-all duration-300 hover:shadow-lg hover:shadow-blue-400/20"
             >
-              {/* Glossy overlay effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 
-                group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
+              {/* Glowing effect on hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-blue-600/5 opacity-0 
+                group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
 
               <div className="relative">
-                {/* Session Title with Icon */}
-                <div className="flex items-start justify-between mb-3">
-                  <h4 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                {/* Session Title and Status */}
+                <div className="flex items-start justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
                     {session.title}
                   </h4>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium
@@ -84,10 +91,10 @@ const SessionsSection = ({ title, sessions, type }) => {
                 </div>
 
                 {/* Session Details */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {/* Date & Time */}
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <CalendarIcon className="w-4 h-4 mr-2 text-gray-600" />
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
                     {new Date(session.dateTime).toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
@@ -96,8 +103,8 @@ const SessionsSection = ({ title, sessions, type }) => {
                     })}
                   </div>
                   
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <ClockIcon className="w-4 h-4 mr-2 text-gray-600" />
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <ClockIcon className="w-4 h-4 mr-2 text-gray-500" />
                     {new Date(session.dateTime).toLocaleTimeString('en-US', {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -109,14 +116,14 @@ const SessionsSection = ({ title, sessions, type }) => {
                   </div>
 
                   {/* Subject & Topic */}
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <BookOpenIcon className="w-4 h-4 mr-2 text-gray-600" />
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <BookOpenIcon className="w-4 h-4 mr-2 text-gray-500" />
                     {session.subject} - {session.topic}
                   </div>
 
                   {/* Participants */}
-                  <div className="flex items-center text-gray-700 text-sm">
-                    <UserGroupIcon className="w-4 h-4 mr-2 text-gray-600" />
+                  <div className="flex items-center text-gray-600 text-sm">
+                    <UserGroupIcon className="w-4 h-4 mr-2 text-gray-500" />
                     {session.participants?.length || 0} Participants
                   </div>
                 </div>
@@ -126,11 +133,11 @@ const SessionsSection = ({ title, sessions, type }) => {
                   <Link
                     to={`/dashboard/session/${session._id}`}
                     className="inline-flex items-center text-blue-600 hover:text-blue-700 
-                    transition-colors text-sm font-medium"
+                      transition-colors text-sm font-medium group"
                   >
                     {type === 'active' ? 'Join Session' : 
                      type === 'upcoming' ? 'View Details' : 'View Summary'}
-                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                    <ArrowRightIcon className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
               </div>

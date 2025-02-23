@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Layout from '../Layout';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
 import { DocumentDuplicateIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import SessionsSection from '../SessionsSection';
+import { MicrophoneIcon, UserGroupIcon, ChartBarIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import '../Dashboard.css';
 
 const StudentMainPage = () => {
@@ -82,126 +83,105 @@ const StudentMainPage = () => {
 
   return (
     <Layout userType="student">
-      <div className="space-y-8">
-        {/* Materials Section */}
-        <section>
-          <div className="relative mb-8">
-            <h2 className="text-3xl font-bold text-gray-100">
-              Semester Materials
-            </h2>
+      <div className="space-y-12">
+        {/* Hero Section */}
+        <div className="relative bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
+          <div className="relative px-8 py-16 md:px-12 lg:px-16">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-6">
+              Welcome to PF Speaking Master
+            </h1>
+            <p className="text-xl text-white/90 max-w-2xl mb-8">
+              Master speaking with real-time feedback and interactive tools designed for immersive learning.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <button className="bg-white text-blue-900 px-6 py-3 rounded-md font-medium hover:bg-blue-50 transition-colors">
+                Start Learning
+              </button>
+              <button className="border-2 border-white text-white px-6 py-3 rounded-md font-medium hover:bg-white/10 transition-colors">
+                Find Classes
+              </button>
+            </div>
           </div>
+        </div>
 
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <MicrophoneIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Real-Time Feedback</h3>
+            <p className="text-gray-600">Get instant pronunciation and fluency insights to improve your speaking skills.</p>
+          </div>
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <UserGroupIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Interactive Sessions</h3>
+            <p className="text-gray-600">Join live sessions with teachers and peers for collaborative learning.</p>
+          </div>
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <ChartBarIcon className="w-6 h-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
+            <p className="text-gray-600">Monitor your improvement with detailed analytics and insights.</p>
+          </div>
+        </div>
+
+        {/* Latest Materials Section */}
+        <div className="bg-white rounded-xl p-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-serif text-gray-900 mb-2">Latest Materials</h2>
+              <div className="h-1 w-20 bg-blue-600 rounded"></div>
+            </div>
+            <Link
+              to="/dashboard/student/materials"
+              className="text-blue-600 hover:text-blue-700 font-medium flex items-center"
+            >
+              View All
+              <ArrowRightIcon className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {materials.slice(0, visibleMaterials).map((material) => (
-              <div
-                key={material._id}
-                className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-                border border-gray-700 hover:border-neon-blue/50
-                transition-all duration-300 group flex flex-col
-                hover:shadow-lg hover:shadow-neon-blue/20"
-              >
-                {/* Glossy overlay effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
-                  group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
-                
-                {/* Animated border gradient
-                <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
-                  opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
-                  animate-once" /> */}
-
-                <div 
-                  onClick={() => navigate(`/dashboard/material/${material._id}`)}
-                  className="cursor-pointer flex-1 relative"
+            {materials.slice(0, 3).map((material) => (
+              <div key={material._id} className="border rounded-lg p-6 hover:shadow-md transition-shadow hover:border-blue-200">
+                <h3 className="font-medium text-lg mb-2">{material.title}</h3>
+                <p className="text-gray-600 text-sm mb-4">{material.description}</p>
+                <Link
+                  to={`/dashboard/student/materials/${material._id}`}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
-                  <h3 className="text-xl font-bold text-gray-100 mb-3 
-                    group-hover:text-neon-blue transition-colors">
-                    {material.title}
-                  </h3>
-                  <span className="inline-block px-3 py-1 bg-gray-700/50 text-gray-300 text-sm font-medium rounded-full mb-4">
-                    {material.subject}
-                  </span>
-                  <p className="text-gray-400 text-sm line-clamp-4 leading-relaxed">
-                    {material.description}
-                  </p>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-gray-700/50 flex justify-end space-x-2 relative">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyMaterialLink(material._id);
-                    }}
-                    className="p-2.5 text-gray-400 hover:text-neon-blue 
-                    rounded-lg transition-all duration-300 
-                    hover:bg-gray-700/50 hover:shadow-md
-                    active:scale-95 relative overflow-hidden"
-                    title="Copy material link"
-                  >
-                    <div className="absolute inset-0 bg-gray-600/0 hover:bg-gray-600/10 transition-colors" />
-                    <DocumentDuplicateIcon className="w-5 h-5 relative z-10" />
-                  </button>
-                </div>
+                  Learn More →
+                </Link>
               </div>
             ))}
           </div>
+        </div>
 
-          {materials.length > visibleMaterials && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={handleSeeMore}
-                className="text-neon-blue hover:text-neon-blue/80 transition-colors
-                flex items-center gap-2"
-              >
-                See more materials
-                <ChevronDownIcon className="w-5 h-5" />
-              </button>
+        {/* Upcoming Sessions */}
+        <div className="bg-white rounded-xl p-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-serif text-gray-900 mb-2">Upcoming Sessions</h2>
+              <div className="h-1 w-20 bg-blue-600 rounded"></div>
             </div>
+            <Link
+              to="/dashboard/available-sessions"
+              className="text-blue-600 hover:text-blue-700 font-medium flex items-center"
+            >
+              View All
+              <ArrowRightIcon className="w-4 h-4 ml-1" />
+            </Link>
+          </div>
+          {upcomingSessions ? (
+            <SessionsSection sessions={upcomingSessions} type="upcoming" />
+          ) : (
+            <p className="text-gray-500 text-center py-8">Loading sessions...</p>
           )}
-        </section>
-
-        {/* Sessions Section */}
-        <section className="space-y-8">
-          <div className="relative mb-8">
-            <h2 className="text-3xl font-bold text-gray-100">
-              Learning Sessions
-            </h2>
-          </div>
-
-          <div className="space-y-6">
-            {/* Active Sessions */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-              border border-gray-700 hover:border-neon-blue/50
-              transition-all duration-300">
-              <SessionsSection 
-                title="Active Sessions"
-                sessions={activeSessions}
-                type="active"
-              />
-            </div>
-
-            {/* Upcoming Sessions */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-              border border-gray-700 hover:border-neon-blue/50
-              transition-all duration-300">
-              <SessionsSection 
-                title="Upcoming Sessions"
-                sessions={upcomingSessions}
-                type="upcoming"
-              />
-            </div>
-
-            {/* Completed Sessions */}
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 
-              border border-gray-700 hover:border-neon-blue/50
-              transition-all duration-300">
-              <SessionsSection 
-                title="Completed Sessions"
-                sessions={completedSessions}
-                type="completed"
-              />
-            </div>
-          </div>
-        </section>
+        </div>
       </div>
     </Layout>
   );

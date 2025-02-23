@@ -18,15 +18,40 @@ import {
 import { Add as AddIcon, Clear as ClearIcon, AccessTime as AccessTimeIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
+import 'react-quill/dist/quill.snow.css';
+import './StudentAssignments.css';
 
 // Add these styles at the top of the file
 const styles = {
+  container: {
+    backgroundColor: '#F0F9FF',
+    p: 3,
+    minHeight: '100vh',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    mb: 4,
+    backgroundColor: '#E0F2FE',
+    p: 2,
+    borderRadius: 2,
+  },
+  card: {
+    backgroundColor: 'white',
+    border: '1px solid #E5E7EB',
+    borderRadius: 2,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    },
+  },
   submissionItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)',
+    backgroundColor: 'rgba(96, 165, 250, 0.1)',
     borderRadius: 1,
     p: 1
   },
@@ -35,7 +60,7 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: '#E5E7EB',
+    color: '#1F2937',
   },
   linkItem: {
     display: 'flex',
@@ -51,7 +76,7 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: '#60A5FA',
+    color: '#1E40AF',
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline'
@@ -60,38 +85,38 @@ const styles = {
   fileInput: {
     mb: 2,
     p: 2,
-    border: '1px dashed rgba(75, 85, 99, 0.5)',
+    border: '1px dashed #60A5FA',
     borderRadius: 1,
-    backgroundColor: 'rgba(31, 41, 55, 0.3)'
+    backgroundColor: 'rgba(96, 165, 250, 0.1)'
   },
   status: {
     px: 2,
     py: 0.5,
-    borderRadius: 1,
+    borderRadius: 20,
     display: 'inline-block',
     typography: 'body2',
+    fontWeight: 'medium',
   },
   pending: {
-    backgroundColor: 'rgba(237, 108, 2, 0.1)',
-    color: '#ED6C02',
+    backgroundColor: '#FEF3C7',
+    color: '#92400E',
   },
   submitted: {
-    backgroundColor: 'rgba(25, 118, 210, 0.1)',
-    color: '#1976D2',
+    backgroundColor: '#DBEAFE',
+    color: '#1E40AF',
   },
   submitted_late: {
-    backgroundColor: 'rgba(133, 100, 4, 0.1)',
-    color: '#856404',
+    backgroundColor: '#FFF7ED',
+    color: '#854D0E',
     fontWeight: 'bold',
-    border: '2px solid rgba(255, 238, 186, 0.2)',
   },
   accepted: {
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-    color: '#2E7D32',
+    backgroundColor: '#DCFCE7',
+    color: '#166534',
   },
   rejected: {
-    backgroundColor: 'rgba(211, 47, 47, 0.1)',
-    color: '#D32F2F',
+    backgroundColor: '#FEE2E2',
+    color: '#9B2C2C',
   },
   countdown: {
     display: 'inline-flex',
@@ -103,21 +128,67 @@ const styles = {
     width: 'fit-content',
   },
   countdownWarning: {
-    backgroundColor: 'rgba(133, 100, 4, 0.1)',
-    color: '#856404',
+    backgroundColor: '#FEF3C7',
+    color: '#92400E',
   },
   countdownDanger: {
-    backgroundColor: 'rgba(198, 40, 40, 0.1)',
-    color: '#C62828',
+    backgroundColor: '#FEE2E2',
+    color: '#9B2C2C',
   },
   countdownNormal: {
-    backgroundColor: 'rgba(46, 125, 50, 0.1)',
-    color: '#2E7D32',
+    backgroundColor: '#DCFCE7',
+    color: '#166534',
   },
   countdownExpired: {
-    backgroundColor: 'rgba(198, 40, 40, 0.1)',
-    color: '#C62828',
+    backgroundColor: '#FEE2E2',
+    color: '#9B2C2C',
     fontWeight: 'bold',
+  },
+  descriptionSection: {
+    my: 2,
+    pl: 4,
+    '& .ql-editor': {
+      padding: 0,
+    },
+    '& .material-content': {
+      color: '#1F2937',
+    }
+  },
+  dialogPaper: {
+    backgroundColor: '#F0F9FF',
+    border: '1px solid #60A5FA',
+  },
+  textField: {
+    '& .MuiOutlinedInput-root': {
+      color: '#1F2937',
+      '& fieldset': {
+        borderColor: '#60A5FA',
+      },
+      '&:hover fieldset': {
+        borderColor: '#1E40AF',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#1E40AF',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: '#4B5563',
+    },
+  },
+  button: {
+    backgroundColor: '#60A5FA',
+    color: '#FFFFFF',
+    '&:hover': {
+      backgroundColor: '#1E40AF',
+    },
+  },
+  outlinedButton: {
+    color: '#1E40AF',
+    borderColor: '#60A5FA',
+    '&:hover': {
+      borderColor: '#1E40AF',
+      backgroundColor: 'rgba(96, 165, 250, 0.1)',
+    },
   },
 };
 
@@ -330,225 +401,176 @@ const StudentAssignments = () => {
 
   if (loading) {
     return (
-      <Box p={3}>
-        <Typography>Loading assignments...</Typography>
+      <Box sx={styles.container}>
+        <Typography sx={{ color: '#4B5563' }}>Loading assignments...</Typography>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box p={3}>
-        <Typography color="error">{error}</Typography>
+      <Box sx={styles.container}>
+        <Alert severity="error">{error}</Alert>
       </Box>
     );
   }
 
   return (
-    <Box p={3} sx={{ backgroundColor: 'transparent' }}>
-      <Typography variant="h4" gutterBottom sx={{ color: '#F3F4F6' }}>
-        My Assignments
-      </Typography>
+    <Box sx={styles.container}>
+      <Box sx={styles.header}>
+        <Typography variant="h4" sx={{ color: '#1F2937' }}>
+          Assignments
+        </Typography>
+      </Box>
 
-      <Grid container spacing={3}>
-        {assignments.map((assignment) => {
-          const studentDetails = getAssignmentDetails(assignment);
-          return (
+      {loading ? (
+        <Typography sx={{ color: '#4B5563' }}>Loading assignments...</Typography>
+      ) : error ? (
+        <Alert severity="error">{error}</Alert>
+      ) : assignments.length === 0 ? (
+        <Typography sx={{ color: '#4B5563' }}>No assignments found.</Typography>
+      ) : (
+        <Grid container spacing={3}>
+          {assignments.map((assignment) => (
             <Grid item xs={12} key={assignment._id}>
-              <Card 
-                sx={{
-                  backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(75, 85, 99, 0.5)',
-                  transition: 'all 0.3s ease',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&:hover': {
-                    border: '1px solid rgba(96, 165, 250, 0.5)',
-                    boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
-                  },
-                }}
-              >
-                {/* Glossy overlay effect */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), transparent)',
-                    opacity: 0,
-                    transition: 'opacity 0.3s',
-                    pointerEvents: 'none',
-                    '.MuiCard-root:hover &': {
-                      opacity: 1
-                    }
-                  }}
-                />
+              <Card sx={styles.card}>
+                <CardContent>
+                  <Typography variant="h5" gutterBottom sx={{ color: '#1F2937' }}>
+                    {assignment.title}
+                  </Typography>
+                  
+                  {renderCountdown(assignment.dueDate)}
 
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box>
-                      <Typography variant="h6" gutterBottom sx={{ color: '#F3F4F6' }}>
-                        {assignment.title}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#9CA3AF', mb: 1 }}>
-                        {assignment.description}
-                      </Typography>
-                    </Box>
-                    {renderCountdown(assignment.dueDate)}
+                  <Box sx={styles.descriptionSection}>
+                    <div
+                      className="prose max-w-none ql-editor material-content"
+                      dangerouslySetInnerHTML={{ __html: assignment.description }}
+                    />
                   </Box>
 
-                  {studentDetails && (
-                    <Box sx={{ mt: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Box sx={getStatusStyle(studentDetails.status)}>
-                          {getStatusDisplay(studentDetails.status)}
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#1F2937' }}>
+                      Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
+                    </Typography>
+                    
+                    {getAssignmentDetails(assignment) && (
+                      <>
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
+                          <Typography variant="body1" sx={{ color: '#4B5563' }}>
+                            Status:
+                          </Typography>
+                          <Box sx={getStatusStyle(getAssignmentDetails(assignment).status)}>
+                            {getStatusDisplay(getAssignmentDetails(assignment).status)}
+                          </Box>
                         </Box>
-                        {studentDetails.mark && (
-                          <Typography variant="body2" sx={{ color: '#9CA3AF' }}>
-                            Mark: {studentDetails.mark}/100
+                        
+                        {getAssignmentDetails(assignment).mark && (
+                          <Typography variant="body1" sx={{ color: '#4B5563', mt: 1 }}>
+                            Mark: {getAssignmentDetails(assignment).mark}/100
                           </Typography>
                         )}
-                      </Box>
+                        
+                        {getAssignmentDetails(assignment).feedback && (
+                          <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle1" sx={{ color: '#1F2937' }}>
+                              Feedback:
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#4B5563', mt: 1 }}>
+                              {getAssignmentDetails(assignment).feedback}
+                            </Typography>
+                          </Box>
+                        )}
+                      </>
+                    )}
 
-                      {studentDetails.feedback && (
-                        <Alert severity="info" sx={{ mb: 2, backgroundColor: 'rgba(25, 118, 210, 0.1)', color: '#1976D2' }}>
-                          {studentDetails.feedback}
-                        </Alert>
-                      )}
-
-                      {studentDetails.rejectionReason && (
-                        <Alert severity="error" sx={{ mb: 2, backgroundColor: 'rgba(211, 47, 47, 0.1)', color: '#D32F2F' }}>
-                          {studentDetails.rejectionReason}
-                        </Alert>
-                      )}
+                    <Box sx={{ mt: 2 }}>
+                      <Button
+                        variant="contained"
+                        onClick={() => handleOpenSubmit(assignment)}
+                        sx={styles.button}
+                        disabled={getAssignmentDetails(assignment)?.status === 'accepted'}
+                      >
+                        {getAssignmentDetails(assignment) ? 'Update Submission' : 'Submit Assignment'}
+                      </Button>
                     </Box>
-                  )}
-
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                    <Button
-                      onClick={() => handleOpenSubmit(assignment)}
-                      disabled={studentDetails?.status === 'accepted'}
-                      sx={{
-                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
-                        color: '#60A5FA',
-                        '&:hover': {
-                          backgroundColor: 'rgba(96, 165, 250, 0.2)',
-                        },
-                        '&.Mui-disabled': {
-                          backgroundColor: 'rgba(31, 41, 55, 0.3)',
-                          color: '#6B7280',
-                        },
-                      }}
-                    >
-                      {studentDetails?.status === 'accepted' ? 'Accepted' : 'Submit'}
-                    </Button>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-          );
-        })}
-      </Grid>
+          ))}
+        </Grid>
+      )}
 
-      <Dialog 
-        open={openSubmitDialog} 
+      <Dialog
+        open={openSubmitDialog}
         onClose={() => setOpenSubmitDialog(false)}
-        PaperProps={{
-          sx: {
-            backgroundColor: 'rgba(31, 41, 55, 0.95)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(75, 85, 99, 0.5)',
-          }
-        }}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: styles.dialogPaper }}
       >
-        <DialogTitle sx={{ color: '#F3F4F6' }}>
+        <DialogTitle sx={{ color: '#1F2937' }}>
           Submit Assignment
         </DialogTitle>
         <DialogContent>
-          <Box sx={styles.fileInput}>
-            <input
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.txt"
-              style={{ color: '#9CA3AF' }}
-            />
-          </Box>
+          {selectedAssignment && (
+            <>
+              <Box sx={styles.fileInput}>
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.txt"
+                />
+                <Typography variant="caption" sx={{ color: '#4B5563', display: 'block', mt: 1 }}>
+                  Max files: {selectedAssignment.maxFiles || 5}
+                </Typography>
+              </Box>
 
-          {links.map((link, index) => (
-            <Box key={index} sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <TextField
-                fullWidth
-                value={link}
-                onChange={(e) => handleLinkChange(index, e.target.value)}
-                placeholder="Add link (optional)"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    color: '#F3F4F6',
-                    '& fieldset': {
-                      borderColor: 'rgba(75, 85, 99, 0.5)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: 'rgba(96, 165, 250, 0.5)',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#60A5FA',
-                    },
-                  },
-                }}
-              />
-              <IconButton 
-                onClick={() => handleRemoveLink(index)}
-                sx={{ 
-                  color: '#EF4444',
-                  '&:hover': {
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  }
-                }}
-              >
-                <ClearIcon />
-              </IconButton>
-            </Box>
-          ))}
+              {selectedFiles.map((file, index) => (
+                <Box key={index} sx={styles.submissionItem}>
+                  <Typography variant="body2" sx={styles.fileName}>
+                    {file.name}
+                  </Typography>
+                </Box>
+              ))}
 
-          {links.length < selectedAssignment?.maxLinks && (
-            <Button
-              startIcon={<AddIcon />}
-              onClick={handleAddLink}
-              sx={{
-                color: '#60A5FA',
-                '&:hover': {
-                  backgroundColor: 'rgba(96, 165, 250, 0.1)',
-                },
-              }}
-            >
-              Add Link
-            </Button>
+              {links.map((link, index) => (
+                <Box key={index} sx={styles.linkItem}>
+                  <TextField
+                    fullWidth
+                    value={link}
+                    onChange={(e) => handleLinkChange(index, e.target.value)}
+                    placeholder="Enter URL"
+                    size="small"
+                    sx={styles.textField}
+                  />
+                  <IconButton 
+                    onClick={() => handleRemoveLink(index)}
+                    size="small"
+                    sx={{ color: '#4B5563' }}
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                </Box>
+              ))}
+
+              {links.length < (selectedAssignment.maxLinks || 3) && (
+                <Button
+                  startIcon={<AddIcon />}
+                  onClick={handleAddLink}
+                  sx={styles.outlinedButton}
+                >
+                  Add Link
+                </Button>
+              )}
+            </>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(75, 85, 99, 0.5)' }}>
-          <Button 
-            onClick={() => setOpenSubmitDialog(false)}
-            sx={{
-              color: '#9CA3AF',
-              '&:hover': {
-                backgroundColor: 'rgba(75, 85, 99, 0.2)',
-              },
-            }}
-          >
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #60A5FA' }}>
+          <Button onClick={() => setOpenSubmitDialog(false)} sx={styles.outlinedButton}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit}
-            variant="contained"
-            sx={{
-              backgroundColor: 'rgba(96, 165, 250, 0.1)',
-              color: '#60A5FA',
-              '&:hover': {
-                backgroundColor: 'rgba(96, 165, 250, 0.2)',
-              },
-            }}
-          >
+          <Button onClick={handleSubmitClick} variant="contained" sx={styles.button}>
             Submit
           </Button>
         </DialogActions>
@@ -557,46 +579,22 @@ const StudentAssignments = () => {
       <Dialog
         open={confirmLateSubmit}
         onClose={() => setConfirmLateSubmit(false)}
-        PaperProps={{
-          sx: {
-            backgroundColor: 'rgba(31, 41, 55, 0.95)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(75, 85, 99, 0.5)',
-          }
-        }}
+        PaperProps={{ sx: styles.dialogPaper }}
       >
-        <DialogTitle sx={{ color: '#F3F4F6' }}>
+        <DialogTitle sx={{ color: '#1F2937' }}>
           Late Submission
         </DialogTitle>
         <DialogContent>
-          <Typography sx={{ color: '#9CA3AF' }}>
-            This assignment is past due. Your submission will be marked as late. Do you want to continue?
+          <Typography sx={{ color: '#4B5563' }}>
+            This assignment is past its due date. Are you sure you want to submit late?
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(75, 85, 99, 0.5)' }}>
-          <Button 
-            onClick={() => setConfirmLateSubmit(false)}
-            sx={{
-              color: '#9CA3AF',
-              '&:hover': {
-                backgroundColor: 'rgba(75, 85, 99, 0.2)',
-              },
-            }}
-          >
+        <DialogActions>
+          <Button onClick={() => setConfirmLateSubmit(false)} sx={styles.outlinedButton}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirmLateSubmit}
-            variant="contained"
-            sx={{
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              color: '#EF4444',
-              '&:hover': {
-                backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              },
-            }}
-          >
-            Submit Anyway
+          <Button onClick={handleConfirmLateSubmit} variant="contained" sx={styles.button}>
+            Submit Late
           </Button>
         </DialogActions>
       </Dialog>
