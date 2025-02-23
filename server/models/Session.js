@@ -40,6 +40,36 @@ const sessionSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    externalLinks: [{
+        title: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        url: {
+            type: String,
+            required: true,
+            trim: true
+        }
+    }],
+    files: [{
+        filename: {
+            type: String,
+            required: true
+        },
+        originalname: {
+            type: String,
+            required: true
+        },
+        path: {
+            type: String,
+            required: true
+        },
+        mimetype: {
+            type: String,
+            required: true
+        }
+    }],
     teacher: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

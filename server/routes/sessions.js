@@ -1,10 +1,77 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
 const Session = require('../models/Session');
 const Attendance = require('../models/Attendance');
 const auth = require('../middleware/auth');
 const isTeacher = require('../middleware/isTeacher');
 const socketService = require('../services/socket');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/sessions');
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        ];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only PDF, DOC, DOCX, PPT, and PPTX files are allowed.'));
+        }
+    }
+});
+
+// Get session file
+router.get('/:sessionId/files/:filename', auth, async (req, res) => {
+    try {
+        const session = await Session.findById(req.params.sessionId);
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found' });
+        }
+
+        const file = session.files.find(f => f.filename === req.params.filename);
+        if (!file) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        const filePath = path.resolve(file.path);
+
+        try {
+            // Read file as buffer
+            const fileBuffer = await fs.readFile(filePath);
+            
+            // Set response headers
+            res.setHeader('Content-Type', file.mimetype);
+            res.setHeader('Content-Disposition', `attachment; filename="${file.originalname}"`);
+            
+            // Send file buffer
+            res.send(fileBuffer);
+        } catch (error) {
+            console.error('Error reading file:', error);
+            res.status(404).json({ error: 'File not found on server' });
+        }
+    } catch (error) {
+        console.error('Error serving file:', error);
+        res.status(500).json({ error: 'Error serving file' });
+    }
+});
 
 // Get all available sessions (for students)
 router.get('/available', auth, async (req, res) => {
@@ -63,9 +130,9 @@ router.get('/enrolled', auth, async (req, res) => {
 });
 
 // Create a new session (teachers only)
-router.post('/', auth, isTeacher, async (req, res) => {
+router.post('/', auth, isTeacher, upload.array('files'), async (req, res) => {
     try {
-        const { title, subject, description, dateTime, materials, duration, gracePeriod, semester } = req.body;
+        const { title, subject, description, dateTime, materials, duration, gracePeriod, semester, externalLinks } = req.body;
         
         // Validate required fields
         if (!duration || duration < 1) {
@@ -80,6 +147,24 @@ router.post('/', auth, isTeacher, async (req, res) => {
             return res.status(400).json({ error: 'Semester is required' });
         }
 
+        // Process external links
+        let parsedExternalLinks = [];
+        if (externalLinks) {
+            try {
+                parsedExternalLinks = JSON.parse(externalLinks);
+            } catch (error) {
+                return res.status(400).json({ error: 'Invalid external links format' });
+            }
+        }
+
+        // Process uploaded files
+        const files = req.files ? req.files.map(file => ({
+            filename: file.filename,
+            originalname: file.originalname,
+            path: file.path,
+            mimetype: file.mimetype
+        })) : [];
+
         const session = new Session({
             title,
             subject,
@@ -90,7 +175,9 @@ router.post('/', auth, isTeacher, async (req, res) => {
             materials,
             semester,
             teacher: req.user._id,
-            status: 'scheduled' // Set default status
+            status: 'scheduled',
+            externalLinks: parsedExternalLinks,
+            files
         });
 
         await session.save();
@@ -110,6 +197,16 @@ router.post('/', auth, isTeacher, async (req, res) => {
 
         res.status(201).json(session);
     } catch (error) {
+        // Clean up uploaded files if session creation fails
+        if (req.files) {
+            for (const file of req.files) {
+                try {
+                    await fs.unlink(file.path);
+                } catch (unlinkError) {
+                    console.error('Error cleaning up file:', unlinkError);
+                }
+            }
+        }
         console.error('Session creation error:', error);
         res.status(400).json({ error: error.message });
     }
@@ -159,63 +256,6 @@ router.get('/teacher', auth, isTeacher, async (req, res) => {
     }
 });
 
-// Enroll in a session
-router.post('/:id/enroll', auth, async (req, res) => {
-    try {
-        const session = await Session.findById(req.params.id);
-        
-        if (!session) {
-            return res.status(404).json({ error: 'Session not found' });
-        }
-
-        // Check if session is in the future
-        if (new Date(session.dateTime) < new Date()) {
-            return res.status(400).json({ error: 'Cannot enroll in past sessions' });
-        }
-
-        // Check if already enrolled
-        if (session.enrolledStudents.includes(req.user._id)) {
-            return res.status(400).json({ error: 'Already enrolled in this session' });
-        }
-
-        session.enrolledStudents.push(req.user._id);
-        await session.save();
-
-        res.json({ message: 'Successfully enrolled in session', session });
-    } catch (error) {
-        console.error('Enrollment error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Unenroll from a session
-router.post('/:id/unenroll', auth, async (req, res) => {
-    try {
-        const session = await Session.findById(req.params.id);
-        
-        if (!session) {
-            return res.status(404).json({ error: 'Session not found' });
-        }
-
-        // Check if session is in the future
-        if (new Date(session.dateTime) < new Date()) {
-            return res.status(400).json({ error: 'Cannot unenroll from past sessions' });
-        }
-
-        // Remove student from enrolled list
-        session.enrolledStudents = session.enrolledStudents.filter(
-            studentId => studentId.toString() !== req.user._id.toString()
-        );
-        
-        await session.save();
-
-        res.json({ message: 'Successfully unenrolled from session', session });
-    } catch (error) {
-        console.error('Unenrollment error:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // Get specific session by ID
 router.get('/:id', auth, async (req, res) => {
     try {
@@ -242,7 +282,7 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Update a session (teachers only, their own sessions)
-router.put('/:id', auth, isTeacher, async (req, res) => {
+router.put('/:id', auth, isTeacher, upload.array('files'), async (req, res) => {
     try {
         const session = await Session.findOne({ 
             _id: req.params.id,
@@ -253,18 +293,48 @@ router.put('/:id', auth, isTeacher, async (req, res) => {
             return res.status(404).json({ error: 'Session not found' });
         }
 
-        const { title, subject, description, dateTime, materials } = req.body;
+        const { title, subject, description, dateTime, materials, externalLinks } = req.body;
         
+        // Process external links
+        let parsedExternalLinks = [];
+        if (externalLinks) {
+            try {
+                parsedExternalLinks = JSON.parse(externalLinks);
+            } catch (error) {
+                return res.status(400).json({ error: 'Invalid external links format' });
+            }
+        }
+
+        // Process new files
+        const newFiles = req.files ? req.files.map(file => ({
+            filename: file.filename,
+            originalname: file.originalname,
+            path: file.path,
+            mimetype: file.mimetype
+        })) : [];
+
         // Update the session fields
         session.title = title;
         session.subject = subject;
         session.description = description;
         session.dateTime = new Date(dateTime);
         session.materials = materials;
+        session.externalLinks = parsedExternalLinks;
+        session.files = [...session.files, ...newFiles];
         
         await session.save();
         res.json(session);
     } catch (error) {
+        // Clean up newly uploaded files if update fails
+        if (req.files) {
+            for (const file of req.files) {
+                try {
+                    await fs.unlink(file.path);
+                } catch (unlinkError) {
+                    console.error('Error cleaning up file:', unlinkError);
+                }
+            }
+        }
         console.error('Error updating session:', error);
         res.status(400).json({ error: error.message });
     }
@@ -273,7 +343,7 @@ router.put('/:id', auth, isTeacher, async (req, res) => {
 // Delete a session (teachers only, their own sessions)
 router.delete('/:id', auth, isTeacher, async (req, res) => {
     try {
-        const session = await Session.findOneAndDelete({
+        const session = await Session.findOne({
             _id: req.params.id,
             teacher: req.user._id
         });
@@ -282,6 +352,19 @@ router.delete('/:id', auth, isTeacher, async (req, res) => {
             return res.status(404).json({ error: 'Session not found' });
         }
 
+        // Delete associated files
+        if (session.files && session.files.length > 0) {
+            for (const file of session.files) {
+                try {
+                    await fs.unlink(file.path);
+                } catch (error) {
+                    console.error(`Error deleting file ${file.path}:`, error);
+                }
+            }
+        }
+
+        await Session.deleteOne({ _id: session._id });
+
         // Emit socket event for real-time update
         const io = socketService.getIO();
         io.emit('sessionUpdate', {
@@ -289,9 +372,44 @@ router.delete('/:id', auth, isTeacher, async (req, res) => {
             sessionId: session._id.toString()
         });
 
-        res.json(session);
+        res.json({ message: 'Session and associated files deleted successfully' });
     } catch (error) {
         console.error('Error deleting session:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete file from session
+router.delete('/:sessionId/files/:fileId', auth, isTeacher, async (req, res) => {
+    try {
+        const session = await Session.findOne({
+            _id: req.params.sessionId,
+            teacher: req.user._id
+        });
+
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found' });
+        }
+
+        const file = session.files.id(req.params.fileId);
+        if (!file) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        // Delete the file from storage
+        try {
+            await fs.unlink(file.path);
+        } catch (error) {
+            console.error(`Error deleting file ${file.path}:`, error);
+        }
+
+        // Remove the file from the session
+        session.files.pull(req.params.fileId);
+        await session.save();
+
+        res.json({ message: 'File deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting file:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -452,6 +570,7 @@ router.post('/:id/duplicate', auth, isTeacher, async (req, res) => {
             duration: originalSession.duration,
             gracePeriod: originalSession.gracePeriod,
             materials: originalSession.materials,
+            externalLinks: originalSession.externalLinks,
             teacher: req.user._id,
             dateTime: req.body.dateTime // New date for the duplicated session
         });

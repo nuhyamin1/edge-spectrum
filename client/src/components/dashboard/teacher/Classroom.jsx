@@ -9,8 +9,9 @@ import { io } from 'socket.io-client';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
 import ExerciseRoom from '../ExerciseRoom';
-import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaPlayCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaPlayCircle, FaTimesCircle, FaFolder } from 'react-icons/fa';
 import DiscussionRoom from '../DiscussionRoom';
+import MaterialRoom from '../MaterialRoom';
 
 const Classroom = () => {
   const { sessionId } = useParams();
@@ -368,6 +369,18 @@ const Classroom = () => {
           <FaBook size={24} />
         </button>
 
+        <button 
+          onClick={() => setActiveTab('material')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'material' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Material Room"
+        >
+          <FaFolder size={24} />
+        </button>
+
         {/* Bottom Section with Session Control */}
         <div className="mt-auto">
           <div className="w-8 border-t border-gray-700 mb-4"></div>
@@ -476,6 +489,9 @@ const Classroom = () => {
                   initialContent={exerciseContent}
                   onContentChange={setExerciseContent}
                 />
+              )}
+              {activeTab === 'material' && (
+                <MaterialRoom sessionId={sessionId} session={session} />
               )}
             </div>
           </div>

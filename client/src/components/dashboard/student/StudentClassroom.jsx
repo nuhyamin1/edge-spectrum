@@ -9,7 +9,8 @@ import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
 import DiscussionRoom from '../DiscussionRoom';
 import ExerciseRoom from '../ExerciseRoom';
-import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook } from 'react-icons/fa';
+import MaterialRoom from '../MaterialRoom';
+import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaFolder } from 'react-icons/fa';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -299,6 +300,18 @@ const StudentClassroom = () => {
         >
           <FaBook size={24} />
         </button>
+
+        <button 
+          onClick={() => setActiveTab('material')}
+          className={`p-2 rounded-lg transition-colors duration-200 ${
+            activeTab === 'material' 
+              ? 'text-blue-500 bg-gray-700' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Material Room"
+        >
+          <FaFolder size={24} />
+        </button>
       </div>
 
       {/* Main Content */}
@@ -342,6 +355,9 @@ const StudentClassroom = () => {
               initialContent={exerciseContent}
               onContentChange={setExerciseContent}
             />
+          )}
+          {activeTab === 'material' && (
+            <MaterialRoom sessionId={sessionId} session={session} />
           )}
         </div>
       </div>

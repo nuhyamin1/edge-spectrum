@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../../context/AuthContext';
 import axios from '../../../utils/axios';
 import Layout from '../Layout';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const CreateSession = () => {
   const navigate = useNavigate();
@@ -20,8 +20,12 @@ const CreateSession = () => {
     duration: '',
     gracePeriod: '',
     materials: '',
-    semester: ''
+    semester: '',
+    externalLinks: [],
+    files: []
   });
+
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchMaterials();
@@ -57,6 +61,44 @@ const CreateSession = () => {
     }));
   };
 
+  const handleAddExternalLink = () => {
+    setFormData(prev => ({
+      ...prev,
+      externalLinks: [...prev.externalLinks, { title: '', url: '' }]
+    }));
+  };
+
+  const handleExternalLinkChange = (index, field, value) => {
+    const updatedLinks = [...formData.externalLinks];
+    updatedLinks[index] = { ...updatedLinks[index], [field]: value };
+    setFormData(prev => ({
+      ...prev,
+      externalLinks: updatedLinks
+    }));
+  };
+
+  const handleRemoveExternalLink = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      externalLinks: prev.externalLinks.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const newFiles = Array.from(e.target.files);
+    setFormData(prev => ({
+      ...prev,
+      files: [...prev.files, ...newFiles]
+    }));
+  };
+
+  const handleRemoveFile = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      files: prev.files.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -68,14 +110,24 @@ const CreateSession = () => {
         return;
       }
 
-      console.log('Sending session data:', {
-        ...formData,
-        teacher: user._id
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach(key => {
+        if (key === 'files') {
+          formData.files.forEach(file => {
+            formDataToSend.append('files', file);
+          });
+        } else if (key === 'externalLinks') {
+          formDataToSend.append('externalLinks', JSON.stringify(formData.externalLinks));
+        } else {
+          formDataToSend.append(key, formData[key]);
+        }
       });
+      formDataToSend.append('teacher', user._id);
 
-      const response = await axios.post('/api/sessions', {
-        ...formData,
-        teacher: user._id
+      const response = await axios.post('/api/sessions', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
       toast.success('Session created successfully');
@@ -187,7 +239,7 @@ const CreateSession = () => {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-blue-900 mb-1">
                     Date and Time
@@ -222,46 +274,134 @@ const CreateSession = () => {
                       transition-all duration-300"
                   />
                 </div>
+              
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Grace Period (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    name="gracePeriod"
+                    value={formData.gracePeriod}
+                    onChange={handleInputChange}
+                    required
+                    min="0"
+                    className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                      text-blue-900
+                      focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                      transition-all duration-300"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-blue-900 mb-1">
-                  Grace Period (minutes)
-                </label>
-                <input
-                  type="number"
-                  name="gracePeriod"
-                  value={formData.gracePeriod}
-                  onChange={handleInputChange}
-                  required
-                  min="0"
-                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
-                    text-blue-900
-                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
-                    transition-all duration-300"
-                />
-              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-1">
+                    Materials
+                  </label>
+                  <select
+                    name="materials"
+                    value={formData.materials}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
+                      text-blue-900
+                      focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
+                      transition-all duration-300"
+                  >
+                    <option value="">Select Material</option>
+                    {materials.map((material) => (
+                      <option key={material._id} value={material._id}>
+                        {material.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-blue-900 mb-1">
-                  Materials
-                </label>
-                <select
-                  name="materials"
-                  value={formData.materials}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-white border border-blue-200 rounded-lg
-                    text-blue-900
-                    focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
-                    transition-all duration-300"
-                >
-                  <option value="">Select Material</option>
-                  {materials.map((material) => (
-                    <option key={material._id} value={material._id}>
-                      {material.title}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-blue-900">
+                      External Links
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleAddExternalLink}
+                      className="flex items-center text-sm text-blue-500 hover:text-blue-600"
+                    >
+                      <PlusIcon className="w-4 h-4 mr-1" />
+                      Add Link
+                    </button>
+                  </div>
+                  <div className="space-y-2 mt-2">
+                    {formData.externalLinks.map((link, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          placeholder="Link Title"
+                          value={link.title}
+                          onChange={(e) => handleExternalLinkChange(index, 'title', e.target.value)}
+                          className="flex-1 px-4 py-2 bg-white border border-blue-200 rounded-lg
+                            text-blue-900 text-sm
+                            focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                        />
+                        <input
+                          type="url"
+                          placeholder="URL"
+                          value={link.url}
+                          onChange={(e) => handleExternalLinkChange(index, 'url', e.target.value)}
+                          className="flex-2 px-4 py-2 bg-white border border-blue-200 rounded-lg
+                            text-blue-900 text-sm
+                            focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExternalLink(index)}
+                          className="p-2 text-red-500 hover:text-red-600"
+                        >
+                          <XMarkIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-blue-900">
+                      Files
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current.click()}
+                      className="flex items-center text-sm text-blue-500 hover:text-blue-600"
+                    >
+                      <PlusIcon className="w-4 h-4 mr-1" />
+                      Add Files
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx"
+                    />
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    {formData.files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                        <span className="text-sm text-blue-900">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(index)}
+                          className="p-1 text-red-500 hover:text-red-600"
+                        >
+                          <XMarkIcon className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-blue-200">
