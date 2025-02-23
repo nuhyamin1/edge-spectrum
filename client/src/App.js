@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import WelcomePage from './components/dashboard/WelcomePage';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import EmailVerification from './components/auth/EmailVerification';
@@ -48,6 +49,12 @@ const AppRoutes = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<EmailVerification />} />
           
+          <Route path="/welcome" element={
+            <ProtectedRoute>
+              <WelcomePage />
+            </ProtectedRoute>
+          } />
+
           <Route
             path="/dashboard"
             element={
