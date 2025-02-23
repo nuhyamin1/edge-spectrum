@@ -47,3 +47,9 @@ debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+#Cline
+cline_mcp_settings.json
+
+#Cline MCP
+perplexity-mcp
