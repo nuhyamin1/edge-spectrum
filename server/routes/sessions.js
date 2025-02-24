@@ -224,7 +224,7 @@ router.get('/', auth, async (req, res) => {
         
         const sessions = await Session.find(query)
             .populate('teacher', 'name email')
-            .populate('enrolledStudents', '_id name')
+            .populate('enrolledStudents', '_id name email profilePicture')
             .sort({ dateTime: 'desc' })
             .lean();
 
