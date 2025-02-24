@@ -23,8 +23,12 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'teacher'],
+    enum: ['student', 'teacher', 'admin'],
     required: [true, 'Please specify your role']
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   },
   isEmailVerified: {
     type: Boolean,
@@ -40,14 +44,33 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
+  try {
+    console.log('Pre-save hook triggered');
+    if (!this.isModified('password')) {
+      console.log('Password not modified, skipping hashing');
+      return next();
+    }
+    console.log('Hashing password...');
+    this.password = await bcrypt.hash(this.password, 12);
+    console.log('Password hashed successfully');
+    next();
+  } catch (error) {
+    console.error('Error in password hashing:', error);
+    next(error);
+  }
 });
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  try {
+    console.log('Comparing passwords...');
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    console.log('Password match:', isMatch);
+    return isMatch;
+  } catch (error) {
+    console.error('Error comparing passwords:', error);
+    throw error;
+  }
 };
 
 module.exports = mongoose.model('User', userSchema);

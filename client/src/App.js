@@ -34,6 +34,7 @@ import { useLocation } from 'react-router-dom';
 import MaterialList from './components/dashboard/teacher/MaterialList';
 import Materials from './components/dashboard/student/Materials';
 import ActiveSessions from './components/dashboard/student/ActiveSessions';
+import AdminDashboard from './components/dashboard/admin/AdminDashboard';
 
 // AppRoutes component to contain all routes
 const AppRoutes = () => {
@@ -230,6 +231,17 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <Materials />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <Layout userType="admin">
+                  <AdminDashboard />
+                </Layout>
               </ProtectedRoute>
             }
           />

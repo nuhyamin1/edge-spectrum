@@ -9,7 +9,7 @@ const fs = require('fs');
 const semesterRoutes = require('./routes/semesters');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const server = http.createServer(app);
@@ -30,10 +30,17 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log('MongoDB Connection Error:', err));
+// MongoDB Connection with hardcoded URI to match createAdmin.js
+mongoose.connect('mongodb://127.0.0.1:27017/learning_platform')
+  .then(() => {
+    console.log('MongoDB Connected');
+    console.log('Database URL:', mongoose.connection.host);
+    console.log('Database Name:', mongoose.connection.name);
+  })
+  .catch(err => {
+    console.error('MongoDB Connection Error:', err);
+    process.exit(1);
+  });
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -46,6 +53,7 @@ app.use('/api/assignments', require('./routes/assignments')); // Add assignments
 app.use('/api/posts', require('./routes/posts')); // Add this line for posts routes
 app.use('/api/semesters', semesterRoutes);
 app.use('/api/pronounce', require('./routes/pronounce')); // Add pronunciation route
+app.use('/api/admin', require('./routes/admin')); // Add admin routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

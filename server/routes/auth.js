@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const User = require('../src/models/User');
+const User = require('../models/User');
 const axios = require('axios');
 
 // Email transporter
@@ -105,16 +105,28 @@ router.get('/verify/:token', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt for:', email);
 
     // Check if user exists
     const user = await User.findOne({ email }).select('+password');
+    console.log('Found user:', user ? {
+      email: user.email,
+      role: user.role,
+      isAdmin: user.isAdmin,
+      hasPassword: !!user.password
+    } : null);
+
     if (!user) {
+      console.log('User not found');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Check if password is correct
     const isMatch = await user.comparePassword(password);
+    console.log('Password match:', isMatch);
+    
     if (!isMatch) {
+      console.log('Password incorrect');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 

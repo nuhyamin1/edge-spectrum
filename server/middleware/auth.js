@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../src/models/User');
+const User = require('../models/User');
 
 const auth = async (req, res, next) => {
     try {
@@ -11,7 +11,7 @@ const auth = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findById(decoded.userId)
-            .select('name email role profilePicture aboutMe isEmailVerified');
+            .select('name email role profilePicture aboutMe isEmailVerified isAdmin');
 
         if (!user) {
             throw new Error('User not found');
