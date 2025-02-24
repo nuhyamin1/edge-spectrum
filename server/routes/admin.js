@@ -121,35 +121,49 @@ router.delete('/collections/:collectionName/:id', auth, isAdmin, async (req, res
   }
 });
 
-// Create admin user
-router.post('/create-admin', auth, isAdmin, async (req, res) => {
+// Create user
+router.post('/users', auth, isAdmin, async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
-    // Check if admin already exists
-    const existingAdmin = await User.findOne({ email });
-    if (existingAdmin) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'User already exists' 
+    // Validate role
+    const validRoles = ['student', 'teacher', 'admin'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid role. Must be student, teacher, or admin'
       });
     }
 
-    // Create new admin user
-    const admin = new User({
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists'
+      });
+    }
+
+    // Create new user
+    const user = new User({
       name,
       email,
       password,
-      role: 'admin',
-      isAdmin: true,
-      isEmailVerified: true // Admin accounts are pre-verified
+      role,
+      isAdmin: role === 'admin',
+      isEmailVerified: true // Users created by admin are pre-verified
     });
 
-    await admin.save();
+    await user.save();
+
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
 
     res.status(201).json({
       success: true,
-      message: 'Admin user created successfully'
+      message: 'User created successfully',
+      user: userResponse
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
