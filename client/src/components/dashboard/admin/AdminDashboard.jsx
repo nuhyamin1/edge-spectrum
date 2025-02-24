@@ -10,6 +10,7 @@ const AdminDashboard = () => {
   const [editedValue, setEditedValue] = useState('');
   const [error, setError] = useState(null);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [isCreatingSemester, setIsCreatingSemester] = useState(false);
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -198,14 +199,118 @@ const AdminDashboard = () => {
 
       {renderStats()}
 
-      <div className="mb-6">
+      <div className="mb-6 flex space-x-4">
         <button
           className="bg-green-500 text-white px-4 py-2 rounded"
           onClick={() => setIsCreatingUser(true)}
         >
           Create New User
         </button>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+          onClick={() => setIsCreatingSemester(true)}
+        >
+          Create New Semester
+        </button>
       </div>
+
+      {isCreatingSemester && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Create New Semester</h2>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              
+              try {
+                const formData = {
+                  year: parseInt(e.target.year.value),
+                  term: e.target.term.value,
+                  startDate: e.target.startDate.value,
+                  endDate: e.target.endDate.value
+                };
+
+                console.log('Creating semester with data:', formData);
+
+                const response = await axios.post('/api/admin/semesters', formData);
+                console.log('Semester created:', response.data);
+                
+                setIsCreatingSemester(false);
+                setError(null);
+
+                // Show success message
+                alert('Semester created successfully');
+
+                // Refresh the semesters collection if it's currently selected
+                if (selectedCollection === 'semesters') {
+                  await fetchDocuments('semesters');
+                }
+              } catch (err) {
+                console.error('Failed to create semester:', err);
+                setError('Failed to create semester: ' + (err.response?.data?.message || err.message));
+              }
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Year</label>
+                  <input
+                    type="number"
+                    name="year"
+                    defaultValue={new Date().getFullYear()}
+                    min="2000"
+                    max="2100"
+                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Term</label>
+                  <select
+                    name="term"
+                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
+                    required
+                  >
+                    <option value="January-June">January-June</option>
+                    <option value="July-December">July-December</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">End Date</label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm p-2"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 mt-4">
+                  <button
+                    type="button"
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                    onClick={() => setIsCreatingSemester(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                  >
+                    Create Semester
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {isCreatingUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

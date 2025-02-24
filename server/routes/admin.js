@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
 const User = require('../models/User');
+const Semester = require('../models/Semester');
 const bcrypt = require('bcryptjs');
 
 // Get all collections in the database
@@ -191,6 +192,81 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
         ...stats,
         collectionsCount: collectionsStats
       }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Create semester
+router.post('/semesters', auth, isAdmin, async (req, res) => {
+  try {
+    const { year, term, startDate, endDate } = req.body;
+
+    // Validate required fields
+    if (!year || !term || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required: year, term, startDate, endDate'
+      });
+    }
+
+    // Validate dates
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format'
+      });
+    }
+
+    if (end <= start) {
+      return res.status(400).json({
+        success: false,
+        message: 'End date must be after start date'
+      });
+    }
+
+    // Validate year matches start date
+    if (start.getFullYear() !== year) {
+      return res.status(400).json({
+        success: false,
+        message: 'Year must match with start date year'
+      });
+    }
+
+    // Check for overlapping semesters
+    const overlapping = await Semester.findOne({
+      $or: [
+        { 
+          startDate: { $lte: end },
+          endDate: { $gte: start }
+        }
+      ]
+    });
+
+    if (overlapping) {
+      return res.status(400).json({
+        success: false,
+        message: 'Date range overlaps with an existing semester'
+      });
+    }
+
+    const semester = new Semester({
+      year,
+      term,
+      startDate: start,
+      endDate: end
+    });
+
+    await semester.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Semester created successfully',
+      semester
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

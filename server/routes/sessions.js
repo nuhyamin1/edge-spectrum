@@ -514,14 +514,16 @@ router.post('/:id/attendance', auth, async (req, res) => {
     try {
         const { studentId, status } = req.body;
         
-        // Validate session exists and student is enrolled
-        const session = await Session.findOne({
-            _id: req.params.id,
-            enrolledStudents: studentId
-        });
-
+        // First check if session exists
+        const session = await Session.findById(req.params.id);
         if (!session) {
-            return res.status(404).json({ error: 'Session not found or student not enrolled' });
+            return res.status(404).json({ error: 'Session not found' });
+        }
+
+        // If student is not enrolled, add them
+        if (!session.enrolledStudents.includes(studentId)) {
+            session.enrolledStudents.push(studentId);
+            await session.save();
         }
 
         // Update or create attendance record
