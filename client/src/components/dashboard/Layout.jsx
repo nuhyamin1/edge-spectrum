@@ -210,11 +210,11 @@ const Layout = ({ children, userType }) => {
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-center">
                   <EnvelopeIcon className="w-5 h-5 mr-2" />
-                  support@pfspeaking.com
+                  pfspeakingmaster@gmail.com
                 </li>
                 <li className="flex items-center">
                   <PhoneIcon className="w-5 h-5 mr-2" />
-                  +1 (555) 123-4567
+                  +62 (852) 6371 3536
                 </li>
               </ul>
             </div>

@@ -320,26 +320,30 @@ A modern virtual learning platform that connects teachers and students through i
 - Added feedback functionality
 - Added discussion room functionality
 - Added exercise room functionality
-- Added pronunciation check functionality
+- Added pronunciation check functionality 
+- Added material room functionality
+
+### Google Button Authenticaion (February 24, 2025)
+- Added Google OAuth Button
+- Added Firebase integration
+
+### New Design (Februay 24, 2025)
+- Added Lottie animation on authenticaion layout
+- Added landing page
+- Added Welcome page with full screen image
+- Changed the layout to use top nav
+- Added a hero section on the main page
+- Added logo
 
 ## Next Steps for interesting features to consider
-- Add assignment filtering and search functionality
 - Implement assignment statistics and analytics
-- Add batch download for multiple submissions
 - Add assignment templates for teachers
 - Implement assignment categories/tags
 - Add deadline notifications
-- Add assignment progress tracking
-- Fix enrolled students' profile picture display
-- Update session population to include complete student profile data
 - Add image compression for better performance
 - Implement profile picture update confirmation
-- Implement classroom features
-- Add material search and filtering
 - Enhance session analytics
 - Add student progress tracking
-- Implement file upload for materials
-- Add rich text editor for material content
 
 ## Technical Stack
 
