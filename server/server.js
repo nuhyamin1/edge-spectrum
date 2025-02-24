@@ -28,7 +28,8 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // MongoDB Connection with hardcoded URI to match createAdmin.js
 mongoose.connect('mongodb://127.0.0.1:27017/learning_platform')

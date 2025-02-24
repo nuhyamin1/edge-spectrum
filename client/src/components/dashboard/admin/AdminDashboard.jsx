@@ -7,6 +7,7 @@ const AdminDashboard = () => {
   const [documents, setDocuments] = useState([]);
   const [stats, setStats] = useState(null);
   const [editingDoc, setEditingDoc] = useState(null);
+  const [editedValue, setEditedValue] = useState('');
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -46,12 +47,34 @@ const AdminDashboard = () => {
 
   const handleUpdateDocument = async (docId, updatedData) => {
     try {
-      await axios.put(`/api/admin/collections/${selectedCollection}/${docId}`, updatedData);
+      console.log('Updating document:', {
+        collection: selectedCollection,
+        docId,
+        dataSize: JSON.stringify(updatedData).length
+      });
+
+      const response = await axios.put(
+        `/api/admin/collections/${selectedCollection}/${docId}`, 
+        updatedData,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          maxBodyLength: Infinity,
+          maxContentLength: Infinity
+        }
+      );
+
+      console.log('Update response:', response.data);
+      
       fetchDocuments(selectedCollection); // Refresh documents
       setEditingDoc(null);
+      setError(null); // Clear any previous errors
     } catch (err) {
-      setError('Failed to update document');
-      console.error(err);
+      console.error('Document update error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      setError('Failed to update document: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -65,6 +88,18 @@ const AdminDashboard = () => {
       setError('Failed to delete document');
       console.error(err);
     }
+  };
+
+  const startEditing = (doc) => {
+    setEditedValue(JSON.stringify(doc, null, 2));
+    setEditingDoc(doc._id);
+    setError(null); // Clear any previous errors
+  };
+
+  const cancelEditing = () => {
+    setEditingDoc(null);
+    setEditedValue('');
+    setError(null); // Clear any previous errors
   };
 
   const renderStats = () => {
@@ -91,22 +126,28 @@ const AdminDashboard = () => {
         <div key={doc._id} className="bg-white p-4 rounded shadow mb-4">
           <textarea
             className="w-full h-48 font-mono text-sm p-2 border rounded"
-            value={JSON.stringify(doc, null, 2)}
-            onChange={(e) => {
-              try {
-                const updatedDoc = JSON.parse(e.target.value);
-                // Remove _id from the update data
-                const { _id, ...updateData } = updatedDoc;
-                handleUpdateDocument(doc._id, updateData);
-              } catch (err) {
-                setError('Invalid JSON');
-              }
-            }}
+            value={editedValue}
+            onChange={(e) => setEditedValue(e.target.value)}
           />
           <div className="mt-2">
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-              onClick={() => setEditingDoc(null)}
+              className="bg-green-500 text-white px-4 py-2 rounded mr-2"
+              onClick={() => {
+                try {
+                  const updatedDoc = JSON.parse(editedValue);
+                  // Remove _id and __v from the update data
+                  const { _id, __v, ...updateData } = updatedDoc;
+                  handleUpdateDocument(doc._id, updateData);
+                } catch (err) {
+                  setError('Invalid JSON format');
+                }
+              }}
+            >
+              Save
+            </button>
+            <button
+              className="bg-gray-500 text-white px-4 py-2 rounded"
+              onClick={cancelEditing}
             >
               Cancel
             </button>
@@ -123,7 +164,7 @@ const AdminDashboard = () => {
         <div className="mt-2">
           <button
             className="bg-blue-500 text-white px-4 py-2 rounded mr-2"
-            onClick={() => setEditingDoc(doc._id)}
+            onClick={() => startEditing(doc)}
           >
             Edit
           </button>

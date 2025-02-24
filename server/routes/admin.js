@@ -23,6 +23,11 @@ router.get('/collections/:collectionName', auth, isAdmin, async (req, res) => {
     const documents = await collection.find({}).toArray();
     res.json({ success: true, documents });
   } catch (error) {
+    console.error('Failed to fetch documents:', {
+      collection: req.params.collectionName,
+      error: error.message,
+      stack: error.stack
+    });
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -31,13 +36,75 @@ router.get('/collections/:collectionName', auth, isAdmin, async (req, res) => {
 router.put('/collections/:collectionName/:id', auth, isAdmin, async (req, res) => {
   try {
     const collection = mongoose.connection.db.collection(req.params.collectionName);
-    const result = await collection.updateOne(
-      { _id: new mongoose.Types.ObjectId(req.params.id) },
-      { $set: req.body }
+    
+    // Validate ObjectId
+    let objectId;
+    try {
+      objectId = new mongoose.Types.ObjectId(req.params.id);
+    } catch (err) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid document ID format' 
+      });
+    }
+
+    // Check if document exists first
+    const existingDoc = await collection.findOne({ _id: objectId });
+    if (!existingDoc) {
+      return res.status(404).json({ success: false, message: 'Document not found' });
+    }
+
+    // Sanitize update object and handle nested ObjectIds
+    const sanitizedUpdate = {};
+    for (const [key, value] of Object.entries(req.body)) {
+      if (!key.startsWith('$')) {
+        // Convert string ObjectIds to actual ObjectIds
+        if (typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value)) {
+          try {
+            sanitizedUpdate[key] = new mongoose.Types.ObjectId(value);
+          } catch (err) {
+            sanitizedUpdate[key] = value;
+          }
+        } else {
+          sanitizedUpdate[key] = value;
+        }
+      }
+    }
+
+    // Log the update attempt
+    console.log('Attempting document update:', {
+      collection: req.params.collectionName,
+      documentId: req.params.id,
+      updateData: sanitizedUpdate
+    });
+
+    const result = await collection.findOneAndUpdate(
+      { _id: objectId },
+      { $set: sanitizedUpdate },
+      { 
+        returnDocument: 'after',
+        returnOriginal: false
+      }
     );
+
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Update failed - document may have been deleted' });
+    }
+    
     res.json({ success: true, result });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Document update error:', {
+      collection: req.params.collectionName,
+      documentId: req.params.id,
+      updateData: sanitizedUpdate,
+      error: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: error.message,
+      details: error.stack 
+    });
   }
 });
 
