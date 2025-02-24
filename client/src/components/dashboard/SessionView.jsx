@@ -10,7 +10,8 @@ import {
   UserGroupIcon,
   AcademicCapIcon,
   LinkIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
+  DocumentIcon
 } from '@heroicons/react/24/outline';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 
@@ -57,6 +58,27 @@ const SessionView = () => {
       fetchSession();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to unenroll from session');
+    }
+  };
+
+  const handleFileDownload = async (file) => {
+    try {
+      const response = await axios.get(
+        `/api/sessions/${id}/files/${file.filename}`,
+        { responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', file.originalname);
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Error downloading file');
     }
   };
 
@@ -189,20 +211,63 @@ const SessionView = () => {
                 </div>
               </div>
 
-              {session.materials && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-700">Session Material</h3>
-                  <a
-                    href={session.materials}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-neon-blue hover:text-neon-blue/80 transition-colors"
-                  >
-                    <LinkIcon className="w-5 h-5 mr-2" />
-                    View Material
-                  </a>
-                </div>
-              )}
+              <div className="space-y-6">
+                {/* Main Materials */}
+                {session.materials && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-700">Main Material</h3>
+                    <a
+                      href={session.materials}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-neon-blue hover:text-neon-blue/80 transition-colors"
+                    >
+                      <LinkIcon className="w-5 h-5 mr-2" />
+                      View Material
+                    </a>
+                  </div>
+                )}
+
+                {/* External Links */}
+                {session.externalLinks && session.externalLinks.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-700">External Links</h3>
+                    <div className="space-y-2">
+                      {session.externalLinks.map((link, index) => (
+                        <a
+                          key={index}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-neon-blue hover:text-neon-blue/80 transition-colors"
+                        >
+                          <LinkIcon className="w-5 h-5 mr-2" />
+                          {link.title}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Downloadable Files */}
+                {session.files && session.files.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-700">Files</h3>
+                    <div className="space-y-2">
+                      {session.files.map((file, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleFileDownload(file)}
+                          className="flex items-center text-neon-blue hover:text-neon-blue/80 transition-colors w-full text-left"
+                        >
+                          <DocumentIcon className="w-5 h-5 mr-2" />
+                          {file.originalname}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Enrolled Students Section */}
