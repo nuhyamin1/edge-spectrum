@@ -142,25 +142,17 @@ const SessionView = () => {
           Back
         </button>
 
-        <div className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl overflow-hidden 
-          border border-gray-700 group hover:border-neon-blue/50
-          transition-all duration-300 hover:shadow-lg hover:shadow-neon-blue/20">
-          
-          {/* Glossy overlay effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 
-            group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-          
-          {/* Animated border gradient */}
-          <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-blue-200/30 to-blue-300/30 
-            opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10
-            animate-once" />
+        <div className="relative bg-gray-100/10 rounded-xl overflow-hidden 
+          border border-gray-400 ">
+        
 
           <div className="p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-100 group-hover:text-neon-blue transition-colors">
+                <h1 className="mb-5 text-2xl font-bold text-gray-600">
                   {session.title}
                 </h1>
+
                 <p className="text-lg text-neon-blue">{session.subject}</p>
               </div>
               <span className={`px-3 py-1 rounded-full text-sm font-medium 
@@ -171,27 +163,27 @@ const SessionView = () => {
               </span>
             </div>
 
-            <p className="text-gray-400 mb-6">{session.description}</p>
+            <p className="text-gray-600 mb-6">{session.description}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div className="space-y-4">
-                <div className="flex items-center text-gray-300">
+                <div className="flex items-center text-gray-600">
                   <CalendarIcon className="w-5 h-5 mr-2 text-gray-400" />
                   {formatDate(session.dateTime)}
                 </div>
-                <div className="flex items-center text-gray-300">
+                <div className="flex items-center text-gray-600">
                   <ClockIcon className="w-5 h-5 mr-2 text-gray-400" />
                   Duration: {session.duration} minutes
                 </div>
-                <div className="flex items-center text-gray-300">
+                <div className="flex items-center text-gray-600">
                   <ClockIcon className="w-5 h-5 mr-2 text-gray-400" />
                   Grace Period: {session.gracePeriod || 5} minutes
                 </div>
-                <div className="flex items-center text-gray-300">
+                <div className="flex items-center text-gray-600">
                   <UserGroupIcon className="w-5 h-5 mr-2 text-gray-400" />
                   {session.enrolledStudents.length} Students Enrolled
                 </div>
-                <div className="flex items-center text-gray-300">
+                <div className="flex items-center text-gray-600">
                   <AcademicCapIcon className="w-5 h-5 mr-2 text-gray-400" />
                   Teacher: {session.teacher.name}
                 </div>
@@ -199,7 +191,7 @@ const SessionView = () => {
 
               {session.materials && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-100">Session Material</h3>
+                  <h3 className="text-lg font-semibold text-gray-700">Session Material</h3>
                   <a
                     href={session.materials}
                     target="_blank"
@@ -215,14 +207,14 @@ const SessionView = () => {
 
             {/* Enrolled Students Section */}
             <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-100 mb-4">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">
                 Enrolled Students ({session.enrolledStudents.length})
               </h3>
               <div className="space-y-4">
                 {session.enrolledStudents.map((student) => (
                   <div key={student._id} 
                     className="flex items-center space-x-3 p-3 
-                    bg-gray-800/30 rounded-lg border border-gray-700
+                    bg-gray-200/30 rounded-lg border border-gray-700
                     hover:border-neon-blue/50 transition-all duration-300">
                     {student.profilePicture?.data ? (
                       <img
@@ -234,8 +226,8 @@ const SessionView = () => {
                       <UserCircleIcon className="w-10 h-10 text-gray-400" />
                     )}
                     <div>
-                      <p className="font-medium text-gray-200">{student.name}</p>
-                      <p className="text-sm text-gray-400">{student.email}</p>
+                      <p className="font-medium text-gray-600">{student.name}</p>
+                      <p className="text-sm text-blue-600">{student.email}</p>
                     </div>
                   </div>
                 ))}
