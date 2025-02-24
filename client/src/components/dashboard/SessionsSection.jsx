@@ -77,7 +77,7 @@ const SessionsSection = ({ title, sessions, type }) => {
 
               <div className="relative">
                 {/* Session Title and Status */}
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-2">
                   <h4 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
                     {session.title}
                   </h4>
@@ -90,9 +90,14 @@ const SessionsSection = ({ title, sessions, type }) => {
                   </span>
                 </div>
 
+                {/* Session Description */}
+                <p className="text-gray-600 text-sm mb-4">
+                  {session.description}
+                </p>
+
                 {/* Session Details */}
-                <div className="space-y-3">
-                  {/* Date & Time */}
+                <div className="flex items-center gap-6">
+                  {/* Date */}
                   <div className="flex items-center text-gray-600 text-sm">
                     <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
                     {new Date(session.dateTime).toLocaleDateString('en-US', {
@@ -102,7 +107,8 @@ const SessionsSection = ({ title, sessions, type }) => {
                       day: 'numeric',
                     })}
                   </div>
-                  
+
+                  {/* Time */}
                   <div className="flex items-center text-gray-600 text-sm">
                     <ClockIcon className="w-4 h-4 mr-2 text-gray-500" />
                     {new Date(session.dateTime).toLocaleTimeString('en-US', {
@@ -113,9 +119,10 @@ const SessionsSection = ({ title, sessions, type }) => {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}`}
+                    {session.gracePeriod && ` (${session.gracePeriod}min grace period)`}
                   </div>
 
-                  {/* Subject & Topic */}
+                  {/* Subject */}
                   <div className="flex items-center text-gray-600 text-sm">
                     <BookOpenIcon className="w-4 h-4 mr-2 text-gray-500" />
                     {session.subject} - {session.topic}

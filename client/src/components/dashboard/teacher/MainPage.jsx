@@ -134,21 +134,21 @@ const TeacherMainPage = () => {
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-gray-100 border border-gray-400 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
               <MicrophoneIcon className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Real-Time Feedback</h3>
             <p className="text-gray-600">Get instant pronunciation and fluency insights to improve your speaking skills.</p>
           </div>
-          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-gray-100 border border-gray-400 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
               <UserGroupIcon className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Interactive Sessions</h3>
             <p className="text-gray-600">Join live sessions with teachers and peers for collaborative learning.</p>
           </div>
-          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-gray-100 border border-gray-400 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
               <ChartBarIcon className="w-6 h-6 text-blue-600" />
             </div>

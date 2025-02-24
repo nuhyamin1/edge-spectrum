@@ -28,11 +28,11 @@ const PronunciationChecker = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div className="bg-orange-500/5 border border-orange-400 hover:bg-orange-500/15 hover:shadow-lg transition-all duration-200 rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-2xl font-semibold mb-4">Pronunciation Checker</h2>
       <div className="flex flex-col space-y-4">
         <textarea
-          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           placeholder="Enter text to hear pronunciation..."
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -43,21 +43,29 @@ const PronunciationChecker = () => {
             onClick={handlePronounce}
             disabled={isLoading || !text.trim()}
             className={`flex items-center px-4 py-2 rounded-lg text-white ${
-              isLoading || !text.trim() 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'
+              isLoading || !text.trim()
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-orange-600 hover:bg-orange-700'
             }`}
           >
-            <SpeakerWaveIcon className="h-5 w-5 mr-2" />
-            {isLoading ? 'Loading...' : ''}
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8v-8H4z" />
+                </svg>
+                Loading...
+              </>
+            ) : (
+              <>
+                <SpeakerWaveIcon className="h-5 w-5 mr-2" />
+                Pronounce
+              </>
+            )}
           </button>
-          <span className="text-sm text-gray-500">
-            Powered by ElevenLabs Text-to-Speech
-          </span>
+          <span className="text-sm text-gray-500">Powered by ElevenLabs</span>
         </div>
-        {error && (
-          <p className="text-red-500 text-sm">{error}</p>
-        )}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
       </div>
     </div>
   );
