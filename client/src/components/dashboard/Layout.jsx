@@ -64,7 +64,7 @@ const Layout = ({ children, userType }) => {
   const secondaryMenus = getSecondaryMenus(menus.filter(menu => !menu.divider));
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className={`min-h-screen bg-white text-gray-900 ${location.pathname === '/' ? 'h-screen overflow-hidden' : ''}`}>
       {/* Top Navigation Bar */}
       {!isClassroomView && (
         <>
@@ -181,14 +181,14 @@ const Layout = ({ children, userType }) => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className={`flex-1 bg-gray-50 ${location.pathname === '/' ? 'h-full' : ''}`}>
+        <div className={`${location.pathname === '/' ? 'h-full' : 'max-w-7xl mx-auto px-4 py-8'}`}>
           {children}
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-blue-900 text-white">
+      <footer className={`bg-blue-900 text-white ${location.pathname === '/' ? 'hidden' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

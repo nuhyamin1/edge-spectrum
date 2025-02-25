@@ -27,7 +27,13 @@ const Login = () => {
       const res = await axios.post('/api/auth/login', formData);
       login(res.data.user, res.data.token);
       toast.success('Login successful!');
-      navigate('/welcome');
+      
+      if (res.data.user.role === 'teacher') {
+        navigate('/dashboard');
+      } else {
+        navigate('/dashboard/student');
+      }
+
     } catch (error) {
       toast.error(error.response?.data?.message || 'An error occurred');
     } finally {

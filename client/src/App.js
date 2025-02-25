@@ -26,7 +26,6 @@ import AssignmentDetails from './components/dashboard/teacher/AssignmentDetails'
 import Layout from './components/dashboard/Layout';
 import SemesterManagement from './components/dashboard/teacher/SemesterManagement';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import LandingPage from './components/LandingPage';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { AnimatePresence, MotionConfig } from 'framer-motion';
@@ -45,16 +44,10 @@ const AppRoutes = () => {
     <MotionConfig reducedMotion="user">
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<WelcomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify/:token" element={<EmailVerification />} />
-          
-          <Route path="/welcome" element={
-            <ProtectedRoute>
-              <WelcomePage />
-            </ProtectedRoute>
-          } />
 
           <Route
             path="/dashboard"
