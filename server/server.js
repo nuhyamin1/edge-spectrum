@@ -8,8 +8,8 @@ const socketService = require('./services/socket');
 const fs = require('fs');
 const semesterRoutes = require('./routes/semesters');
 
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// Load environment variables from root directory
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
@@ -31,12 +31,13 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// MongoDB Connection with hardcoded URI to match createAdmin.js
-mongoose.connect('mongodb://127.0.0.1:27017/learning_platform')
+// MongoDB Connection using Atlas URI from environment variables
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('MongoDB Connected');
     console.log('Database URL:', mongoose.connection.host);
     console.log('Database Name:', mongoose.connection.name);
+    console.log('Full Connection String:', process.env.MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//****:****@')); // Hide credentials
   })
   .catch(err => {
     console.error('MongoDB Connection Error:', err);

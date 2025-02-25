@@ -2,8 +2,13 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const axios = require('axios');
+
+// Debug database connection
+console.log('Database connection state:', mongoose.connection.readyState);
+console.log('Database name:', mongoose.connection.name);
 
 // Email transporter
 const transporter = nodemailer.createTransport({
@@ -40,23 +45,46 @@ router.post('/register', async (req, res) => {
       email,
       password,
       role,
+      authProvider: 'local', // Set auth provider to local for email registration
       verificationToken,
       verificationTokenExpires: Date.now() + 3600000 // 1 hour
     });
 
+    console.log('Attempting to save user to database:', {
+      name,
+      email,
+      role,
+      dbConnection: mongoose.connection.name
+    });
+
     await user.save();
-    console.log('User saved to database');
+    
+    // Verify the user was saved
+    const savedUser = await User.findOne({ email });
+    console.log('User saved successfully:', savedUser ? 'Yes' : 'No');
+    if (!savedUser) {
+      throw new Error('User was not saved to database');
+    }
 
     // Send verification email
-    const verificationUrl = `http://localhost:3000/verify/${verificationToken}`;
+    const verificationUrl = `${process.env.CLIENT_URL}/verify/${verificationToken}`;
     console.log('Verification URL:', verificationUrl);
     
-    await transporter.sendMail({
+    const mailOptions = {
       to: email,
       subject: 'Email Verification',
-      html: `Please click this link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
-    });
-    console.log('Verification email sent');
+      html: `
+        <h2>Welcome to PF Speaking Master!</h2>
+        <p>Please click the button below to verify your email address:</p>
+        <a href="${verificationUrl}" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
+        <p>Or copy and paste this link in your browser:</p>
+        <p>${verificationUrl}</p>
+        <p>This link will expire in 1 hour.</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log('Verification email sent to:', email);
 
     res.status(201).json({
       message: 'Registration successful. Please check your email for verification.'
@@ -67,21 +95,34 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Verify Email
+    // Verify Email
 router.get('/verify/:token', async (req, res) => {
+  console.log('Starting email verification process');
   try {
     const { token } = req.params;
-    console.log('Received verification request with token:', token);
+    console.log('Verification endpoint hit with token:', token);
+    console.log('Current database:', mongoose.connection.name);
+    console.log('Database state:', mongoose.connection.readyState);
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log('Decoded token:', decoded);
 
-    const user = await User.findOne({
-      email: decoded.email,
-      verificationToken: token,
-      verificationTokenExpires: { $gt: Date.now() }
-    });
-    console.log('Found user:', user ? 'Yes' : 'No');
+    let user;
+    try {
+      user = await User.findOne({
+        email: decoded.email,
+        verificationToken: token,
+        verificationTokenExpires: { $gt: Date.now() }
+      });
+      console.log('Found user:', user ? {
+        email: user.email,
+        tokenMatch: user.verificationToken === token,
+        tokenExpired: user.verificationTokenExpires < Date.now()
+      } : 'No user found');
+    } catch (dbError) {
+      console.error('Database error during verification:', dbError);
+      throw dbError;
+    }
 
     if (!user) {
       console.log('User not found or token expired');
@@ -171,7 +212,12 @@ router.post('/google', async (req, res) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      // User exists - generate JWT token
+      // Update auth provider if user exists but was created with email
+      if (user.authProvider === 'local') {
+        user.authProvider = 'google';
+        await user.save();
+      }
+      // Generate JWT token
       const jwtToken = jwt.sign(
         { userId: user._id, role: user.role },
         process.env.JWT_SECRET,
@@ -191,17 +237,28 @@ router.post('/google', async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user for Google OAuth
     user = new User({
       name,
       email,
       role: role || 'student',
-      profilePicture: picture,
+      profilePicture: {
+        data: picture,
+        contentType: 'image/jpeg'
+      },
       isEmailVerified: true, // Google accounts are already verified
+      authProvider: 'google' // Set auth provider to google
+    });
+
+    console.log('Creating new Google OAuth user:', {
+      name,
+      email,
+      role: role || 'student',
       authProvider: 'google'
     });
 
     await user.save();
+    console.log('Google OAuth user saved successfully');
 
     // Generate JWT token
     const jwtToken = jwt.sign(

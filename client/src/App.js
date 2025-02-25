@@ -48,7 +48,7 @@ const AppRoutes = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<EmailVerification />} />
+          <Route path="/verify/:token" element={<EmailVerification />} />
           
           <Route path="/welcome" element={
             <ProtectedRoute>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../../utils/axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AuthLayout from './AuthLayout';
@@ -24,11 +24,13 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await axios.post('/api/auth/register', formData);
+      const response = await axios.post('/api/auth/register', formData);
+      console.log('Registration response:', response.data);
       toast.success('Registration successful! Please check your email for verification.');
       navigate('/login');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'An error occurred');
+      console.error('Registration error:', error);
+      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

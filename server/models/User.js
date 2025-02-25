@@ -17,9 +17,16 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
+    required: function() {
+      return this.authProvider !== 'google'; // Only require password for non-Google auth
+    },
     minlength: 8,
     select: false
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
   },
   role: {
     type: String,
@@ -68,6 +75,10 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
     console.log('Comparing passwords...');
+    // For Google OAuth users, no password comparison needed
+    if (this.authProvider === 'google') {
+      return true;
+    }
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
     console.log('Password match:', isMatch);
     return isMatch;
