@@ -584,6 +584,55 @@ router.post('/:id/duplicate', auth, isTeacher, async (req, res) => {
     }
 });
 
+// Reschedule a session
+router.post('/:id/reschedule', auth, isTeacher, async (req, res) => {
+    try {
+        const { dateTime } = req.body;
+        const originalSession = await Session.findById(req.params.id);
+        
+        if (!originalSession) {
+            return res.status(404).json({ error: 'Original session not found' });
+        }
+
+        // Create new session with all the original data except attendance and discussion
+        const newSession = new Session({
+            title: originalSession.title,
+            subject: originalSession.subject,
+            description: originalSession.description,
+            semester: originalSession.semester,
+            originalSession: originalSession._id,
+            duration: originalSession.duration,
+            gracePeriod: originalSession.gracePeriod,
+            materials: originalSession.materials,
+            externalLinks: originalSession.externalLinks,
+            files: originalSession.files,
+            teacher: req.user._id,
+            dateTime: new Date(dateTime),
+            status: 'scheduled'
+        });
+
+        await newSession.save();
+        
+        // Populate teacher information before sending response
+        await newSession.populate('teacher', 'name email');
+        
+        // Emit socket event for real-time update
+        const io = socketService.getIO();
+        io.emit('sessionUpdate', {
+            type: 'sessionCreated',
+            session: {
+                ...newSession.toObject(),
+                enrolledStudents: [] // Initialize empty array for new session
+            }
+        });
+
+        res.status(201).json(newSession);
+    } catch (error) {
+        console.error('Error rescheduling session:', error);
+        res.status(500).json({ error: 'Failed to reschedule session' });
+    }
+});
+
 // Get sessions by semester
 router.get('/semester/:semesterId', auth, async (req, res) => {
     try {

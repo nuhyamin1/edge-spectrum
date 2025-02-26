@@ -140,6 +140,29 @@ const EditSession = () => {
     }));
   };
 
+  const handleReschedule = async () => {
+    setLoading(true);
+    try {
+      const response = await api.post(`/sessions/${id}/reschedule`, {
+        dateTime: session.dateTime
+      });
+      
+      toast.success('Session rescheduled successfully!');
+      navigate('/dashboard/sessions');
+    } catch (error) {
+      console.error('Error rescheduling session:', error);
+      if (error.response?.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+        logout();
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.error || 'Failed to reschedule session');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -475,6 +498,21 @@ const EditSession = () => {
                 >
                   Cancel
                 </button>
+                {session.status === 'completed' && (
+                  <button
+                    type="button"
+                    onClick={handleReschedule}
+                    disabled={loading}
+                    className={`px-6 py-2 bg-green-500 text-white rounded-lg 
+                      hover:bg-green-600 transition-all duration-300 
+                      border border-green-400 
+                      hover:shadow-lg hover:shadow-green-400/20
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {loading ? 'Rescheduling...' : 'Reschedule Session'}
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={loading}

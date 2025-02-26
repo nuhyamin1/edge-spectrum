@@ -6,6 +6,8 @@ const path = require('path');
 const http = require('http');
 const socketService = require('./services/socket');
 const fs = require('fs');
+const compression = require('compression');
+const helmet = require('helmet');
 const semesterRoutes = require('./routes/semesters');
 
 // Load environment variables from root directory
@@ -23,13 +25,36 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
-}));
+// CORS Configuration
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:3000'];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// Security and optimization middleware
+app.use(helmet()); // Add security headers
+app.use(compression()); // Enable gzip compression
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Hide detailed errors in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  });
+}
 
 // MongoDB Connection using Atlas URI from environment variables
 mongoose.connect(process.env.MONGODB_URI)
