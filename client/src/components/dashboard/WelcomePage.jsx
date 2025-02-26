@@ -140,6 +140,11 @@ const WelcomePage = () => {
       content: "Empower educators and learners with intuitive tools for interactive teaching, personalized content creation, and secure virtual classrooms, fostering engagement and accessibility in education."
     },
     {
+      id: 'features',
+      label: 'Features',
+      content: "• Interactive Virtual Classroom\n• Video Conference\n• Whiteboard\n• Social Feed\n• Pronunciation"
+    },
+    {
       id: 'start-learning',
       label: 'Start Learning',
       content: "Begin your learning journey with PFSM. Join our interactive platform and enhance your speaking skills through personalized lessons and real-time practice sessions.",
@@ -180,47 +185,6 @@ const WelcomePage = () => {
 
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50 z-0" />
-
-      {/* Logo and Brand Name at lower left corner */}
-      <div className="absolute bottom-8 left-8 z-30 pointer-events-auto">
-          <div className="flex items-center space-x-4 cursor-default">
-          <img 
-            src={`${process.env.PUBLIC_URL}/pfsm_logo.png`} 
-            alt="PFSM Logo" 
-            className="h-16 w-auto"
-            style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))' }}
-          />
-          <div className="flex flex-col">
-            <div 
-              className="text-2xl font-medium pointer-events-none"
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                background: 'linear-gradient(to right, #60a5fa, #3b82f6)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                textFillColor: 'transparent',
-                textShadow: '0 0 10px rgba(59, 130, 246, 0.3)',
-                letterSpacing: '1px'
-              }}
-            >
-              PF Speaking Master
-            </div>
-            <div 
-              className="text-sm"
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                color: 'rgba(255, 255, 255, 0.8)',
-                letterSpacing: '2px',
-                textShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-                fontWeight: '300'
-              }}
-            >
-              Practice & Fluency
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Content panel that appears at top right - now borderless with glow effect */}
       <div 
@@ -263,8 +227,48 @@ const WelcomePage = () => {
       </div>
 
       {/* Sidebar menu */}
-      <div className="relative z-20 w-72 pt-24 flex flex-col items-start pointer-events-auto">
-        <div className="space-y-2">
+      <div className="relative z-20 w-96 flex flex-col items-start pointer-events-auto overflow-y-auto max-h-screen">
+        {/* Logo and Brand Name */}
+        <div className="px-8 pt-8 pb-6 cursor-default">
+          <div className="flex items-center space-x-4">
+            <img 
+              src={`${process.env.PUBLIC_URL}/pfsm_logo.png`} 
+              alt="PFSM Logo" 
+              className="h-16 w-auto"
+              style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))' }}
+            />
+            <div className="flex flex-col">
+              <div 
+                className="text-2xl font-medium pointer-events-none"
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  background: 'linear-gradient(to right, #60a5fa, #3b82f6)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  textFillColor: 'transparent',
+                  textShadow: '0 0 10px rgba(59, 130, 246, 0.3)',
+                  letterSpacing: '1px'
+                }}
+              >
+                PF Speaking Master
+              </div>
+              <div 
+                className="text-sm"
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  letterSpacing: '2px',
+                  textShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
+                  fontWeight: '300'
+                }}
+              >
+                Practice & Fluency
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-2 w-full">
           {menuItems.map((item) => (
             <div
               key={item.id}
@@ -305,20 +309,34 @@ const WelcomePage = () => {
         </div>
       </div>
 
-      {/* Main content without Enter button */}
-      <div className="relative flex-1 flex items-center justify-center z-20 pointer-events-auto">
-        <div className="text-white space-y-8 max-w-2xl px-4 text-center mx-auto">
-          {/* Reduced vertical spacing */}
-          <div className="h-[450px]" />
-          <p style={{ fontFamily: "'Montserrat', sans-serif" }} className="text-2xl font-light italic pointer-events-none">
+      {/* Glowing vertical line */}
+      <div 
+        className="absolute top-[40px] bottom-[40px] w-[4px] left-96"
+        style={{
+          background: 'linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.8) 15%, rgba(147, 197, 253, 0.9) 50%, rgba(59, 130, 246, 0.8) 85%, transparent)',
+          boxShadow: '0 0 5px rgba(59, 130, 246, 0.5), 0 0 60px rgba(147, 197, 253, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)',
+          zIndex: 30
+        }}
+      />
+
+      {/* Main content*/}
+      <div className="absolute bottom-4 right-4 text-right z-20 pointer-events-auto">
+        <div className=" text-white space-y-4 max-w-2xl px-4">
+          <p
+            style={{ fontFamily: "'Montserrat', sans-serif" }}
+            className="text-2xl font-light italic pointer-events-none"
+          >
             "Language is the road map of a culture. It tells you where its people come from and where they are going."
           </p>
-          <p style={{ fontFamily: "'Montserrat', sans-serif" }} className="text-xl pointer-events-none">
+          <p
+            style={{ fontFamily: "'Montserrat', sans-serif" }}
+            className="text-xl pointer-events-none"
+          >
             ‒ Rita Mae Brown
           </p>
-
         </div>
       </div>
+
     </div>
   );
 };
