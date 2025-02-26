@@ -27,18 +27,10 @@ if (!fs.existsSync(uploadsDir)) {
 
 // CORS Configuration
 const corsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = [process.env.CLIENT_URL || 'http://localhost:3000'];
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins in development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 };
 
 // Security and optimization middleware
