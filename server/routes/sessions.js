@@ -646,4 +646,70 @@ router.get('/semester/:semesterId', auth, async (req, res) => {
     }
 });
 
+// Enroll in a session
+router.post('/:id/enroll', auth, async (req, res) => {
+    try {
+        const session = await Session.findById(req.params.id);
+        
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found' });
+        }
+
+        if (session.status === 'completed') {
+            return res.status(400).json({ error: 'Cannot enroll in a completed session' });
+        }
+
+        // Check if student is already enrolled
+        if (session.enrolledStudents.includes(req.user._id)) {
+            return res.status(400).json({ error: 'Already enrolled in this session' });
+        }
+
+        session.enrolledStudents.push(req.user._id);
+        await session.save();
+
+        // Populate teacher and student information before sending response
+        await session.populate('teacher', 'name email');
+        await session.populate('enrolledStudents', 'name email profilePicture');
+
+        res.json(session);
+    } catch (error) {
+        console.error('Error enrolling in session:', error);
+        res.status(500).json({ error: 'Failed to enroll in session' });
+    }
+});
+
+// Unenroll from a session
+router.post('/:id/unenroll', auth, async (req, res) => {
+    try {
+        const session = await Session.findById(req.params.id);
+        
+        if (!session) {
+            return res.status(404).json({ error: 'Session not found' });
+        }
+
+        if (session.status === 'completed') {
+            return res.status(400).json({ error: 'Cannot unenroll from a completed session' });
+        }
+
+        // Check if student is enrolled
+        if (!session.enrolledStudents.includes(req.user._id)) {
+            return res.status(400).json({ error: 'Not enrolled in this session' });
+        }
+
+        session.enrolledStudents = session.enrolledStudents.filter(
+            studentId => studentId.toString() !== req.user._id.toString()
+        );
+        await session.save();
+
+        // Populate teacher and student information before sending response
+        await session.populate('teacher', 'name email');
+        await session.populate('enrolledStudents', 'name email profilePicture');
+
+        res.json(session);
+    } catch (error) {
+        console.error('Error unenrolling from session:', error);
+        res.status(500).json({ error: 'Failed to unenroll from session' });
+    }
+});
+
 module.exports = router;
