@@ -490,7 +490,7 @@ const StudentAssignments = () => {
                         sx={styles.button}
                         disabled={getAssignmentDetails(assignment)?.status === 'accepted'}
                       >
-                        {getAssignmentDetails(assignment) ? 'Update Submission' : 'Submit Assignment'}
+                        {getAssignmentDetails(assignment)?.status === 'rejected' ? 'Update Submission' : 'Submit'}
                       </Button>
                     </Box>
                   </Box>
