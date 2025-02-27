@@ -244,7 +244,9 @@ const Layout = ({ children, userType }) => {
       </footer>
 
       {/* AI Chat Component */}
-      <AiChat />
+      {!(location.pathname.startsWith('/classroom/') || location.pathname.startsWith('/teacher/classroom/')) && (
+        <AiChat />
+      )}
     </div>
   );
 };
