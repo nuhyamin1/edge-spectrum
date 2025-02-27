@@ -424,6 +424,82 @@ router.get('/:id/download/:submissionIndex', auth, async (req, res) => {
 });
 
 // Delete assignment (Teacher only)
+// Update assignment (Teacher only)
+router.post('/:id/update', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'teacher') {
+      return res.status(403).json({ message: 'Only teachers can update assignments' });
+    }
+
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Assignment not found' });
+    }
+
+    if (assignment.teacherId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You can only update your own assignments' });
+    }
+
+    const { title, description, dueDate, studentId, maxFiles, maxLinks, assignToAll } = req.body;
+    
+    if (!maxFiles || !maxLinks) {
+      return res.status(400).json({ message: 'Please specify maximum number of files and links allowed' });
+    }
+
+    // Validate date format
+    const parsedDate = new Date(dueDate);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+
+    let assignedStudents = [];
+
+    if (assignToAll) {
+      // Get all students
+      const students = await User.find({ role: 'student' });
+      
+      if (students.length === 0) {
+        return res.status(400).json({ message: 'No students found in the system' });
+      }
+      
+      assignedStudents = students.map(student => ({
+        studentId: student._id,
+        status: 'pending',
+        submissions: []
+      }));
+    } else {
+      // Validate student exists for individual assignment
+      if (!studentId) {
+        return res.status(400).json({ message: 'Please select a student' });
+      }
+
+      const student = await User.findById(studentId);
+      if (!student || student.role !== 'student') {
+        return res.status(400).json({ message: 'Invalid student ID' });
+      }
+
+      assignedStudents = [{
+        studentId: student._id,
+        status: 'pending',
+        submissions: []
+      }];
+    }
+
+    assignment.title = title;
+    assignment.description = description;
+    assignment.dueDate = parsedDate;
+    assignment.maxFiles = parseInt(maxFiles);
+    assignment.maxLinks = parseInt(maxLinks);
+    assignment.assignedStudents = assignedStudents;
+
+    await assignment.save();
+    res.json(assignment);
+  } catch (error) {
+    console.error('Assignment update error:', error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
 router.delete('/:id', auth, async (req, res) => {
   try {
     if (req.user.role !== 'teacher') {

@@ -17,7 +17,7 @@ import {
   Divider,
   Paper,
 } from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon, CalendarToday as CalendarIcon, Assignment as AssignmentIcon } from '@mui/icons-material';
+import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, CalendarToday as CalendarIcon, Assignment as AssignmentIcon } from '@mui/icons-material';
 import { useAuth, api } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -160,8 +160,17 @@ const TeacherAssignments = () => {
   const [assignments, setAssignments] = useState([]);
   const [students, setStudents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openReviewDialog, setOpenReviewDialog] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    studentId: '',
+    maxFiles: 1,
+    maxLinks: 1
+  });
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -285,6 +294,56 @@ const TeacherAssignments = () => {
     }
   };
 
+  const handleEditAssignment = (assignment, event) => {
+    event.stopPropagation();
+    setSelectedAssignment(assignment);
+    setEditFormData({
+      title: assignment.title,
+      description: assignment.description,
+      dueDate: new Date(assignment.dueDate).toISOString().slice(0, 16),
+      studentId: assignment.assignToAll ? 'all' : assignment.assignedStudents[0]?.studentId._id || '',
+      maxFiles: assignment.maxFiles,
+      maxLinks: assignment.maxLinks
+    });
+    setAssignToAll(assignment.assignToAll);
+    setOpenEditDialog(true);
+  };
+
+  const handleUpdateAssignment = async () => {
+    try {
+      if (!editFormData.title || !editFormData.description || !editFormData.dueDate ||
+          (!assignToAll && !editFormData.studentId) || !editFormData.maxFiles || !editFormData.maxLinks) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+
+      const updatedAssignment = {
+        ...editFormData,
+        description: editFormData.description,
+        dueDate: new Date(editFormData.dueDate).toISOString(),
+        maxFiles: parseInt(editFormData.maxFiles),
+        maxLinks: parseInt(editFormData.maxLinks),
+        assignToAll: assignToAll
+      };
+
+      await api.post(`/assignments/${selectedAssignment._id}/update`, updatedAssignment);
+      setOpenEditDialog(false);
+      setEditFormData({
+        title: '',
+        description: '',
+        dueDate: '',
+        studentId: '',
+        maxFiles: 1,
+        maxLinks: 1
+      });
+      setAssignToAll(false);
+      fetchAssignments();
+      toast.success('Assignment updated successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error updating assignment');
+    }
+  };
+
   const handleDeleteAssignment = async (assignmentId, event) => {
     event.stopPropagation();
     try {
@@ -388,18 +447,32 @@ const TeacherAssignments = () => {
                       {assignment.title}
                     </Typography>
                   </Box>
-                  <IconButton
-                    onClick={(e) => handleDeleteAssignment(assignment._id, e)}
-                    size="small"
-                    sx={{
-                      color: '#EF4444',
-                      '&:hover': {
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)'
-                      }
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <IconButton
+                      onClick={(e) => handleEditAssignment(assignment, e)}
+                      size="small"
+                      sx={{
+                        color: '#60A5FA',
+                        '&:hover': {
+                          backgroundColor: 'rgba(96, 165, 250, 0.1)'
+                        }
+                      }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={(e) => handleDeleteAssignment(assignment._id, e)}
+                      size="small"
+                      sx={{
+                        color: '#EF4444',
+                        '&:hover': {
+                          backgroundColor: 'rgba(239, 68, 68, 0.1)'
+                        }
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 </Box>
                 
                 <Box sx={styles.descriptionSection}>
@@ -656,6 +729,98 @@ const TeacherAssignments = () => {
           <Button onClick={() => setOpenReviewDialog(false)}>Cancel</Button>
           <Button onClick={handleReviewAssignment} variant="contained" color="primary">
             Submit Review
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Edit Assignment</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="Title"
+              value={editFormData.title}
+              onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>Description</Typography>
+            <ReactQuill
+              value={editFormData.description}
+              onChange={(value) => setEditFormData({ ...editFormData, description: value })}
+              style={{ height: '250px', marginBottom: '50px' }}
+              modules={{
+                toolbar: [
+                  [{ 'header': [1, 2, 3, false] }],
+                  ['bold', 'italic', 'underline', 'strike'],
+                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                  [{ 'color': [] }, { 'background': [] }],
+                  ['link'],
+                  ['clean']
+                ],
+              }}
+              theme="snow"
+            />
+
+            <TextField
+              fullWidth
+              label="Due Date"
+              type="datetime-local"
+              value={editFormData.dueDate}
+              onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
+              sx={{ mb: 2 }}
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <TextField
+              select
+              fullWidth
+              label="Assign To"
+              value={assignToAll ? 'all' : editFormData.studentId}
+              onChange={(e) => {
+                if (e.target.value === 'all') {
+                  setAssignToAll(true);
+                  setEditFormData({ ...editFormData, studentId: '' });
+                } else {
+                  setAssignToAll(false);
+                  setEditFormData({ ...editFormData, studentId: e.target.value });
+                }
+              }}
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="all">All Students</MenuItem>
+              {students.map((student) => (
+                <MenuItem key={student._id} value={student._id}>
+                  {student.name}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              fullWidth
+              label="Maximum Files"
+              type="number"
+              value={editFormData.maxFiles}
+              onChange={(e) => setEditFormData({ ...editFormData, maxFiles: e.target.value })}
+              sx={{ mb: 2 }}
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+
+            <TextField
+              fullWidth
+              label="Maximum Links"
+              type="number"
+              value={editFormData.maxLinks}
+              onChange={(e) => setEditFormData({ ...editFormData, maxLinks: e.target.value })}
+              InputProps={{ inputProps: { min: 1 } }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenEditDialog(false)}>Cancel</Button>
+          <Button onClick={handleUpdateAssignment} variant="contained" color="primary">
+            Update
           </Button>
         </DialogActions>
       </Dialog>
