@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import AiChat from './AiChat';
 import { 
   UserCircleIcon, 
   Bars3Icon, 
@@ -241,6 +242,9 @@ const Layout = ({ children, userType }) => {
           </div>
         </div>
       </footer>
+
+      {/* AI Chat Component */}
+      <AiChat />
     </div>
   );
 };
