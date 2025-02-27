@@ -10,6 +10,9 @@ const AiChat = () => {
   const [genAI, setGenAI] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [systemPrompt, setSystemPrompt] = useState(
+    "You are a helpful English tutor. Guide learners in a conversational style, providing text-based responses only, without using markdown or any special formatting characters like asterisks."
+  );
 
   useEffect(() => {
     const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
@@ -40,10 +43,14 @@ const AiChat = () => {
     e.preventDefault();
     if (!message.trim() && !imageFile) return;
     if (!genAI) {
-      setConversation(prev => [...prev, {
-        role: 'ai',
-        content: 'API key not configured. Please check your environment settings.'
-      }]);
+      setConversation((prev) => [
+        ...prev,
+        {
+          role: "ai",
+          content:
+            "API key not configured. Please check your environment settings.",
+        },
+      ]);
       return;
     }
 
@@ -52,16 +59,20 @@ const AiChat = () => {
     setLoading(true);
 
     // Add user message to conversation
-    setConversation(prev => [...prev, {
-      role: 'user',
-      content: userMessage,
-      image: imagePreview
-    }]);
+    setConversation((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: userMessage,
+        image: imagePreview,
+      },
+    ]);
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      
+
       let result;
+      let prompt;
       if (imageFile) {
         // Convert image to Uint8Array
         const imageData = await new Promise((resolve) => {
@@ -71,26 +82,40 @@ const AiChat = () => {
         });
 
         // Prepare content parts
-        const prompt = [{
-          text: userMessage || "What's in this image?"
-        }, {
-          inlineData: {
-            data: Array.from(imageData),
-            mimeType: imageFile.type
-          }
-        }];
+        prompt = [
+          {
+            text: systemPrompt,
+          },
+          {
+            text: userMessage || "What's in this image?",
+          },
+          {
+            inlineData: {
+              data: Array.from(imageData),
+              mimeType: imageFile.type,
+            },
+          },
+        ];
 
         result = await model.generateContent(prompt);
       } else {
-        result = await model.generateContent(userMessage);
+        prompt = [
+          {
+            text: systemPrompt,
+          },
+          {
+            text: userMessage,
+          },
+        ];
+        result = await model.generateContent(prompt);
       }
 
       const response = await result.response;
       const aiResponse = response.text();
 
       // Add AI response to conversation
-      setConversation(prev => [...prev, { role: 'ai', content: aiResponse }]);
-      
+      setConversation((prev) => [...prev, { role: "ai", content: aiResponse }]);
+
       // Clear image after sending
       clearImage();
     } catch (error) {
@@ -101,7 +126,7 @@ const AiChat = () => {
         errorMessage = 'API key error. Please check the environment configuration.';
       }
 
-      setConversation(prev => [...prev, {
+      setConversation((prev) => [...prev, {
         role: 'ai',
         content: errorMessage
       }]);
@@ -129,55 +154,88 @@ const AiChat = () => {
         <div className="absolute bottom-16 right-0 w-96 h-[500px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
           {/* Header */}
           <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg">
-            <h3 className="text-lg font-semibold">Chat with AI</h3>
+            <h3 className="text-lg font-semibold">Chat with AI (Gemini 2.0 Flash)</h3>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-4">
-            {conversation.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    msg.role === 'user' 
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-2">
-                  Thinking...
-                </div>
-              </div>
-            )}
-          </div>
+         <div className="flex-1 p-4 overflow-y-auto space-y-4">
+           {conversation.map((msg, index) => (
+             <div
+               key={index}
+               className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+             >
+               {msg.image && (
+                 <div className="mb-2 rounded-lg overflow-hidden max-w-[200px]">
+                   <img src={msg.image} alt="Uploaded content" className="w-full h-auto" />
+                 </div>
+               )}
+               <div
+                 className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                   msg.role === 'user'
+                     ? 'bg-blue-600 text-white'
+                     : 'bg-gray-100 text-gray-800'
+                 }`}
+               >
+                 {msg.content}
+               </div>
+             </div>
+           ))}
+           {loading && (
+             <div className="flex justify-start">
+               <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-2">
+                 Thinking...
+               </div>
+             </div>
+           )}
+         </div>
 
-          {/* Input */}
-          <form onSubmit={handleSendMessage} className="border-t p-4">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
-              >
-                Send
-              </button>
-            </div>
-          </form>
+         {/* Image Preview */}
+         {imagePreview && (
+           <div className="px-4 pt-2">
+             <div className="relative inline-block">
+               <img
+                 src={imagePreview}
+                 alt="Preview"
+                 className="h-20 w-auto rounded-lg"
+               />
+               <button
+                 onClick={clearImage}
+                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+               >
+                 <XMarkIcon className="h-4 w-4" />
+               </button>
+             </div>
+           </div>
+         )}
+
+         {/* Input */}
+         <form onSubmit={handleSendMessage} className="border-t p-4">
+           <div className="flex space-x-2">
+             <input
+               type="text"
+               value={message}
+               onChange={(e) => setMessage(e.target.value)}
+               placeholder="Type your message..."
+               className="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+             />
+             <label className="cursor-pointer">
+               <input
+                 type="file"
+                 accept="image/*"
+                 onChange={handleImageChange}
+                 className="hidden"
+               />
+               <PhotoIcon className="h-10 w-10 text-blue-600 hover:text-blue-700 p-2" />
+             </label>
+             <button
+               type="submit"
+               disabled={loading}
+               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+             >
+               Send
+             </button>
+           </div>
+         </form>
         </div>
       )}
     </div>
