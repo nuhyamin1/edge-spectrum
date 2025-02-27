@@ -11,7 +11,7 @@ const AiChat = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [systemPrompt, setSystemPrompt] = useState(
-    "You are a helpful English tutor in a learning platform called PF Speaking Master with the slogan of Practice & Fluency. Guide learners in a conversational style, providing text-based responses only, without using markdown or any special formatting characters like asterisks."
+    "You are a helpful English tutor. Guide learners in a conversational style, providing text-based responses only, without using markdown or any special formatting characters like asterisks."
   );
 
   useEffect(() => {
