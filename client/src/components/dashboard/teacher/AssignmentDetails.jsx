@@ -284,6 +284,22 @@ const AssignmentDetails = () => {
 
   return (
     <Box p={3} sx={{ backgroundColor: '#F0F9FF' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => navigate('/dashboard/assignments')}
+          sx={{
+            color: '#1E40AF',
+            borderColor: '#60A5FA',
+            '&:hover': {
+              borderColor: '#1E40AF',
+              backgroundColor: 'rgba(96, 165, 250, 0.1)',
+            },
+          }}
+        >
+          Back to Assignments
+        </Button>
+      </Box>
       <Box sx={styles.header}>
         <Box>
           <Typography variant="h4" gutterBottom sx={{ color: '#1F2937' }}>
@@ -297,27 +313,13 @@ const AssignmentDetails = () => {
               Assignment Description
             </Typography>
             <Box sx={styles.descriptionSection}>
-              <div 
+              <div
                 className="prose max-w-none ql-editor material-content"
                 dangerouslySetInnerHTML={{ __html: assignment.description }}
               />
             </Box>
           </Box>
         </Box>
-        <Button 
-          variant="outlined" 
-          onClick={() => navigate('/dashboard/assignments')}
-          sx={{
-            color: '#1E40AF',
-            borderColor: '#60A5FA',
-            '&:hover': {
-              borderColor: '#1E40AF',
-              backgroundColor: 'rgba(96, 165, 250, 0.1)',
-            },
-          }}
-        >
-          Back to Assignments
-        </Button>
       </Box>
 
       <Typography variant="h6" gutterBottom sx={{ mt: 4, color: '#1F2937' }}>
