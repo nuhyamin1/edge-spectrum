@@ -329,9 +329,9 @@ const TeacherAssignments = () => {
           startIcon={<AddIcon />}
           onClick={() => setOpenDialog(true)}
           sx={{
-            backgroundColor: 'rgba(31, 41, 55, 0.5)',
-            borderColor: 'rgba(75, 85, 99, 0.5)',
-            color: '#60A5FA',
+            backgroundColor: 'rgba(198, 208, 222, 0.5)',
+            borderColor: 'rgba(6, 52, 118, 0.5)',
+            color: '#60A5FF',
             '&:hover': {
               backgroundColor: 'rgba(31, 41, 55, 0.8)',
             }
@@ -355,7 +355,8 @@ const TeacherAssignments = () => {
                   boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
                 },
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                backgroundColor: 'rgba(235, 240, 243, 0.8)',
               }}
             >
               {/* Glossy overlay effect */}
