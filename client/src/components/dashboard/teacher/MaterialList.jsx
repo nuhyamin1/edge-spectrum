@@ -115,7 +115,19 @@ const MaterialList = () => {
         onSearch={() => {}}
         onSubjectChange={() => {}}
         onMaterialClick={(materialId) => navigate(`/dashboard/material/${materialId}`)}
-        className="bg-white rounded-xl shadow-md p-6 border border-gray-100"
+        className="bg-white rounded-xl shadow-md p-6 border border-gray-100
+          [&>*]:py-4
+          [&_li]:mb-3 [&_li]:bg-white
+          [&_li]:border [&_li]:border-gray-200
+          [&_li]:rounded-xl [&_li]:p-6
+          [&_li]:transition-all [&_li]:duration-300
+          [&_li]:hover:shadow-lg [&_li]:hover:border-blue-200
+          [&_li]:hover:bg-gradient-to-r [&_li]:hover:from-blue-50 [&_li]:hover:to-white
+          [&_li_h3]:text-xl [&_li_h3]:font-semibold [&_li_h3]:text-blue-700
+          [&_li_p]:text-gray-600 [&_li_p]:mt-2
+          [&_li]:cursor-pointer
+          [&_li]:flex [&_li]:items-center [&_li]:justify-between
+          last:[&_li]:mb-0"
       />
     </Layout>
   );

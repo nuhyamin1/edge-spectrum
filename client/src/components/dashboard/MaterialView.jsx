@@ -70,8 +70,8 @@ const MaterialView = () => {
               </div>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-neon-blue
-                transition-colors rounded-lg hover:bg-gray-700/50"
+                className="px-4 py-2 text-sm bg-gray-200 border border-gray-700 text-gray-900 hover:text-neon-blue
+                transition-colors rounded-lg hover:bg-gray-300"
               >
                 Back to Dashboard
               </button>
@@ -101,8 +101,8 @@ const MaterialView = () => {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => navigate(`/dashboard/edit-material/${material._id}`)}
-                  className="px-4 py-2 bg-gray-800 text-neon-blue rounded-lg 
-                  hover:bg-gray-700 transition-all duration-300 
+                  className="px-4 py-2 bg-gray-200 text-neon-blue rounded-lg 
+                  hover:bg-gray-300 transition-all duration-300 
                   border border-gray-700 hover:border-neon-blue/50
                   hover:shadow-lg hover:shadow-neon-blue/20"
                 >

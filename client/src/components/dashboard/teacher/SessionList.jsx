@@ -237,11 +237,11 @@ const SessionList = () => {
       session.title.toLowerCase().includes(searchTerm.toLowerCase());
     const descriptionMatch = searchTerm && 
       session.description.toLowerCase().includes(searchTerm.toLowerCase());
-
+  
     return (
       <div 
         key={session._id} 
-        className="relative p-6 hover:bg-blue-50 transition-all duration-300 group/item"
+        className="relative p-6 border border-gray-500 hover:bg-blue-50 transition-all duration-300 group/item border border-gray-200 rounded-lg shadow-sm mb-4"
       >
         <div className="flex justify-between items-start">
           <div className="flex-1">
@@ -253,8 +253,11 @@ const SessionList = () => {
                 </span>
               )}
             </h3>
-            <p className="text-sm text-blue-600 mt-1">{session.subject}</p>
-            <p className="text-sm text-blue-700 mt-2">
+            <p className="text-sm text-blue-600 px-3 py-1 bg-blue-50 rounded-full 
+                    inline-block mb-2">
+                    {session.subject}
+                  </p>
+            <p className="text-sm text-gray-700 mt-2">
               {highlightText(session.description, searchTerm)}
             </p>
             {session.materials && (
