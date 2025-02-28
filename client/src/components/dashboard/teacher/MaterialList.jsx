@@ -5,7 +5,7 @@ import { api } from '../../../context/AuthContext';
 import { useAuth } from '../../../context/AuthContext';
 import Layout from '../Layout';
 import { MaterialListBase } from '../shared/MaterialListBase';
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, PlusCircleIcon, BookOpenIcon } from '@heroicons/react/24/outline';
 
 const MaterialList = () => {
   const [materials, setMaterials] = useState([]);
@@ -53,32 +53,35 @@ const MaterialList = () => {
   const createButton = (
     <button
       onClick={() => navigate('/dashboard/create-material')}
-      className="px-6 py-2.5 bg-blue-500 text-white rounded-lg 
-      hover:bg-blue-600 transition-all duration-300 
-      border border-blue-400 
-      hover:shadow-lg hover:shadow-blue-400/20
+      className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white 
+      rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1
+      transition-all duration-300 font-semibold
       flex items-center gap-2"
     >
-      <PencilIcon className="w-5 h-5" />
+      <PlusCircleIcon className="w-5 h-5" />
       Create New Material
     </button>
   );
 
   const renderActions = (material) => (
-    <div className="ml-6 flex space-x-2">
+    <div className="flex space-x-3">
       <button
         onClick={() => navigate(`/dashboard/edit-material/${material._id}`)}
-        className="p-2 text-blue-600 hover:text-blue-700 transition-colors
-        rounded-lg hover:bg-blue-50"
+        className="p-2.5 text-white bg-blue-500 hover:bg-blue-600 
+        rounded-full shadow transition-all duration-200
+        flex items-center justify-center group"
+        aria-label="Edit material"
       >
-        <PencilIcon className="w-5 h-5" />
+        <PencilIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
       </button>
       <button
         onClick={() => handleDelete(material._id)}
-        className="p-2 text-red-500 hover:text-red-600 transition-colors
-        rounded-lg hover:bg-red-50"
+        className="p-2.5 text-white bg-red-500 hover:bg-red-600
+        rounded-full shadow transition-all duration-200
+        flex items-center justify-center group"
+        aria-label="Delete material"
       >
-        <TrashIcon className="w-5 h-5" />
+        <TrashIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
       </button>
     </div>
   );
@@ -86,8 +89,9 @@ const MaterialList = () => {
   if (loading) {
     return (
       <Layout userType="teacher">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+        <div className="flex flex-col justify-center items-center h-64 gap-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+          <p className="text-gray-600 font-medium animate-pulse">Loading materials...</p>
         </div>
       </Layout>
     );
@@ -95,6 +99,14 @@ const MaterialList = () => {
 
   return (
     <Layout userType="teacher">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <BookOpenIcon className="w-6 h-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-800">Teaching Materials</h1>
+        </div>
+        <p className="text-gray-600">Manage your educational content and resources</p>
+      </div>
+      
       <MaterialListBase
         materials={materials}
         loading={loading}
@@ -103,9 +115,10 @@ const MaterialList = () => {
         onSearch={() => {}}
         onSubjectChange={() => {}}
         onMaterialClick={(materialId) => navigate(`/dashboard/material/${materialId}`)}
+        className="bg-white rounded-xl shadow-md p-6 border border-gray-100"
       />
     </Layout>
   );
 };
 
-export default MaterialList; 
+export default MaterialList;
