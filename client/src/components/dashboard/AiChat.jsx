@@ -13,12 +13,37 @@ const AiChat = () => {
   const [systemPrompt, setSystemPrompt] = useState(
     "You are a helpful English tutor. Guide learners in a conversational style, providing text-based responses only, without using markdown or any special formatting characters like asterisks."
   );
+  // Add a chat session to maintain history
+  const [chatSession, setChatSession] = useState(null);
 
   useEffect(() => {
     const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
     if (apiKey) {
       const ai = new GoogleGenerativeAI(apiKey);
       setGenAI(ai);
+      
+      // Initialize the chat session
+      const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const newChatSession = model.startChat({
+        history: [
+          {
+            role: "user",
+            parts: [{ text: systemPrompt }]
+          },
+          {
+            role: "model",
+            parts: [{ text: "I understand. I'll act as a helpful English tutor and provide conversational guidance without special formatting." }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1000,
+        },
+      });
+      
+      setChatSession(newChatSession);
     }
   }, []);
 
@@ -42,13 +67,13 @@ const AiChat = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() && !imageFile) return;
-    if (!genAI) {
+    if (!genAI || !chatSession) {
       setConversation((prev) => [
         ...prev,
         {
           role: "ai",
           content:
-            "API key not configured. Please check your environment settings.",
+            "API key not configured or chat session not initialized. Please check your environment settings.",
         },
       ]);
       return;
@@ -69,10 +94,8 @@ const AiChat = () => {
     ]);
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
       let result;
-      let prompt;
+      
       if (imageFile) {
         // Convert image to Uint8Array
         const imageData = await new Promise((resolve) => {
@@ -81,13 +104,17 @@ const AiChat = () => {
           reader.readAsArrayBuffer(imageFile);
         });
 
-        // Prepare content parts
-        prompt = [
+        // For images, we need to use a different approach since chat history doesn't support images easily
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        
+        // Prepare content with previous conversation context
+        const historyContext = conversation.map(msg => 
+          `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.content}`
+        ).join('\n');
+        
+        const prompt = [
           {
-            text: systemPrompt,
-          },
-          {
-            text: userMessage || "What's in this image?",
+            text: `${systemPrompt}\n\nConversation history:\n${historyContext}\n\nNow the user has sent an image with this message: "${userMessage || "What's in this image?"}"`,
           },
           {
             inlineData: {
@@ -99,15 +126,8 @@ const AiChat = () => {
 
         result = await model.generateContent(prompt);
       } else {
-        prompt = [
-          {
-            text: systemPrompt,
-          },
-          {
-            text: userMessage,
-          },
-        ];
-        result = await model.generateContent(prompt);
+        // For text-only messages, use the chat session to maintain context
+        result = await chatSession.sendMessage(userMessage);
       }
 
       const response = await result.response;
@@ -122,7 +142,7 @@ const AiChat = () => {
       console.error('Detailed error:', error);
       
       let errorMessage = 'Sorry, I encountered an error. Please try again.';
-      if (error.message.includes('API key not valid')) {
+      if (error.message && error.message.includes('API key not valid')) {
         errorMessage = 'API key error. Please check the environment configuration.';
       }
 
