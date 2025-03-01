@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaMobileAlt } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -187,6 +187,43 @@ const useRecording = () => {
 const useClient = createClient(config);
 const useMicrophoneAndCameraTracks = createMicrophoneAndCameraTracks();
 
+const OrientationPrompt = () => {
+  const [showPrompt, setShowPrompt] = useState(true);
+  
+  useEffect(() => {
+    const checkOrientation = () => {
+      if (window.innerWidth > 768 || window.innerWidth > window.innerHeight) {
+        setShowPrompt(false);
+      } else {
+        setShowPrompt(true);
+      }
+    };
+    
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+    };
+  }, []);
+  
+  if (!showPrompt) return null;
+  
+  return (
+    <div className="orientation-prompt">
+      <FaMobileAlt />
+      <h2 className="text-xl font-bold mb-2">Please Rotate Your Device</h2>
+      <p>For the best experience in the video room, please use landscape orientation.</p>
+      <button 
+        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+        onClick={() => setShowPrompt(false)}
+      >
+        Continue Anyway
+      </button>
+    </div>
+  );
+};
+
 const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [users, setUsers] = useState([]);
   const [start, setStart] = useState(false);
@@ -296,6 +333,22 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   }, [isDragging]);
 
   useEffect(() => {
+    // Check if device is mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // If mobile, try to switch to landscape orientation
+    if (isMobile) {
+      try {
+        if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+          window.screen.orientation.lock('landscape').catch(err => {
+            console.log('Could not lock screen to landscape:', err);
+          });
+        }
+      } catch (error) {
+        console.log('Orientation API not supported:', error);
+      }
+    }
+    
     // Function to handle user published events
     const handleUserPublished = async (user, mediaType) => {
       try {
@@ -992,7 +1045,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const studentUsers = users.filter(u => u.uid !== 'teacher');
 
   return (
-    <div className="relative w-full h-full bg-gray-900">
+    <div className="relative w-full h-full bg-gray-900 video-room-container">
+      <OrientationPrompt />
       {/* Error display */}
       <ErrorDisplay error={error || screenShareError} />
       
@@ -1070,10 +1124,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
       )}
 
-      {/* Video grid */}
-      <div className="grid grid-cols-12 gap-4 p-4 h-full">
+      {/* Video grid - Modified for responsive layout */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 h-full">
         {/* Left Column - Teacher and Session Info */}
-        <div className="col-span-5 flex flex-col space-y-4">
+        <div className="md:col-span-5 flex flex-col space-y-4">
           {/* Teacher Video */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             {isTeacher && start && tracks ? (
@@ -1084,7 +1138,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
                   {user.name} (Teacher)
                 </div>
                 <button
@@ -1102,7 +1156,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
                   Teacher
                 </div>
                 <button
@@ -1114,23 +1168,23 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
               </div>
             ) : (
               <div className="aspect-video flex items-center justify-center bg-gray-100">
-                <p className="text-gray-500">Teacher video not available</p>
+                <p className="text-gray-500 text-sm">Teacher video not available</p>
               </div>
             )}
           </div>
 
-          {/* Session Details */}
+          {/* Session Details - Collapsible on mobile */}
           {session && (
-            <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="bg-white rounded-lg shadow-md p-4 session-details">
               <h2 className="text-xl font-semibold mb-4">{session.title}</h2>
               <div className="space-y-2">
                 <div className="flex items-center">
-                  <span className="text-gray-600 w-32">Subject:</span>
-                  <span className="text-gray-900">{session.subject}</span>
+                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Subject:</span>
+                  <span className="text-gray-900 text-sm md:text-base">{session.subject}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="text-gray-600 w-32">Status:</span>
-                  <span className={`px-2 py-1 rounded text-sm ${
+                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Status:</span>
+                  <span className={`px-2 py-1 rounded text-xs md:text-sm ${
                     session.status === 'active' 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-gray-100 text-gray-800'
@@ -1140,24 +1194,24 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 </div>
                 {session.startedAt && (
                   <div className="flex items-center">
-                    <span className="text-gray-600 w-32">Started:</span>
-                    <span className="text-gray-900">
+                    <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Started:</span>
+                    <span className="text-gray-900 text-sm md:text-base">
                       {new Date(session.startedAt).toLocaleString()}
                     </span>
                   </div>
                 )}
                 <div className="flex items-center">
-                  <span className="text-gray-600 w-32">Duration:</span>
-                  <span className="text-gray-900">{session.duration} minutes</span>
+                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Duration:</span>
+                  <span className="text-gray-900 text-sm md:text-base">{session.duration} minutes</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="text-gray-600 w-32">Grace Period:</span>
-                  <span className="text-gray-900">{session.gracePeriod} minutes</span>
+                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Grace Period:</span>
+                  <span className="text-gray-900 text-sm md:text-base">{session.gracePeriod} minutes</span>
                 </div>
                 {session.description && (
                   <div className="mt-4">
-                    <span className="text-gray-600 block mb-2">Description:</span>
-                    <p className="text-gray-900 bg-gray-50 p-3 rounded">
+                    <span className="text-gray-600 block mb-2 text-sm md:text-base">Description:</span>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded text-sm md:text-base">
                       {session.description}
                     </p>
                   </div>
@@ -1168,9 +1222,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
 
         {/* Right Column - Student Videos */}
-        <div className="col-span-7 bg-white rounded-lg shadow-md p-4">
+        <div className="md:col-span-7 bg-white rounded-lg shadow-md p-4">
           <h3 className="text-lg font-semibold mb-4">Participants ({studentUsers.length})</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {!isTeacher && start && tracks && (
               <div className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="absolute inset-0">
@@ -1179,7 +1233,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
                   {user.name} (You)
                 </div>
               </div>
@@ -1204,7 +1258,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                         style={{ height: '100%', width: '100%' }}
                       />
                     </div>
-                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
                       {displayName}
                     </div>
                     <button
@@ -1216,9 +1270,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     
                     {/* Add hand raise indicator */}
                     {hasRaisedHand && (
-                      <div className="absolute top-2 right-2 bg-yellow-500 text-white px-3 py-1.5 rounded-full flex items-center space-x-1 animate-pulse">
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full flex items-center space-x-1 animate-pulse text-xs">
                         <FaHandPaper className="inline" />
-                        <span>Hand Raised</span>
+                        <span className="hidden sm:inline">Hand Raised</span>
                       </div>
                     )}
                   </div>
@@ -1230,50 +1284,50 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
       </div>
 
-      {/* Control bar */}
-      <div className="fixed bottom-0 left-12 right-0 bg-black/50 p-4 flex justify-center space-x-4">
+      {/* Mobile-optimized Control bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/70 p-2 md:p-4 flex justify-center space-x-2 md:space-x-4 z-50">
         <button
           onClick={toggleAudio}
-          className={`p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          className={`p-2 md:p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
           title={isAudioMuted ? "Unmute Audio" : "Mute Audio"}
         >
-          {isAudioMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
+          {isAudioMuted ? <FaMicrophoneSlash size={16} /> : <FaMicrophone size={16} />}
         </button>
         <button
           onClick={toggleVideo}
-          className={`p-3 rounded-full ${isVideoMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          className={`p-2 md:p-3 rounded-full ${isVideoMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
           title={isVideoMuted ? "Turn On Video" : "Turn Off Video"}
         >
-          {isVideoMuted ? <FaVideoSlash /> : <FaVideo />}
+          {isVideoMuted ? <FaVideoSlash size={16} /> : <FaVideo size={16} />}
         </button>
         <button
           onClick={toggleScreenShare}
-          className={`p-3 rounded-full ${isScreenSharing ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          className={`p-2 md:p-3 rounded-full ${isScreenSharing ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
           disabled={!ready}
           title="Share Screen"
         >
-          <FaDesktop />
+          <FaDesktop size={16} />
         </button>
         <button
           onClick={handleWhiteboardToggle}
-          className={`p-3 rounded-full ${showWhiteboard ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          className={`p-2 md:p-3 rounded-full ${showWhiteboard ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
           title={showWhiteboard ? "Hide Whiteboard" : "Show Whiteboard"}
         >
-          <FaEdit />
+          <FaEdit size={16} />
         </button>
         <button
           onClick={toggleHandRaise}
-          className={`p-3 rounded-full ${isHandRaised ? 'bg-yellow-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          className={`p-2 md:p-3 rounded-full ${isHandRaised ? 'bg-yellow-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
           title={isHandRaised ? "Lower Hand" : "Raise Hand"}
         >
-          <FaHandPaper className={isHandRaised ? 'animate-pulse' : ''} />
+          <FaHandPaper className={isHandRaised ? 'animate-pulse' : ''} size={16} />
         </button>
         <button 
           onClick={handleRecording} 
-          className={`p-3 rounded-full ${isRecording ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
+          className={`p-2 md:p-3 rounded-full ${isRecording ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
           title={isRecording ? 'Stop Recording' : 'Start Recording'}
         >
-          {isRecording ? <FaStop /> : <FaCircle style={{ color: '#ff0000' }} />}
+          {isRecording ? <FaStop size={16} /> : <FaCircle style={{ color: '#ff0000' }} size={16} />}
         </button>
       </div>
 
