@@ -4,13 +4,29 @@ import { useNavigate } from 'react-router-dom';
 const WelcomePage = () => {
   const navigate = useNavigate();
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [contentVisible, setContentVisible] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
 
+  // Detect if on mobile device
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Particle system configuration
   const particleConfig = {
-    count: 50,
+    count: isMobile ? 25 : 50, // Reduce particle count on mobile
     color: '#8EB8FF',
     speedFactor: 0.5,
     sizeRange: [1, 3],
@@ -116,10 +132,22 @@ const WelcomePage = () => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [particleConfig.count]);
 
   const handleEnter = () => {
     navigate('/login');
+  };
+
+  // Handle item selection on mobile
+  const handleItemClick = (item) => {
+    if (isMobile) {
+      setSelectedItem(item.id === selectedItem ? null : item.id);
+      setIsMobileMenuOpen(false);
+    }
+    
+    if (item.action) {
+      item.action();
+    }
   };
 
   // Content for each menu item
@@ -154,7 +182,7 @@ const WelcomePage = () => {
 
   // Set a slight delay when hovering out to make the UI feel more responsive
   useEffect(() => {
-    if (hoveredItem) {
+    if (hoveredItem || selectedItem) {
       setContentVisible(true);
     } else {
       const timer = setTimeout(() => {
@@ -162,11 +190,16 @@ const WelcomePage = () => {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [hoveredItem]);
+  }, [hoveredItem, selectedItem]);
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   return (
     <div 
-      className="absolute inset-0 flex overflow-hidden select-none outline-none pointer-events-none"
+      className="min-h-screen w-full flex flex-col md:flex-row relative overflow-hidden select-none"
       onClick={(e) => e.preventDefault()}
       onContextMenu={(e) => e.preventDefault()}
       style={{
@@ -186,60 +219,49 @@ const WelcomePage = () => {
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50 z-0" />
 
-      {/* Content panel that appears at top right - now borderless with glow effect */}
-      <div 
-        className="absolute top-8 right-8 z-20 max-w-lg w-full transition-all duration-700 transform p-8 overflow-hidden"
-        style={{
-          transform: contentVisible ? 'translateY(0) translateX(0)' : 'translateY(-30px) translateX(30px)',
-          opacity: contentVisible ? 1 : 0,
-        }}
-      >
-        {hoveredItem && (
-          <>
-            <h2 
-              className="text-6xl mb-4 text-white"
-              style={{ 
-                fontFamily: "'Cormorant Garamond', serif",
-                textShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.3)',
-                letterSpacing: '1px',
-                fontWeight: '600',
-                animation: 'fadeIn 0.3s ease-out'
-              }}
-            >
-              {menuItems.find(item => item.id === hoveredItem)?.label}
-            </h2>
-            <div 
-              className="text-white text-lg leading-relaxed pointer-events-none"
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                animation: 'fadeIn 0.5s ease-in-out',
-                textShadow: '0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(0, 0, 0, 0.3)',
-                fontWeight: '300',
-                maxWidth: '90%',
-                transform: 'translateZ(0)',
-                opacity: '0.80'
-              }}
-            >
-              {menuItems.find(item => item.id === hoveredItem)?.content}
-            </div>
-          </>
-        )}
+      {/* Mobile Menu Button */}
+      <div className="md:hidden absolute top-4 right-4 z-50">
+        <button 
+          onClick={toggleMobileMenu}
+          className="p-2 rounded-full bg-blue-500/20 backdrop-blur-sm"
+          aria-label="Toggle menu"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-8 w-8" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="white"
+          >
+            {isMobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
 
-      {/* Sidebar menu */}
-      <div className="relative z-20 w-96 flex flex-col items-start pointer-events-auto overflow-y-auto max-h-screen">
+      {/* Sidebar for desktop / Full overlay for mobile when menu is open */}
+      <div 
+        className={`
+          z-30 
+          md:relative md:w-96 md:flex md:flex-col md:items-start md:max-h-screen md:overflow-y-auto
+          ${isMobile ? (isMobileMenuOpen ? 'fixed inset-0 bg-black/90 flex flex-col items-center pt-16' : 'hidden') : 'relative'}
+        `}
+      >
         {/* Logo and Brand Name */}
-        <div className="px-8 pt-8 pb-6 cursor-default">
+        <div className={`px-8 pt-8 pb-6 cursor-default w-full ${isMobile ? 'flex justify-center' : ''}`}>
           <div className="flex items-center space-x-4">
             <img 
               src={`${process.env.PUBLIC_URL}/pfsm_logo.png`} 
               alt="PFSM Logo" 
-              className="h-16 w-auto"
+              className="h-12 md:h-16 w-auto"
               style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))' }}
             />
             <div className="flex flex-col">
               <div 
-                className="text-2xl font-medium pointer-events-none"
+                className="text-xl md:text-2xl font-medium pointer-events-none"
                 style={{
                   fontFamily: "'Montserrat', sans-serif",
                   background: 'linear-gradient(to right, #60a5fa, #3b82f6)',
@@ -254,7 +276,7 @@ const WelcomePage = () => {
                 PF Speaking Master
               </div>
               <div 
-                className="text-sm"
+                className="text-xs md:text-sm"
                 style={{
                   fontFamily: "'Montserrat', sans-serif",
                   color: 'rgba(255, 255, 255, 0.8)',
@@ -268,50 +290,58 @@ const WelcomePage = () => {
             </div>
           </div>
         </div>
-        <div className="space-y-2 w-full">
+
+        {/* Menu Items */}
+        <div className="space-y-1 md:space-y-2 w-full">
           {menuItems.map((item) => (
             <div
               key={item.id}
-              className="px-10 py-6 cursor-pointer relative"
-              onMouseEnter={() => setHoveredItem(item.id)}
-              onMouseLeave={() => setHoveredItem(null)}
-              onClick={item.action}
+              className={`
+                px-8 md:px-10 py-4 md:py-6 cursor-pointer relative
+                ${isMobile ? 'text-center' : ''}
+              `}
+              onMouseEnter={() => !isMobile && setHoveredItem(item.id)}
+              onMouseLeave={() => !isMobile && setHoveredItem(null)}
+              onClick={() => handleItemClick(item)}
             >
               {/* Glow effect container */}
               <div 
                 className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-700"
                 style={{
-                  opacity: hoveredItem === item.id ? 0.3 : 0,
+                  opacity: (hoveredItem === item.id || selectedItem === item.id) ? 0.3 : 0,
                   background: 'radial-gradient(circle, rgba(147, 197, 253, 0.3) 0%, rgba(59, 130, 246, 0.8) 0%, rgba(59, 130, 246, 0) 100%)'
                 }}
               />
             
-            {/* Text with animation */}
-            <span 
-            className="relative transition-all duration-700 pointer-events-none"
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: hoveredItem === item.id ? '2.4rem' : '2.2rem',
-                fontWeight: hoveredItem === item.id ? '600' : '500',
-                color: hoveredItem === item.id ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
-                textShadow: hoveredItem === item.id 
-                  ? '0 0 15px rgba(147, 197, 253, 0.9), 0 0 30px rgba(59, 130, 246, 0.6), 0 0 45px rgba(37, 99, 235, 0.4)'
-                  : '0 0 8px rgba(59, 130, 246, 0.3)',
-                transform: hoveredItem === item.id ? 'translateX(12px)' : 'translateX(0)',
-                letterSpacing: hoveredItem === item.id ? '2px' : '1px'
-              }}
-            >
-              {item.label}
-            </span>
+              {/* Text with animation */}
+              <span 
+                className="relative transition-all duration-700 pointer-events-none"
+                style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: (hoveredItem === item.id || selectedItem === item.id) 
+                    ? (isMobile ? '1.8rem' : '2.4rem') 
+                    : (isMobile ? '1.6rem' : '2.2rem'),
+                  fontWeight: (hoveredItem === item.id || selectedItem === item.id) ? '600' : '500',
+                  color: (hoveredItem === item.id || selectedItem === item.id) ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
+                  textShadow: (hoveredItem === item.id || selectedItem === item.id)
+                    ? '0 0 15px rgba(147, 197, 253, 0.9), 0 0 30px rgba(59, 130, 246, 0.6), 0 0 45px rgba(37, 99, 235, 0.4)'
+                    : '0 0 8px rgba(59, 130, 246, 0.3)',
+                  transform: (hoveredItem === item.id || selectedItem === item.id) 
+                    ? (isMobile ? 'translateY(4px)' : 'translateX(12px)') 
+                    : 'translate(0)',
+                  letterSpacing: (hoveredItem === item.id || selectedItem === item.id) ? '2px' : '1px'
+                }}
+              >
+                {item.label}
+              </span>
             </div>
           ))}
-
         </div>
       </div>
 
-      {/* Glowing vertical line */}
+      {/* Glowing vertical line - visible only on desktop */}
       <div 
-        className="absolute top-[40px] bottom-[40px] w-[4px] left-96"
+        className="hidden md:block absolute top-[40px] bottom-[40px] w-[4px] left-96"
         style={{
           background: 'linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.8) 15%, rgba(147, 197, 253, 0.9) 50%, rgba(59, 130, 246, 0.8) 85%, transparent)',
           boxShadow: '0 0 5px rgba(59, 130, 246, 0.5), 0 0 60px rgba(147, 197, 253, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)',
@@ -319,24 +349,79 @@ const WelcomePage = () => {
         }}
       />
 
-      {/* Main content*/}
-      <div className="absolute bottom-4 right-4 text-right z-20 pointer-events-auto">
-        <div className=" text-white space-y-4 max-w-2xl px-4">
-          <p
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-            className="text-2xl font-light italic pointer-events-none"
-          >
-            "Language is the road map of a culture. It tells you where its people come from and where they are going."
-          </p>
-          <p
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-            className="text-xl pointer-events-none"
-          >
-            ‒ Rita Mae Brown
-          </p>
+      {/* Content area - fills the rest of the space */}
+      <div className="relative flex-1 flex flex-col z-20 p-4">
+        {/* Content panel for desktop or selected item on mobile */}
+        <div 
+          className={`
+            transition-all duration-700 transform overflow-hidden 
+            ${isMobile 
+              ? 'mx-auto mt-6 px-4 py-6 w-full' 
+              : 'absolute top-8 right-8 max-w-lg w-full p-8'
+            }
+          `}
+          style={{
+            transform: contentVisible 
+              ? 'translateY(0) translateX(0)' 
+              : (isMobile ? 'translateY(-30px)' : 'translateY(-30px) translateX(30px)'),
+            opacity: contentVisible ? 1 : 0,
+          }}
+        >
+          {(hoveredItem || selectedItem) && (
+            <>
+              <h2 
+                className={`${isMobile ? 'text-4xl' : 'text-6xl'} mb-4 text-white text-center md:text-left`}
+                style={{ 
+                  fontFamily: "'Cormorant Garamond', serif",
+                  textShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.3)',
+                  letterSpacing: '1px',
+                  fontWeight: '600',
+                  animation: 'fadeIn 0.3s ease-out'
+                }}
+              >
+                {menuItems.find(item => item.id === (hoveredItem || selectedItem))?.label}
+              </h2>
+              <div 
+                className="text-white text-base md:text-lg leading-relaxed pointer-events-none"
+                style={{
+                  fontFamily: "'Montserrat', sans-serif",
+                  animation: 'fadeIn 0.5s ease-in-out',
+                  textShadow: '0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(0, 0, 0, 0.3)',
+                  fontWeight: '300',
+                  maxWidth: '100%',
+                  transform: 'translateZ(0)',
+                  opacity: '0.80',
+                  whiteSpace: 'pre-line' // Preserve line breaks in content
+                }}
+              >
+                {menuItems.find(item => item.id === (hoveredItem || selectedItem))?.content}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Quote area - at bottom on mobile, bottom right on desktop */}
+        <div className={`
+          mt-auto 
+          ${isMobile ? 'pb-6 px-4 text-center' : 'absolute bottom-4 right-4 text-right'}
+          z-20 
+        `}>
+          <div className="text-white space-y-2 md:space-y-4 max-w-2xl">
+            <p
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
+              className="text-lg md:text-2xl font-light italic pointer-events-none"
+            >
+              "Language is the road map of a culture. It tells you where its people come from and where they are going."
+            </p>
+            <p
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
+              className="text-base md:text-xl pointer-events-none"
+            >
+              ‒ Rita Mae Brown
+            </p>
+          </div>
         </div>
       </div>
-
     </div>
   );
 };
