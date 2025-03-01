@@ -38,7 +38,7 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         connectSrc: ["'self'", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io"],
-        mediaSrc: ["'self'", "blob:", "mediastream:"],
+        mediaSrc: ["'self'", "blob:", "mediastream:", "data:"],
         imgSrc: ["'self'", "data:", "blob:"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // May need these for Agora
         styleSrc: ["'self'", "'unsafe-inline'"],
