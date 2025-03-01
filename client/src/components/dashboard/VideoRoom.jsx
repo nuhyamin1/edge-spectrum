@@ -437,29 +437,51 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
     const init = async () => {
       try {
+        // Check if client is already connected or connecting
+        if (client.connectionState === 'CONNECTED' || client.connectionState === 'CONNECTING') {
+          console.log("Client already connected or connecting, skipping join");
+          return;
+        }
+
         client.on("user-published", handleUserPublished);
         client.on("user-unpublished", handleUserUnpublished);
         client.on("user-left", handleUserLeft);
+
+        // Add more detailed logging
+        console.log("Joining channel with config:", {
+          appId: config.appId,
+          channelName: sessionId,
+          uid: isTeacher ? 'teacher' : `${user.name}___${user.id}_${Math.floor(Math.random() * 1000000)}`,
+          connectionState: client.connectionState
+        });
 
         // Generate a unique ID for the user
         const uid = isTeacher ? 'teacher' : `${user.name}___${user.id}_${Math.floor(Math.random() * 1000000)}`;
 
         // Join channel with the unique ID
         await client.join(config.appId, sessionId, null, uid);
+        console.log("Successfully joined channel");
 
         if (tracks) {
+          console.log("Publishing tracks:", tracks);
           await client.publish(tracks);
           setStart(true);
         }
       } catch (err) {
-        console.error("Error joining video room:", err);
-        setError("Failed to join video room");
+        console.error("Error setting up video room:", err);
+        setError("Failed to join video room: " + (err.message || "Unknown error"));
       }
     };
 
+    // Make sure tracks are ready before initializing
     if (ready && tracks) {
       console.log("Initializing with tracks:", tracks);
-      init();
+      // Use a single initialization attempt with a reasonable delay
+      const initTimer = setTimeout(() => {
+        init();
+      }, 500);
+      
+      return () => clearTimeout(initTimer);
     }
 
     // Cleanup function
@@ -478,16 +500,23 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           });
         }
         
-        if (tracks) {
-          client.unpublish(tracks).then(() => {
+        if (client.connectionState === 'CONNECTED') {
+          if (tracks) {
+            client.unpublish(tracks).then(() => {
+              client.leave();
+            }).catch(err => {
+              console.error("Error during unpublish:", err);
+              client.leave();
+            });
+          } else {
             client.leave();
-          }).catch(console.error);
+          }
         }
       } catch (err) {
         console.error("Error during cleanup:", err);
       }
     };
-  }, [sessionId, client, ready, tracks, isTeacher, user.name]);
+  }, [sessionId, client, ready, tracks, isTeacher, user.name, user.id]);
 
   useEffect(() => {
     return () => {
