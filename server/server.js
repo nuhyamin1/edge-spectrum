@@ -37,11 +37,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: ["'self'", 
-          "*.agora.io", 
-          "*.agoraio.cn", 
-          "wss://*.agora.io",
-          "https://generativelanguage.googleapis.com"],
+        connectSrc: ["'self'", "wss://*", "ws://*", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io", "https://generativelanguage.googleapis.com"],
         mediaSrc: ["'self'", "blob:", "mediastream:", "data:"],
         imgSrc: ["'self'", "data:", "blob:"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // May need these for Agora
