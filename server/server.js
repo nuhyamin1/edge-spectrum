@@ -39,12 +39,14 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: ["'self'", "wss://*", "ws://*", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io", "https://generativelanguage.googleapis.com"],
+        connectSrc: ["'self'", "wss://*", "ws://*", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://*.googleapis.com", "https://securetoken.googleapis.com"],
         mediaSrc: ["'self'", "blob:", "mediastream:", "data:"],
-        imgSrc: ["'self'", "data:", "blob:"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // May need these for Agora
+        imgSrc: ["'self'", "data:", "blob:", "https://www.google.com", "https://*.googleusercontent.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.googleapis.com"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        workerSrc: ["'self'", "blob:"]
+        workerSrc: ["'self'", "blob:"],
+        frameSrc: ["'self'", "https://accounts.google.com", "https://*.firebaseapp.com"],
+        formAction: ["'self'", "https://accounts.google.com"]
       }
     }
   })
