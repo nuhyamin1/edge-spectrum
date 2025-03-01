@@ -12,13 +12,10 @@ const semesterRoutes = require('./routes/semesters');
 
 // Load environment variables from root directory
 dotenv.config();
-
 const app = express();
 const server = http.createServer(app);
-
 // Initialize Socket.IO only once
 const io = socketService.init(server);
-
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads/profile-pictures');
 if (!fs.existsSync(uploadsDir)) {
@@ -34,12 +31,27 @@ const corsOptions = {
 };
 
 // Security and optimization middleware
-app.use(helmet()); // Add security headers
+// Custom Helmet configuration with CSP for Agora
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io"],
+        mediaSrc: ["'self'", "blob:", "mediastream:"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // May need these for Agora
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        workerSrc: ["'self'", "blob:"]
+      }
+    }
+  })
+);
+
 app.use(compression()); // Enable gzip compression
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
 // Hide detailed errors in production
 if (process.env.NODE_ENV === 'production') {
   app.use((err, req, res, next) => {
