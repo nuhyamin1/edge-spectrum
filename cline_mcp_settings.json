@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "github.com/pashpashpash/perplexity-mcp": {
+      "command": "node",
+      "args": ["perplexity-mcp/dist/index.js"],
+      "env": {
+        "PERPLEXITY_API_KEY": "your-api-key-here"
+      },
+      "autoApprove": [
+        "search",
+        "get_documentation",
+        "find_apis",
+        "check_deprecated_code"
+      ]
+    }
+  }
+}
