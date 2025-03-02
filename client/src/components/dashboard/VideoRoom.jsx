@@ -893,35 +893,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
-  const QualityMonitor = ({ stats }) => {
-    if (!stats || Object.keys(stats).length === 0) return null;
-
-    const getNetworkQualityText = (quality) => {
-      switch(quality) {
-        case 1: return 'Excellent';
-        case 2: return 'Good';
-        case 3: return 'Poor';
-        case 4: return 'Bad';
-        case 5: return 'Very Bad';
-        default: return 'Unknown';
-      }
-    };
-
-    return (
-      <div className="fixed bottom-4 right-4 bg-black/50 text-white p-4 rounded-lg text-sm">
-        <h3 className="font-bold mb-2">Network Stats</h3>
-        <div className="space-y-1">
-          <p>Network: {stats.networkType}</p>
-          <p>Quality: {getNetworkQualityText(stats.networkQuality)}</p>
-          <p>Latency: {stats.lastMileDelay}ms</p>
-          <p>Send Bitrate: {(stats.sendBitrate / 1024).toFixed(1)} Mbps</p>
-          <p>Frame Rate: {stats.sendFrameRate} fps</p>
-          <p>Resolution: {stats.sendResolution}</p>
-        </div>
-      </div>
-    );
-  };
-
   const ErrorDisplay = ({ error }) => {
     if (!error) return null;
 
@@ -1078,9 +1049,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       <OrientationPrompt />
       {/* Error display */}
       <ErrorDisplay error={error || screenShareError} />
-      
-      {/* Quality monitor */}
-      <QualityMonitor stats={qualityStats} />
       
       {/* Whiteboard Overlay */}
       {showWhiteboard && (
