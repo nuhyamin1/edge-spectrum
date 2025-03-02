@@ -438,6 +438,7 @@
   max-height: 100vh;
   display: flex;
   flex-direction: column;
+  border-radius: 10px;
 }
 
 /* Ensure the grid takes up all available space */
@@ -498,7 +499,7 @@
 
 /* Dark mode for session details */
 .session-details {
-  overflow-y: auto;
+  /* overflow-y: auto; */
   max-height: 30vh;
   background-color: #1a1a1a !important;
   color: #e0e0e0 !important;

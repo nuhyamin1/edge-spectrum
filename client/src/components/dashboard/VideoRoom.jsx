@@ -272,18 +272,30 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [availableVoices, setAvailableVoices] = useState([]);
 
-  const toggleAudio = async () => {
-    if (tracks && tracks[0]) {
-      await tracks[0].setEnabled(!isAudioMuted);
-      setIsAudioMuted(!isAudioMuted);
-    }
+  useEffect(() => {
+    const setTrackEnabled = async () => {
+      if (tracks && tracks[0]) {
+        await tracks[0].setEnabled(!isAudioMuted);
+      }
+    };
+    setTrackEnabled();
+  }, [isAudioMuted, tracks]);
+  
+  const toggleAudio = () => {
+    setIsAudioMuted(prev => !prev);
   };
 
-  const toggleVideo = async () => {
-    if (tracks && tracks[1]) {
-      await tracks[1].setEnabled(!isVideoMuted);
-      setIsVideoMuted(!isVideoMuted);
-    }
+  useEffect(() => {
+    const setTrackEnabled = async () => {
+      if (tracks && tracks[1]) {
+        await tracks[1].setEnabled(!isVideoMuted);
+      }
+    };
+    setTrackEnabled();
+  }, [isVideoMuted, tracks]);
+  
+  const toggleVideo = () => {
+    setIsVideoMuted(prev => !prev);
   };
 
   const toggleScreenShare = async () => {
@@ -1282,7 +1294,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       </div>
 
       {/* Mobile-optimized Control bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/70 p-2 md:p-4 flex justify-center space-x-2 md:space-x-4 z-50">
+      <div className="fixed bottom-0 left-0 right-0 p-2 md:p-4 flex justify-center space-x-2 md:space-x-4 z-50">
         <button
           onClick={toggleAudio}
           className={`p-2 md:p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
