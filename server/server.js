@@ -25,7 +25,8 @@ if (!fs.existsSync(uploadsDir)) {
 // CORS Configuration
 const corsOptions = {
   origin: [
-    'https://edge-spectrum-production.up.railway.app', // Replace with your actual Railway URL
+    'https://edge-spectrum-production.up.railway.app', // Production URL
+    'http://localhost:3000', // Local development URL
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
