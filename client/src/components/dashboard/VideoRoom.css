@@ -433,6 +433,74 @@
   width: 100%;
   height: 100vh;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the grid takes up all available space */
+.grid {
+  flex: 1;
+  height: 100%;
+  max-height: calc(100vh - 70px); /* Account for the control bar */
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Make participant containers more efficient with space */
+.grid-cols-1.sm\:grid-cols-2.gap-4 {
+  gap: 2px;
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+/* Thinner borders for video frames */
+.rounded-lg {
+  border-radius: 0.25rem;
+}
+
+.shadow-md {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Reduce padding around videos to maximize space */
+.p-4 {
+  padding: 0.5rem;
+}
+
+/* Make participant videos scale better with more participants */
+@media (min-width: 768px) {
+  .md\:col-span-7 .grid-cols-1.sm\:grid-cols-2.gap-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 2px;
+  }
+  
+  /* Make video containers scale efficiently */
+  .aspect-video {
+    aspect-ratio: 16/9;
+    height: auto;
+    width: 100%;
+  }
+}
+
+/* For the session details section to use space efficiently */
+.session-details {
+  overflow-y: auto;
+  max-height: 30vh;
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .p-4 {
+    padding: 0.25rem;
+  }
+  
+  .gap-4 {
+    gap: 1px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -537,27 +605,6 @@
     width: 90%;
     font-size: 14px;
     padding: 8px 12px;
-  }
-}
-
-/* For very small screens */
-@media (max-width: 480px) {
-  .feedback-controls {
-    max-width: 140px;
-  }
-  
-  .feedback-button {
-    min-width: 80px;
-    font-size: 11px;
-    padding: 4px 6px;
-  }
-  
-  .pronunciation-tool {
-    width: 200px;
-  }
-  
-  .feedback-message {
-    font-size: 24px;
   }
 }
 

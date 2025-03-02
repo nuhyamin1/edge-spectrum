@@ -400,4 +400,15 @@ A modern virtual learning platform that connects teachers and students through i
    npm start
    ```
 
-## Project Structure
+### Development Workflow:
+
+  Local Development:
+  Run `npm run dev:local` to start both server and client in development mode
+  Server will run on port 5000, client on port 3000
+  Client will connect to your local server
+
+  Testing Production Build Locally:
+  Run `npm run build:client` to build the client
+  Run `npm run dev:prod-test` to run the server in production mode
+  Access at `http://localhost:5000` (server serves the built client files)
+
