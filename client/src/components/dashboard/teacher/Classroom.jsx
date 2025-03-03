@@ -21,6 +21,7 @@ const Classroom = () => {
   const [activeTab, setActiveTab] = useState('attendance');
   const [attendanceStatus, setAttendanceStatus] = useState({});
   const [exerciseContent, setExerciseContent] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const socketRef = useRef(null);
 
   const updateAttendanceStatus = useCallback((studentId, status) => {
@@ -294,8 +295,30 @@ const Classroom = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
+      {/* Mobile Menu Button */}
+      <button 
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="fixed md:hidden z-50 bottom-4 right-4 p-3 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+      >
+        <svg 
+          className="w-6 h-6 text-white" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M4 6h16M4 12h16M4 18h16" 
+          />
+        </svg>
+      </button>
+
       {/* Sidebar */}
-      <div className="w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8">
+      <div className={`fixed md:relative z-40 w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8 transition-transform duration-300 ${
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
         {/* Top Section */}
         <button 
           onClick={() => navigate('/dashboard')}
