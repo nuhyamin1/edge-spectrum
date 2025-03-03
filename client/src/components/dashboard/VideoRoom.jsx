@@ -187,42 +187,6 @@ const useRecording = () => {
 const useClient = createClient(config);
 const useMicrophoneAndCameraTracks = createMicrophoneAndCameraTracks();
 
-const OrientationPrompt = () => {
-  const [showPrompt, setShowPrompt] = useState(true);
-  
-  useEffect(() => {
-    const checkOrientation = () => {
-      if (window.innerWidth > 768 || window.innerWidth > window.innerHeight) {
-        setShowPrompt(false);
-      } else {
-        setShowPrompt(true);
-      }
-    };
-    
-    checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    
-    return () => {
-      window.removeEventListener('resize', checkOrientation);
-    };
-  }, []);
-  
-  if (!showPrompt) return null;
-  
-  return (
-    <div className="orientation-prompt">
-      <FaMobileAlt />
-      <h2 className="text-xl font-bold mb-2">Please Rotate Your Device</h2>
-      <p>For the best experience in the video room, please use landscape orientation.</p>
-      <button 
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
-        onClick={() => setShowPrompt(false)}
-      >
-        Continue Anyway
-      </button>
-    </div>
-  );
-};
 
 const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [users, setUsers] = useState([]);
@@ -1033,7 +997,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
   return (
     <div className="relative w-full h-full bg-gray-900 video-room-container">
-      <OrientationPrompt />
       {/* Error display */}
       <ErrorDisplay error={error || screenShareError} />
       
