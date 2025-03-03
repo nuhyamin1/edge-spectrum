@@ -298,10 +298,10 @@ const Classroom = () => {
       {/* Mobile Menu Button */}
       <button 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="fixed md:hidden z-50 bottom-4 right-4 p-3 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+        className="fixed md:hidden z-[100] top-4 right-4 p-4 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
       >
         <svg 
-          className="w-6 h-6 text-white" 
+          className="w-8 h-8 text-white" 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
