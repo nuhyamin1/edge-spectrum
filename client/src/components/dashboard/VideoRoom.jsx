@@ -740,40 +740,15 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const handleWhiteboardToggle = () => {
     const newVisibility = !showWhiteboard;
     setShowWhiteboard(newVisibility);
-    
+
     if (socketRef.current) {
       // Emit whiteboard visibility change to all users
       socketRef.current.emit('toggleWhiteboard', {
         sessionId,
         isVisible: newVisibility
       });
-
-      // Join whiteboard room when opening
-      if (newVisibility) {
-        socketRef.current.emit('joinWhiteboard', {
-          sessionId
-        });
-      }
     }
   };
-
-  useEffect(() => {
-    if (socketRef.current) {
-      socketRef.current.on('whiteboardVisibilityChanged', ({ isVisible }) => {
-        console.log('Whiteboard visibility changed:', isVisible);
-        setShowWhiteboard(isVisible);
-        
-        // Join whiteboard room when it becomes visible
-        if (isVisible) {
-          socketRef.current.emit('joinWhiteboard', { sessionId });
-        }
-      });
-
-      return () => {
-        socketRef.current.off('whiteboardVisibilityChanged');
-      };
-    }
-  }, [sessionId, socketRef]);
 
   const toggleFullscreen = (elementId) => {
     const element = document.getElementById(elementId);
@@ -1503,4 +1478,3 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 };
 
 export default VideoRoom;
-

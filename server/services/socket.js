@@ -112,10 +112,10 @@ module.exports = {
 
             socket.on('toggleWhiteboard', (data) => {
                 const { sessionId, isVisible } = data;
-                const whiteboardRoom = `whiteboard_${sessionId}`;
-                // Broadcast the visibility change to all clients in the same whiteboard room except the sender
-                socket.to(whiteboardRoom).emit('whiteboardVisibilityChanged', { isVisible });
-                console.log(`Broadcasting whiteboard visibility change (${isVisible}) in room ${whiteboardRoom}`);
+                const sessionRoom = `session_${sessionId}`;
+                // Broadcast the visibility change to all clients in the same session room
+                io.to(sessionRoom).emit('whiteboardVisibilityChanged', { isVisible });
+                console.log(`Broadcasting whiteboard visibility change (${isVisible}) in room ${sessionRoom}`);
             });
 
             // Add hand raise event handler
