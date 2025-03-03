@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import WelcomePage from './components/dashboard/WelcomePage';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
-import EmailVerification from './components/auth/EmailVerification';
+import EmailVerification from './components/auth/EmailVerification.jsx';
 import TeacherMainPage from './components/dashboard/teacher/MainPage';
 import CreateSession from './components/dashboard/teacher/CreateSession';
 import SessionList from './components/dashboard/teacher/SessionList';
