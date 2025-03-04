@@ -46,9 +46,36 @@ exports.register = async (req, res) => {
     // Send verification email
     const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${token}`;
     await transporter.sendMail({
+      from: {
+        name: 'Learning Platform',
+        address: process.env.EMAIL_USER
+      },
       to: email,
-      subject: 'Verify your email',
-      html: `Please click this link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
+      subject: 'Please Verify Your Email - Learning Platform',
+      text: `Welcome to Learning Platform! Please verify your email address by clicking the following link: ${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create an account with Learning Platform, please ignore this email.`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #4F46E5; margin-bottom: 20px;">Welcome to Learning Platform!</h2>
+          <p style="margin-bottom: 15px;">Thank you for registering. To complete your registration, please verify your email address by clicking the button below:</p>
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${verificationUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a>
+          </div>
+          <p style="margin-bottom: 15px;">Or copy and paste this link into your browser:</p>
+          <p style="margin-bottom: 20px; word-break: break-all; color: #4F46E5;">${verificationUrl}</p>
+          <p style="margin-bottom: 15px;">This link will expire in 24 hours.</p>
+          <p style="color: #666; font-size: 0.9em;">If you didn't create an account with Learning Platform, please ignore this email.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #666; font-size: 0.8em; text-align: center;">This is an automated message, please do not reply to this email.</p>
+        </div>
+      `,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+        'List-Unsubscribe': `<${process.env.CLIENT_URL}/unsubscribe>`,
+        'X-Report-Abuse': `${process.env.CLIENT_URL}/report-abuse`,
+        'Feedback-ID': 'registration:learning-platform'
+      }
     });
 
     res.status(201).json({ message: 'User registered. Please verify your email.' });
