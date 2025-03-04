@@ -26,6 +26,7 @@ if (!fs.existsSync(uploadsDir)) {
 const corsOptions = {
   origin: [
     'https://edge-spectrum-production.up.railway.app', // Production URL
+    'https://pf-speaking-master-ba7a9.firebaseapp.com', // Firebase Auth Domain
     'http://localhost:3000', // Local development URL
   ],
   credentials: true,
@@ -40,13 +41,13 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: ["'self'", "wss://*", "ws://*", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://*.googleapis.com", "https://securetoken.googleapis.com"],
+        connectSrc: ["'self'", "wss://*", "ws://*", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://*.googleapis.com", "https://securetoken.googleapis.com", "https://edge-spectrum-production.up.railway.app"],
         mediaSrc: ["'self'", "blob:", "mediastream:", "data:"],
         imgSrc: ["'self'", "data:", "blob:", "https://www.google.com", "https://*.googleusercontent.com"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.googleapis.com"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         workerSrc: ["'self'", "blob:"],
-        frameSrc: ["'self'", "https://accounts.google.com", "https://*.firebaseapp.com"],
+        frameSrc: ["'self'", "https://accounts.google.com", "https://*.firebaseapp.com", "https://pf-speaking-master-ba7a9.firebaseapp.com"],
         formAction: ["'self'", "https://accounts.google.com"]
       }
     }
