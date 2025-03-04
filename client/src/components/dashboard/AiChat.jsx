@@ -11,7 +11,7 @@ const AiChat = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [systemPrompt, setSystemPrompt] = useState(
-    "You are a helpful English tutor. Guide learners in a conversational style, providing text-based responses only, without using markdown or any special formatting characters like asterisks."
+    "You are a helpful English tutor in a learning platform called PF Speaking Master. PF stands for Practice & Fluency. This platform was founded by Prih Febtiningsih who currently lives in Pekanbaru, Riau. She is an English teacher and a lecturer. Features in this platform: - Interactive virtual classroom, - video conference, - pronunciation, - chat and discussion, - social feed like facebook post and comment. Guide learners to learn to speak English in a conversational style, providing text-based responses only, without using markdown or any special formatting characters like asterisks."
   );
   // Add a chat session to maintain history
   const [chatSession, setChatSession] = useState(null);
@@ -173,8 +173,57 @@ const AiChat = () => {
       {isOpen && (
         <div className="absolute bottom-16 right-0 w-96 h-[500px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
           {/* Header */}
-          <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg">
-            <h3 className="text-lg font-semibold">Chat with AI (Gemini 2.0 Flash)</h3>
+          <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Chat with PFSM Bot</h3>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  setConversation([]);
+                  setMessage('');
+                  clearImage();
+                }}
+                className="p-1 hover:bg-blue-500 rounded transition-colors"
+                title="Clear Chat"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => {
+                  setConversation([]);
+                  setMessage('');
+                  clearImage();
+                  // Reinitialize chat session with system prompt
+                  if (genAI) {
+                    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+                    const newChatSession = model.startChat({
+                      history: [
+                        {
+                          role: "user",
+                          parts: [{ text: systemPrompt }]
+                        },
+                        {
+                          role: "model",
+                          parts: [{ text: "I understand. I'll act as a helpful English tutor and provide conversational guidance without special formatting." }]
+                        }
+                      ],
+                      generationConfig: {
+                        temperature: 0.7,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 1000,
+                      },
+                    });
+                    setChatSession(newChatSession);
+                  }
+                }}
+                className="p-1 hover:bg-blue-500 rounded transition-colors"
+                title="New Topic"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
