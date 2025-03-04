@@ -14,7 +14,7 @@ import {
   MicrophoneIcon
 } from '@heroicons/react/24/outline';
 import SessionsSection from '../SessionsSection';
-import PronunciationChecker from '../PronunciationChecker';
+// import PronunciationChecker from '../PronunciationChecker';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
@@ -157,8 +157,8 @@ const TeacherMainPage = () => {
           </div>
         </div>
 
-        {/* Pronunciation Checker Section */}
-        <PronunciationChecker />
+        {/* Pronunciation Checker Section
+        <PronunciationChecker /> */}
 
         {/* Materials Section */}
         <section>

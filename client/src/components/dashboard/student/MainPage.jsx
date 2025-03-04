@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { DocumentDuplicateIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import SessionsSection from '../SessionsSection';
 import { MicrophoneIcon, UserGroupIcon, ChartBarIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
-import PronunciationChecker from '../PronunciationChecker';
+// import PronunciationChecker from '../PronunciationChecker';
 import '../Dashboard.css';
 
 const StudentMainPage = () => {
@@ -138,7 +138,7 @@ const StudentMainPage = () => {
         </div>
 
         {/* Pronunciation Checker Section */}
-        <PronunciationChecker />
+        {/* <PronunciationChecker /> */}
 
         {/* Latest Materials Section */}
         <div className="bg-white rounded-xl p-8">
