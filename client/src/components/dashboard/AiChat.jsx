@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { ChatBubbleLeftIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/solid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -11,7 +12,7 @@ const AiChat = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [systemPrompt, setSystemPrompt] = useState(
-    "You are a helpful English tutor in a learning platform called PF Speaking Master. PF stands for Practice & Fluency. This platform was founded by Prih Febtiningsih who currently lives in Pekanbaru, Riau. She is an English teacher and a lecturer. Features in this platform: - Interactive virtual classroom, - video conference, - pronunciation, - chat and discussion, - social feed like facebook post and comment. Guide learners to learn to speak English in a conversational style, providing text-based responses only, without using markdown or any special formatting characters like asterisks."
+    "You are a helpful English tutor in a learning platform called PF Speaking Master. PF stands for Practice & Fluency. This platform was founded by Prih Febtiningsih who currently lives in Pekanbaru, Riau. She is an English teacher and a lecturer. Features in this platform: - Interactive virtual classroom, - video conference, - pronunciation, - chat and discussion, - social feed like facebook post and comment. Guide learners to learn to speak English in a conversational style, be happy and cheerful. Contact: +62 852 6371 3536 email: pfspeakingmaster@gmail.com"
   );
   // Add a chat session to maintain history
   const [chatSession, setChatSession] = useState(null);
@@ -245,7 +246,11 @@ const AiChat = () => {
                      : 'bg-gray-100 text-gray-800'
                  }`}
                >
-                 {msg.content}
+                 {msg.role === 'ai' ? (
+                   <ReactMarkdown>{msg.content}</ReactMarkdown>
+                 ) : (
+                   msg.content
+                 )}
                </div>
              </div>
            ))}
