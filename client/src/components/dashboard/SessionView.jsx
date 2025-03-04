@@ -306,9 +306,9 @@ const SessionView = () => {
                   {session.status === 'scheduled' && (
                     <button
                       onClick={handleStartSession}
-                      className="px-4 py-2 bg-gray-800 text-green-400 rounded-lg 
-                      hover:bg-gray-700 transition-all duration-300 
-                      border border-gray-700 hover:border-green-400/50
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg 
+                      hover:bg-gray-300 transition-all duration-300 
+                      border border-gray-200 hover:border-gray-400/50
                       hover:shadow-lg hover:shadow-green-400/20"
                     >
                       Start Session
@@ -317,9 +317,9 @@ const SessionView = () => {
                   {session.status === 'active' && (
                     <button
                       onClick={handleEndSession}
-                      className="px-4 py-2 bg-gray-800 text-red-400 rounded-lg 
-                      hover:bg-gray-700 transition-all duration-300 
-                      border border-gray-700 hover:border-red-400/50
+                      className="px-4 py-2 bg-gray-100 text-red-400 rounded-lg 
+                      hover:bg-gray-300 transition-all duration-300 
+                      border border-gray-300 hover:border-red-400/50
                       hover:shadow-lg hover:shadow-red-400/20"
                     >
                       End Session
@@ -342,9 +342,9 @@ const SessionView = () => {
                     ) : (
                       <button
                         onClick={handleEnroll}
-                        className="px-4 py-2 bg-gray-800 text-neon-blue rounded-lg 
-                        hover:bg-gray-700 transition-all duration-300 
-                        border border-gray-700 hover:border-neon-blue/50
+                        className="px-4 py-2 bg-gray-100 text-neon-blue rounded-lg 
+                        hover:bg-gray-200 transition-all duration-300 
+                        border border-gray-300 hover:border-neon-blue/50
                         hover:shadow-lg hover:shadow-neon-blue/20"
                       >
                         Enroll in Session
