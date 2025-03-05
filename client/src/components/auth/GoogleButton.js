@@ -48,7 +48,13 @@ const GoogleButton = ({ role }) => {
       console.error('Google sign-in error:', error);
       console.log('Error code:', error.code);
       console.log('Error message:', error.message);
-      toast.error('Failed to sign in with Google');
+      
+      // Handle specific error cases
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.info('Sign-in cancelled. Please try again if you want to sign in with Google.');
+      } else {
+        toast.error('Failed to sign in with Google. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
