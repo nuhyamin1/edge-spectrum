@@ -16,6 +16,12 @@ const GoogleButton = ({ role }) => {
       setIsLoading(true);
       const provider = new GoogleAuthProvider();
       
+      // Set custom parameters for the Google provider
+      provider.setCustomParameters({
+        prompt: 'select_account',
+        hl: navigator.language || 'en' // Use browser's language or fallback to English
+      });
+      
       console.log('Initiating Google sign-in popup...');
       const result = await signInWithPopup(auth, provider);
       console.log('Popup result:', result);
@@ -66,4 +72,4 @@ const GoogleButton = ({ role }) => {
   );
 };
 
-export default GoogleButton; 
+export default GoogleButton;
