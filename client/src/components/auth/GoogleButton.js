@@ -16,13 +16,15 @@ const GoogleButton = ({ role }) => {
       setIsLoading(true);
       const provider = new GoogleAuthProvider();
       
-      // Use signInWithPopup instead of redirect
+      console.log('Initiating Google sign-in popup...');
       const result = await signInWithPopup(auth, provider);
-      console.log('Google sign in result:', result);
-
+      console.log('Popup result:', result);
+  
       if (result.user) {
+        console.log('User authenticated:', result.user.uid);
         const accessToken = await result.user.getIdToken();
-        
+        console.log('Access token retrieved:', accessToken);
+  
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/google`, {
           token: accessToken,
           role: role || 'student',
@@ -30,13 +32,16 @@ const GoogleButton = ({ role }) => {
           name: result.user.displayName,
           picture: result.user.photoURL
         });
-
+  
+        console.log('Backend response:', response.data);
         login(response.data.user, response.data.token);
         toast.success('Successfully signed in with Google!');
         navigate('/dashboard');
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
+      console.log('Error code:', error.code);
+      console.log('Error message:', error.message);
       toast.error('Failed to sign in with Google');
     } finally {
       setIsLoading(false);
