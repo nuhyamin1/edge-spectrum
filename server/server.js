@@ -58,6 +58,10 @@ app.use(compression()); // Enable gzip compression
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Hide detailed errors in production
 if (process.env.NODE_ENV === 'production') {
   app.use((err, req, res, next) => {
@@ -90,6 +94,7 @@ app.use('/api/assignments', require('./routes/assignments')); // Add assignments
 app.use('/api/posts', require('./routes/posts')); // Add this line for posts routes
 app.use('/api/semesters', semesterRoutes);
 app.use('/api/pronounce', require('./routes/pronounce')); // Add pronunciation route
+app.use('/api/gtts', require('./routes/gtts')); // Add gtts route for mobile devices
 app.use('/api/admin', require('./routes/admin')); // Add admin routes
 
 // Error handling middleware

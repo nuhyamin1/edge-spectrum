@@ -6,6 +6,7 @@ import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTi
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
+import axios from 'axios';
 
 const config = {
   mode: "rtc",
@@ -235,6 +236,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [showPronunciation, setShowPronunciation] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [availableVoices, setAvailableVoices] = useState([]);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
 
   useEffect(() => {
     const setTrackEnabled = async () => {
@@ -915,8 +918,23 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   }, [socketRef]);
 
-  // Initialize speech synthesis voices
+  // Detect if device is mobile
   useEffect(() => {
+    const checkIfMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      setIsMobileDevice(isMobile);
+      console.log('Device detected as:', isMobile ? 'mobile' : 'desktop');
+    };
+    
+    checkIfMobile();
+  }, []);
+
+  // Initialize speech synthesis voices (for desktop only)
+  useEffect(() => {
+    // Skip voice initialization for mobile devices
+    if (isMobileDevice) return;
+    
     const synth = window.speechSynthesis;
     
     const loadVoices = () => {
@@ -947,23 +965,55 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         speechSynthesis.onvoiceschanged = null;
       }
     };
-  }, [selectedVoice]);
+  }, [selectedVoice, isMobileDevice]);
 
-  const handlePronunciation = () => {
-    if (!pronunciationWord.trim() || !selectedVoice) return;
+  // Handle pronunciation based on device type
+  const handlePronunciation = async () => {
+    if (!pronunciationWord.trim()) return;
 
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
+    if (isMobileDevice) {
+      // Use better-node-gtts for mobile devices
+      try {
+        setIsLoadingAudio(true);
+        const response = await axios.post('/api/gtts', {
+          text: pronunciationWord,
+          lang: 'en'
+        });
+        
+        if (response.data && response.data.audio) {
+          const audio = new Audio(response.data.audio);
+          audio.oncanplaythrough = () => {
+            setIsLoadingAudio(false);
+          };
+          audio.onerror = () => {
+            console.error('Error loading audio');
+            setIsLoadingAudio(false);
+          };
+          audio.play();
+        }
+      } catch (error) {
+        console.error('Error using gtts for pronunciation:', error);
+        setIsLoadingAudio(false);
+      }
+    } else {
+      // Use browser's speech synthesis for desktop
+      if (!selectedVoice) return;
+      
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(pronunciationWord);
-    utterance.voice = selectedVoice;
-    utterance.rate = 0.8; // Slightly slower for clearer pronunciation
-    utterance.pitch = 1;
-    
-    window.speechSynthesis.speak(utterance);
+      const utterance = new SpeechSynthesisUtterance(pronunciationWord);
+      utterance.voice = selectedVoice;
+      utterance.rate = 0.8; // Slightly slower for clearer pronunciation
+      utterance.pitch = 1;
+      
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   const handleVoiceChange = (e) => {
+    if (isMobileDevice) return; // Voice selection not needed for mobile
+    
     const voice = availableVoices.find(v => v.name === e.target.value);
     if (voice) {
       setSelectedVoice(voice);
@@ -1405,17 +1455,19 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         
         {showPronunciation && (
           <div className="pronunciation-content">
-            <select 
-              value={selectedVoice?.name || ''} 
-              onChange={handleVoiceChange}
-              className="voice-select"
-            >
-              {availableVoices.map(voice => (
-                <option key={voice.name} value={voice.name}>
-                  {voice.name}
-                </option>
-              ))}
-            </select>
+            {!isMobileDevice && (
+              <select 
+                value={selectedVoice?.name || ''} 
+                onChange={handleVoiceChange}
+                className="voice-select"
+              >
+                {availableVoices.map(voice => (
+                  <option key={voice.name} value={voice.name}>
+                    {voice.name}
+                  </option>
+                ))}
+              </select>
+            )}
             
             <div className="pronunciation-input-group">
               <input
@@ -1428,11 +1480,16 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
               <button
                 onClick={handlePronunciation}
                 className="pronunciation-button"
-                disabled={!pronunciationWord.trim() || !selectedVoice}
+                disabled={(!isMobileDevice && !selectedVoice) || !pronunciationWord.trim() || isLoadingAudio}
               >
-                <FaVolumeUp />
+                {isLoadingAudio ? '...' : <FaVolumeUp />}
               </button>
             </div>
+            {isMobileDevice && (
+              <div className="text-xs text-gray-300 mt-1">
+                <FaMobileAlt className="inline mr-1" /> Using mobile TTS
+              </div>
+            )}
           </div>
         )}
       </div>
