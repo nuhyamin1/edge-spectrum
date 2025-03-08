@@ -426,8 +426,6 @@
   font-weight: 500;
   margin-bottom: 8px;
 }
-
-/* Add these styles at the top of your existing CSS */
 .video-room-container {
   position: relative;
   width: 100%;
@@ -441,20 +439,20 @@
   border-radius: 10px;
 }
 
-/* Ensure the grid takes up all available space */
 .grid {
   flex: 1;
   height: 100%;
-  max-height: calc(100vh - 70px); /* Account for the control bar */
+  max-height: calc(100vh - 70px);
   margin: 0;
-  overflow: hidden;
+  padding: 16px;
+  overflow: auto;
 }
 
-/* Make participant containers more efficient with space */
 .grid-cols-1.sm\:grid-cols-2.gap-4 {
-  gap: 1px;
+  gap: 16px;
   overflow-y: auto;
   max-height: 100%;
+  padding: 16px;
 }
 
 /* Thinner, more subtle borders for video frames */
@@ -484,16 +482,9 @@
 @media (min-width: 768px) {
   .md\:col-span-7 .grid-cols-1.sm\:grid-cols-2.gap-4 {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1px;
-    padding: 2px;
-  }
-  
-  /* Darken the participants heading to match the background */
-  .md\:col-span-7 h3 {
-    color: #f0f0f0;
-    padding: 0.5rem;
-    margin-bottom: 0.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    padding: 16px;
   }
 }
 
