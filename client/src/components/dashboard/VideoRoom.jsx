@@ -972,17 +972,17 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     if (!pronunciationWord.trim()) return;
 
     if (isMobileDevice) {
-      // Use better-node-gtts for mobile devices
+      // Use ElevenLabs API for mobile devices
       try {
         setIsLoadingAudio(true);
-        const response = await axios.post('/api/gtts', {
-          text: pronunciationWord,
-          lang: 'en'
+        const response = await axios.post('/api/pronounce', {
+          text: pronunciationWord
         });
         
         if (response.data && response.data.audio) {
-          const audioUrl = `${process.env.REACT_APP_API_URL}${response.data.audio}`;
-          const audio = new Audio(audioUrl);
+          // Create audio from base64
+          const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
+          const audio = new Audio(audioSrc);
           
           audio.oncanplaythrough = () => {
             setIsLoadingAudio(false);
@@ -999,7 +999,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           });
         }
       } catch (error) {
-        console.error('Error using gtts for pronunciation:', error);
+        console.error('Error using ElevenLabs API for pronunciation:', error);
         setIsLoadingAudio(false);
       }
     } else {
