@@ -155,7 +155,7 @@ const StudentMainPage = () => {
               <ArrowRightIcon className="w-4 h-4 ml-1" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-fit overflow-visible">
             {materials.slice(0, 3).map((material) => (
               <div key={material._id} className="border rounded-lg p-6 hover:shadow-md transition-shadow hover:border-blue-200">
                 <h3 className="font-medium text-lg mb-2">{material.title}</h3>

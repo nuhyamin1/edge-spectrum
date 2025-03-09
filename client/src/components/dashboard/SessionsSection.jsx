@@ -63,7 +63,7 @@ const SessionsSection = ({ title, sessions, type }) => {
           <p className="text-gray-500 text-center">No {type} sessions</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-4 min-h-fit overflow-visible">
           {sessions.map((session) => (
             <div
               key={session._id}

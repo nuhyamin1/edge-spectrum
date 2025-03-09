@@ -176,7 +176,7 @@ const TeacherMainPage = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-fit overflow-visible">
             {materials.slice(0, visibleMaterials).map((material) => (
               <div
                 key={material._id}
