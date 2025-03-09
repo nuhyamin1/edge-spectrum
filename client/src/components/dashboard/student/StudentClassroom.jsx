@@ -25,7 +25,27 @@ const StudentClassroom = () => {
   const hasEmittedJoin = useRef(false);
   const [activeTab, setActiveTab] = useState('attendance');
   const [exerciseContent, setExerciseContent] = useState('');
-
+  const sidebarRef = useRef(null);
+  
+  // Handle click outside sidebar to close mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && 
+          !sidebarRef.current.contains(event.target) && 
+          isMobileMenuOpen) {
+        // Check if the click is not on the menu button
+        const menuButton = document.querySelector('.mobile-menu-button');
+        if (!menuButton.contains(event.target)) {
+          setIsMobileMenuOpen(false);
+        }
+      }
+    };
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+  }, [isMobileMenuOpen]);
+  
   useEffect(() => {
     const initializeSocket = async () => {
       try {
@@ -230,7 +250,7 @@ const StudentClassroom = () => {
       {/* Mobile Menu Button */}
       <button 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="fixed md:hidden z-[100] top-4 right-4 p-4 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+        className="fixed md:hidden z-[100] top-4 right-4 p-4 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors mobile-menu-button"
       >
         <svg 
           className="w-8 h-8 text-white" 
@@ -248,9 +268,12 @@ const StudentClassroom = () => {
       </button>
 
       {/* Sidebar */}
-      <div className={`fixed md:relative z-40 w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8 transition-transform duration-300 ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
+      <div 
+        ref={sidebarRef}
+        className={`fixed md:relative z-40 w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8 transition-transform duration-300 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
         {/* Home Button */}
         <button 
           onClick={() => navigate('/dashboard')}

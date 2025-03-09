@@ -23,6 +23,7 @@ const Classroom = () => {
   const [exerciseContent, setExerciseContent] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const socketRef = useRef(null);
+  const sidebarRef = useRef(null);
 
   const updateAttendanceStatus = useCallback((studentId, status) => {
     setAttendanceStatus(prev => ({
@@ -156,6 +157,26 @@ const Classroom = () => {
   useEffect(() => {
     fetchSessionDetails();
   }, [fetchSessionDetails]);
+
+  // Handle click outside sidebar to close mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && 
+          !sidebarRef.current.contains(event.target) && 
+          isMobileMenuOpen) {
+        // Check if the click is not on the menu button
+        const menuButton = document.querySelector('.mobile-menu-button');
+        if (!menuButton.contains(event.target)) {
+          setIsMobileMenuOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   const toggleAttendance = useCallback(async (studentId) => {
     const newStatus = attendanceStatus[studentId] === 'present' ? 'absent' : 'present';
@@ -293,12 +314,13 @@ const Classroom = () => {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Mobile Menu Button */}
       <button 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="fixed md:hidden z-[100] top-4 right-4 p-4 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+        className="fixed md:hidden z-[100] top-4 right-4 p-4 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors mobile-menu-button"
       >
         <svg 
           className="w-8 h-8 text-white" 
@@ -316,9 +338,12 @@ const Classroom = () => {
       </button>
 
       {/* Sidebar */}
-      <div className={`fixed md:relative z-40 w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8 transition-transform duration-300 ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
+      <div 
+        ref={sidebarRef}
+        className={`fixed md:relative z-40 w-16 bg-gray-800 flex flex-col items-center py-4 border-r border-gray-700 space-y-8 transition-transform duration-300 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
         {/* Top Section */}
         <button 
           onClick={() => navigate('/dashboard')}
