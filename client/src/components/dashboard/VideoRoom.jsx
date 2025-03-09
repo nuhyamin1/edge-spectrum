@@ -981,15 +981,22 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         });
         
         if (response.data && response.data.audio) {
-          const audio = new Audio(response.data.audio);
+          const audioUrl = `${process.env.REACT_APP_API_URL}${response.data.audio}`;
+          const audio = new Audio(audioUrl);
+          
           audio.oncanplaythrough = () => {
             setIsLoadingAudio(false);
           };
-          audio.onerror = () => {
-            console.error('Error loading audio');
+          
+          audio.onerror = (e) => {
+            console.error('Error loading audio:', e);
             setIsLoadingAudio(false);
           };
-          audio.play();
+          
+          await audio.play().catch(error => {
+            console.error('Error playing audio:', error);
+            setIsLoadingAudio(false);
+          });
         }
       } catch (error) {
         console.error('Error using gtts for pronunciation:', error);
@@ -999,14 +1006,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       // Use browser's speech synthesis for desktop
       if (!selectedVoice) return;
       
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-
       const utterance = new SpeechSynthesisUtterance(pronunciationWord);
       utterance.voice = selectedVoice;
-      utterance.rate = 0.8; // Slightly slower for clearer pronunciation
-      utterance.pitch = 1;
-      
       window.speechSynthesis.speak(utterance);
     }
   };
