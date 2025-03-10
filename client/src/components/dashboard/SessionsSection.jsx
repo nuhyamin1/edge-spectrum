@@ -54,7 +54,7 @@ const SessionsSection = ({ title, sessions, type }) => {
       <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
         <span className="relative">
           {title}
-          <div className="absolute -bottom-2 left-0 h-1 w-12 bg-blue-400 rounded"></div>
+          
         </span>
       </h3>
       
