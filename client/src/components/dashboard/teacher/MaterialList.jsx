@@ -53,12 +53,12 @@ const MaterialList = () => {
   const createButton = (
     <button
       onClick={() => navigate('/dashboard/create-material')}
-      className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white 
+      className="px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white 
       rounded-full shadow-md hover:shadow-lg transform hover:-translate-y-1
-      transition-all duration-300 font-semibold
-      flex items-center gap-2"
+      transition-all duration-300 text-sm md:text-base font-semibold
+      flex items-center gap-1.5 md:gap-2"
     >
-      <PlusCircleIcon className="w-5 h-5" />
+      <PlusCircleIcon className="w-4 h-4 md:w-5 md:h-5" />
       Create New Material
     </button>
   );

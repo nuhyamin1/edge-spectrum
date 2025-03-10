@@ -208,7 +208,7 @@ const EditMaterial = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-2 bg-gray-800 text-gray-400 rounded-lg 
+                  className="px-6 py-2 bg-gray-200 text-gray-400 rounded-lg 
                   hover:bg-gray-700 transition-all duration-300 
                   border border-gray-700 hover:border-gray-400/50"
                 >
@@ -216,7 +216,7 @@ const EditMaterial = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-gray-800 text-neon-blue rounded-lg 
+                  className="px-6 py-2 bg-gray-200 text-neon-blue rounded-lg 
                   hover:bg-gray-700 transition-all duration-300 
                   border border-gray-700 hover:border-neon-blue/50
                   hover:shadow-lg hover:shadow-neon-blue/20"
