@@ -36,23 +36,24 @@ const corsOptions = {
 
 // Security and optimization middleware
 // Custom Helmet configuration with CSP for Agora
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        connectSrc: ["'self'", "wss://*", "ws://*", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://*.googleapis.com", "https://securetoken.googleapis.com", "https://edge-spectrum-production.up.railway.app"],
-        mediaSrc: ["'self'", "blob:", "mediastream:", "data:"],
-        imgSrc: ["'self'", "data:", "blob:", "https://www.google.com", "https://*.googleusercontent.com"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.googleapis.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
-        workerSrc: ["'self'", "blob:"],
-        frameSrc: ["'self'", "https://accounts.google.com", "https://*.firebaseapp.com", "https://pf-speaking-master-ba7a9.firebaseapp.com"],
-        formAction: ["'self'", "https://accounts.google.com"]
-      }
-    }
-  })
-);
+// app.use(
+//   helmet({
+//     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'"],
+//         connectSrc: ["'self'", "wss://*", "ws://*", "*.agora.io", "*.agoraio.cn", "wss://*.agora.io", "https://generativelanguage.googleapis.com", "https://identitytoolkit.googleapis.com", "https://*.googleapis.com", "https://securetoken.googleapis.com", "https://edge-spectrum-production.up.railway.app"],
+//         mediaSrc: ["'self'", "blob:", "mediastream:", "data:"],
+//         imgSrc: ["'self'", "data:", "blob:", "https://www.google.com", "https://*.googleusercontent.com"],
+//         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.googleapis.com"],
+//         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+//         workerSrc: ["'self'", "blob:"],
+//         frameSrc: ["'self'", "https://accounts.google.com", "https://*.firebaseapp.com", "https://pf-speaking-master-ba7a9.firebaseapp.com"],
+//         formAction: ["'self'", "https://accounts.google.com"]
+//       }
+//     }
+//   })
+// );
 
 app.use(compression()); // Enable gzip compression
 app.use(cors(corsOptions));
