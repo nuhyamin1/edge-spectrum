@@ -11,33 +11,6 @@ const SessionsSection = ({ title, sessions, type }) => {
   const { user } = useAuth();
   const isTeacher = user?.role === 'teacher';
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'active':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-yellow-100 text-yellow-800';
-    }
-  };
-
-  const handleSessionClick = (sessionId) => {
-    navigate(`/dashboard/session/${sessionId}`);
-  };
-
   const handleViewMore = () => {
     if (isTeacher) {
       navigate('/dashboard/sessions');
@@ -51,11 +24,8 @@ const SessionsSection = ({ title, sessions, type }) => {
 
   return (
     <div className="h-full">
-      <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-        <span className="relative">
-          {title}
-          
-        </span>
+      <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center">
+        <span className="relative">{title}</span>
       </h3>
       
       {sessions.length === 0 ? (
@@ -67,21 +37,20 @@ const SessionsSection = ({ title, sessions, type }) => {
           {sessions.map((session) => (
             <div
               key={session._id}
-              className="group relative bg-white/80 backdrop-blur-xl rounded-xl p-5 
+              className="group relative bg-white/80 backdrop-blur-xl rounded-xl p-4 md:p-5 
                 border border-blue-200 hover:border-blue-400
                 transition-all duration-300 hover:shadow-lg hover:shadow-blue-400/20"
             >
-              {/* Glowing effect on hover */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-blue-600/5 opacity-0 
                 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
 
               <div className="relative">
                 {/* Session Title and Status */}
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-2">
+                  <h4 className="text-base md:text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
                     {session.title}
                   </h4>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit
                     ${type === 'active' ? 'bg-green-100 text-green-700' : 
                       type === 'upcoming' ? 'bg-blue-100 text-blue-700' : 
                       'bg-gray-100 text-gray-700'}`}>
@@ -96,41 +65,46 @@ const SessionsSection = ({ title, sessions, type }) => {
                 </p>
 
                 {/* Session Details */}
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                   {/* Date */}
                   <div className="flex items-center text-gray-600 text-sm">
-                    <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
-                    {new Date(session.dateTime).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
+                    <CalendarIcon className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                    <span className="line-clamp-1">
+                      {new Date(session.dateTime).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
                   </div>
 
                   {/* Time */}
                   <div className="flex items-center text-gray-600 text-sm">
-                    <ClockIcon className="w-4 h-4 mr-2 text-gray-500" />
-                    {new Date(session.dateTime).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                    {session.endTime && ` - ${new Date(session.endTime).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}`}
-                    {session.gracePeriod && ` (${session.gracePeriod}min grace period)`}
+                    <ClockIcon className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                    <span className="line-clamp-1">
+                      {new Date(session.dateTime).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      {session.endTime && ` - ${new Date(session.endTime).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}`}
+                    </span>
                   </div>
 
                   {/* Subject */}
                   <div className="flex items-center text-gray-600 text-sm">
-                    <BookOpenIcon className="w-4 h-4 mr-2 text-gray-500" />
-                    {session.subject} - {session.topic}
+                    <BookOpenIcon className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
+                    <span className="line-clamp-1">
+                      {session.subject} - {session.topic}
+                    </span>
                   </div>
 
                   {/* Participants */}
                   <div className="flex items-center text-gray-600 text-sm">
-                    <UserGroupIcon className="w-4 h-4 mr-2 text-gray-500" />
+                    <UserGroupIcon className="w-4 h-4 mr-2 text-gray-500 flex-shrink-0" />
                     {session.enrolledStudents?.length || 0} Participants
                   </div>
                 </div>
@@ -154,10 +128,10 @@ const SessionsSection = ({ title, sessions, type }) => {
       )}
 
       {hasMore && (
-        <div className="mt-6 text-center">
+        <div className="mt-4 md:mt-6 text-center">
           <button
             onClick={handleViewMore}
-            className="inline-flex items-center px-4 py-2 border border-transparent
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent
               text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700
               transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
               focus:ring-blue-500"
