@@ -141,7 +141,7 @@ const StudentMainPage = () => {
         {/* <PronunciationChecker /> */}
 
         {/* Latest Materials Section */}
-        <div className="bg-white rounded-xl p-8">
+        <div className="bg-white rounded-xl p-6 sm:p-8">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-serif text-gray-900 mb-2">Latest Materials</h2>
@@ -155,24 +155,39 @@ const StudentMainPage = () => {
               <ArrowRightIcon className="w-4 h-4 ml-1" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-fit overflow-visible">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-fit">
             {materials.slice(0, 3).map((material) => (
-              <div key={material._id} className="border rounded-lg p-6 hover:shadow-md transition-shadow hover:border-blue-200">
-                <h3 className="font-medium text-lg mb-2">{material.title}</h3>
-                <p className="text-gray-600 text-sm mb-4">{material.description}</p>
-                <Link
-                  to={`/dashboard/material/${material._id}`}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  Learn More →
-                </Link>
+              <div 
+                key={material._id} 
+                className="bg-gray-100 border border-gray-400 rounded-xl p-6 sm:p-8 
+                  hover:shadow-md transition-all duration-100"
+              >
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    {material.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                    {material.description}
+                  </p>
+                  <Link
+                    to={`/dashboard/material/${material._id}`}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium 
+                      inline-flex items-center"
+                  >
+                    Learn More 
+                    <span className="transform translate-x-0 transition-transform 
+                      duration-200 hover:translate-x-1">→</span>
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
+
         {/* Upcoming Sessions */}
-        <div className="bg-white rounded-xl p-8">
+        <div className="bg-white rounded-xl p-8 border border-blue-400">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-serif text-gray-900 mb-2">Upcoming Sessions</h2>

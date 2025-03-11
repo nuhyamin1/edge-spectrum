@@ -157,11 +157,8 @@ const TeacherMainPage = () => {
           </div>
         </div>
 
-        {/* Pronunciation Checker Section
-        <PronunciationChecker /> */}
-
         {/* Materials Section */}
-        <section>
+        <section className="px-4 sm:px-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-serif text-gray-900 mb-2">Semester Materials</h2>
@@ -175,64 +172,49 @@ const TeacherMainPage = () => {
               Create Material
             </button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-fit overflow-visible">
+          
+          {/* Modified grid structure without overflow */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-fit">
             {materials.slice(0, visibleMaterials).map((material) => (
               <div
                 key={material._id}
-                className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-                border border-blue-200 hover:border-blue-400
-                transition-all duration-100 group flex flex-col
-                hover:shadow-lg hover:shadow-blue-400/20"
+                className="bg-gray-100 border border-gray-400 rounded-xl p-6 sm:p-8 
+                hover:shadow-md transition-all duration-100"
               >
-                {/* Glossy overlay effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 
-                  group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
-                
-                {/* Animated border gradient
-                <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-blue-50/50 to-blue-70/50 
-                opacity-0 group-hover:opacity-100 transition-opacity duration-50 -z-10
-                animate-once" /> */}
-
-                <div 
+                <div
                   onClick={() => navigate(`/dashboard/material/${material._id}`)}
-                  className="cursor-pointer flex-1 relative"
+                  className="cursor-pointer"
                 >
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 
-                    group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
                     {material.title}
                   </h3>
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
                     {material.subject}
                   </span>
-                  <p className="text-gray-600 text-sm line-clamp-4 leading-relaxed">
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
                     {material.description}
                   </p>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-blue-100 flex justify-end space-x-2 relative">
+                <div className="pt-4 border-t border-gray-300 flex justify-end space-x-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       copyMaterialLink(material._id);
                     }}
-                    className="p-2.5 text-blue-500 hover:text-blue-700 
-                    rounded-lg transition-all duration-300 
-                    hover:bg-blue-50 hover:shadow-md
-                    active:scale-95 relative overflow-hidden"
+                    className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
+                    hover:bg-blue-50 active:scale-95"
                     title="Copy material link"
                   >
-                    <DocumentDuplicateIcon className="w-5 h-5 relative z-10" />
+                    <DocumentDuplicateIcon className="w-5 h-5" />
                   </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/dashboard/edit-material/${material._id}`);
                     }}
-                    className="p-2.5 text-blue-500 hover:text-blue-700 
-                    rounded-lg transition-all duration-300 
-                    hover:bg-blue-50 hover:shadow-md
-                    active:scale-95"
+                    className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
+                    hover:bg-blue-50 active:scale-95"
                     title="Edit material"
                   >
                     <PencilIcon className="w-5 h-5" />
@@ -242,10 +224,8 @@ const TeacherMainPage = () => {
                       e.stopPropagation();
                       handleDelete(material._id);
                     }}
-                    className="p-2.5 text-red-500 hover:text-red-700 
-                    rounded-lg transition-all duration-300 
-                    hover:bg-red-50 hover:shadow-md
-                    active:scale-95"
+                    className="p-2 text-red-500 hover:text-red-700 rounded-lg
+                    hover:bg-red-50 active:scale-95"
                     title="Delete material"
                   >
                     <TrashIcon className="w-5 h-5" />
@@ -254,7 +234,7 @@ const TeacherMainPage = () => {
               </div>
             ))}
           </div>
-
+          
           {materials.length > visibleMaterials && (
             <div className="flex justify-center mt-8">
               <button
@@ -268,6 +248,8 @@ const TeacherMainPage = () => {
             </div>
           )}
         </section>
+
+
 
         {/* Sessions Section */}
         <section className="space-y-8">
