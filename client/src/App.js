@@ -24,6 +24,8 @@ import TeacherAssignments from './components/dashboard/teacher/TeacherAssignment
 import StudentAssignments from './components/dashboard/student/StudentAssignments';
 import AssignmentDetails from './components/dashboard/teacher/AssignmentDetails';
 import Layout from './components/dashboard/Layout';
+import Help from './components/dashboard/Help';
+import Contact from './components/dashboard/Contact';
 import SemesterManagement from './components/dashboard/teacher/SemesterManagement';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import 'react-toastify/dist/ReactToastify.css';
@@ -225,6 +227,24 @@ const AppRoutes = () => {
               <ProtectedRoute allowedRoles={['student']}>
                 <Materials />
               </ProtectedRoute>
+            }
+          />
+  
+          <Route
+            path="/dashboard/help"
+            element={
+              <Layout>
+                <Help />
+              </Layout>
+            }
+          />
+
+          <Route
+            path="/dashboard/contact"
+            element={
+              <Layout>
+                <Contact />
+              </Layout>
             }
           />
 

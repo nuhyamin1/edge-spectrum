@@ -74,8 +74,8 @@ const Layout = ({ children, userType }) => {
             <div className="max-w-7xl mx-auto px-4">
               <div className="flex justify-end items-center h-10 text-sm">
                 <Link to="/dashboard/profile" className="hover:text-blue-200 px-3">Profile</Link>
-                <Link to="/help" className="hover:text-blue-200 px-3">Help</Link>
-                <Link to="/contact" className="hover:text-blue-200 px-3">Contact</Link>
+                <Link to="/dashboard/help" className="hover:text-blue-200 px-3">Help</Link>
+                <Link to="/dashboard/contact" className="hover:text-blue-200 px-3">Contact</Link>
               </div>
             </div>
           </div>
