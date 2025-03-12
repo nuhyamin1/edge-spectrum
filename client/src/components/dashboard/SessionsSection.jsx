@@ -37,7 +37,7 @@ const SessionsSection = ({ title, sessions, type }) => {
           {sessions.map((session) => (
             <div
               key={session._id}
-              className="group relative bg-white/80 backdrop-blur-xl rounded-xl p-4 md:p-5 
+              className="group relative bg-white/80 backdrop-blur-xl rounded-xl p-5 md:p-6
                 border border-blue-200 hover:border-blue-400
                 transition-all duration-300 hover:shadow-lg hover:shadow-blue-400/20"
             >
