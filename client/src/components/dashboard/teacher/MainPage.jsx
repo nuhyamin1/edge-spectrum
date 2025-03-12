@@ -159,26 +159,19 @@ const TeacherMainPage = () => {
 
         {/* Materials Section */}
         <section className="px-4 sm:px-6">
-          <div className="flex justify-between items-center mb-6">
+          {/* <div className="flex justify-between items-center mb-6"> */}
             <div>
-              <h2 className="text-2xl font-serif text-gray-900 mb-2">Semester Materials</h2>
+              <h2 className="text-2xl font-serif text-gray-900 mb-2">Materials</h2>
               <div className="h-1 w-20 bg-blue-600 rounded"></div>
             </div>
-            <button
-              onClick={() => navigate('/dashboard/create-material')}
-              className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
-            >
-              <PencilIcon className="w-5 h-5" />
-              Create Material
-            </button>
-          </div>
+          {/* </div> */}
           
           {/* Modified grid structure without overflow */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-fit">
             {materials.slice(0, visibleMaterials).map((material) => (
               <div
                 key={material._id}
-                className="bg-gray-100 border border-gray-400 rounded-xl p-6 sm:p-8 
+                className="bg-gray-100 border border-blue-400 rounded-xl p-6 sm:p-8 
                 hover:shadow-md transition-all duration-100"
               >
                 <div
@@ -249,58 +242,49 @@ const TeacherMainPage = () => {
           )}
         </section>
 
-
-
         {/* Sessions Section */}
-        <section className="space-y-8">
-          <div className="relative mb-8 flex justify-between items-center">
+        {/* <section className="space-y-8"> */}
+          {/* <div className="relative mb-8 flex justify-between items-center"> */}
             <h2 className="text-3xl font-bold text-gray-900">
               Teaching Sessions
             </h2>
-            <button
-              onClick={() => navigate('/dashboard/create-session')}
-              className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
-            >
-              <PencilIcon className="w-5 h-5" />
-              Create Session
-            </button>
-          </div>
+          {/* </div> */}
 
-          <div className="space-y-6">
+          {/* <div className="space-y-6"> */}
             {/* Active Sessions */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
+            {/* <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
               border border-blue-200 hover:border-blue-400
-              transition-all duration-300">
+              transition-all duration-300"> */}
               <SessionsSection 
                 title="Active Sessions"
                 sessions={activeSessions}
                 type="active"
               />
-            </div>
+            {/* </div> */}
 
             {/* Upcoming Sessions */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-              border border-blue-200 hover:border-blue-400
-              transition-all duration-300">
+            {/* <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6  */}
+              {/* border border-blue-200 hover:border-blue-400
+              transition-all duration-300"> */}
               <SessionsSection 
                 title="Upcoming Sessions"
                 sessions={upcomingSessions}
                 type="upcoming"
               />
-            </div>
+            {/* </div> */}
 
             {/* Completed Sessions */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
+            {/* <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
               border border-blue-200 hover:border-blue-400
-              transition-all duration-300">
+              transition-all duration-300"> */}
               <SessionsSection 
                 title="Completed Sessions"
                 sessions={completedSessions}
                 type="completed"
               />
-            </div>
-          </div>
-        </section>
+            {/* </div> */}
+          {/* </div> */}
+        {/* </section> */}
       </div>
     </Layout>
   );

@@ -141,7 +141,7 @@ const StudentMainPage = () => {
         {/* <PronunciationChecker /> */}
 
         {/* Latest Materials Section */}
-        <div className="bg-white rounded-xl p-6 sm:p-8">
+        {/* <div className="bg-white rounded-xl p-6 sm:p-8"> */}
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-serif text-gray-900 mb-2">Latest Materials</h2>
@@ -160,7 +160,7 @@ const StudentMainPage = () => {
             {materials.slice(0, 3).map((material) => (
               <div 
                 key={material._id} 
-                className="bg-gray-100 border border-gray-400 rounded-xl p-6 sm:p-8 
+                className="bg-blue-50 border border-blue-400 rounded-xl p-6 sm:p-8 
                   hover:shadow-md transition-all duration-100"
               >
                 <div>
@@ -183,11 +183,11 @@ const StudentMainPage = () => {
               </div>
             ))}
           </div>
-        </div>
+        {/* </div> */}
 
 
         {/* Upcoming Sessions */}
-        <div className="bg-white rounded-xl p-8 border border-blue-400">
+        {/* <div className="bg-white rounded-xl p-8 border border-blue-400"> */}
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-serif text-gray-900 mb-2">Upcoming Sessions</h2>
@@ -207,7 +207,7 @@ const StudentMainPage = () => {
             <p className="text-gray-500 text-center py-8">Loading sessions...</p>
           )}
         </div>
-      </div>
+      {/* </div> */}
     </Layout>
   );
 };
