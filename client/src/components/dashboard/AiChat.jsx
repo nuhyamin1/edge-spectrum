@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { ChatBubbleLeftIcon, XMarkIcon, PhotoIcon } from '@heroicons/react/24/solid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -9,6 +9,7 @@ const AiChat = () => {
   const [conversation, setConversation] = useState([]);
   const [loading, setLoading] = useState(false);
   const [genAI, setGenAI] = useState(null);
+  const messagesContainerRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [systemPrompt, setSystemPrompt] = useState(
@@ -16,6 +17,46 @@ const AiChat = () => {
   );
   // Add a chat session to maintain history
   const [chatSession, setChatSession] = useState(null);
+
+  // Prevent zoom on double tap
+  useEffect(() => {
+    const handleTouchStart = (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, []);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [conversation, loading]); // Scroll when messages change or loading state changes
+
+  // Handle mobile keyboard
+  useEffect(() => {
+    const handleVisualViewport = () => {
+      if (window.visualViewport) {
+        const chatWindow = document.querySelector('.chat-window');
+        if (chatWindow) {
+          chatWindow.style.height = `${window.visualViewport.height}px`;
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleVisualViewport);
+      return () => {
+        window.visualViewport.removeEventListener('resize', handleVisualViewport);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const apiKey = process.env.REACT_APP_GEMINI_API_KEY;
@@ -157,7 +198,7 @@ const AiChat = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-0 md:bottom-4 right-0 md:right-4 z-50 w-full md:w-auto">
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -172,7 +213,7 @@ const AiChat = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="absolute bottom-16 right-0 w-96 h-[500px] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
+        <div className="chat-window absolute bottom-16 right-0 w-[96vw] md:w-96 h-[80vh] md:h-[500px] mx-2 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col">
           {/* Header */}
           <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center">
             <h3 className="text-lg font-semibold">Chat with PFSM Bot</h3>
@@ -227,12 +268,17 @@ const AiChat = () => {
             </div>
           </div>
 
-          {/* Messages */}
-         <div className="flex-1 p-4 overflow-y-auto space-y-4">
+         {/* Messages */}
+         <div
+           className="flex-1 p-4 overflow-y-auto space-y-4"
+           ref={messagesContainerRef}
+         >
            {conversation.map((msg, index) => (
              <div
                key={index}
-               className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+               className={`flex flex-col ${
+                 msg.role === 'user' ? 'items-end' : 'items-start'
+               }`}
              >
                {msg.image && (
                  <div className="mb-2 rounded-lg overflow-hidden max-w-[200px]">
@@ -240,7 +286,7 @@ const AiChat = () => {
                  </div>
                )}
                <div
-                 className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                 className={`max-w-[90%] md:max-w-[80%] rounded-lg px-3 md:px-4 py-2.5 md:py-2 text-base md:text-sm ${
                    msg.role === 'user'
                      ? 'bg-blue-600 text-white'
                      : 'bg-gray-100 text-gray-800'
@@ -304,7 +350,7 @@ const AiChat = () => {
              <button
                type="submit"
                disabled={loading}
-               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+               className="bg-blue-600 text-white px-4 py-3 md:py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 min-w-[4rem] text-base md:text-sm"
              >
                Send
              </button>

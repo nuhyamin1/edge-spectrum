@@ -30,7 +30,7 @@ const Help = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Help Center</h1>
         <p className="text-gray-600">
           Find answers to common questions about using PF Speaking Master. Can't find what you're looking for?{' '}
-          <Link to="/contact" className="text-blue-600 hover:text-blue-700 font-medium">
+          <Link to="/dashboard/contact" className="text-blue-600 hover:text-blue-700 font-medium">
             Contact our support team
           </Link>
           .
