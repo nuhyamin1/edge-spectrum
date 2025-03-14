@@ -161,19 +161,19 @@ const StudentMainPage = () => {
               <div 
                 key={material._id} 
                 className="bg-blue-50 border border-blue-400 rounded-xl p-6 sm:p-8 
-                  hover:shadow-md transition-all duration-100"
+                  hover:shadow-md transition-all duration-100 h-full flex flex-col" // Added height and flex
               >
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                <div className="flex-1 flex flex-col"> {/* Added flex container */}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2"> {/* Limited to 2 lines */}
                     {material.title}
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3"> {/* Limited to 3 lines */}
                     {material.description}
                   </p>
                   <Link
                     to={`/dashboard/material/${material._id}`}
                     className="text-blue-600 hover:text-blue-700 text-sm font-medium 
-                      inline-flex items-center"
+                      inline-flex items-center mt-auto" // Added mt-auto for bottom alignment
                   >
                     Learn More 
                     <span className="transform translate-x-0 transition-transform 

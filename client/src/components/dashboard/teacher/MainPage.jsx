@@ -172,19 +172,19 @@ const TeacherMainPage = () => {
               <div
                 key={material._id}
                 className="bg-gray-100 border border-blue-400 rounded-xl p-6 sm:p-8 
-                hover:shadow-md transition-all duration-100"
+                hover:shadow-md transition-all duration-100 h-full flex flex-col" // Added h-full and flex
               >
                 <div
                   onClick={() => navigate(`/dashboard/material/${material._id}`)}
-                  className="cursor-pointer"
+                  className="cursor-pointer flex-1 flex flex-col"
                 >
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2"> {/* Limit title to 2 lines */}
                     {material.title}
                   </h3>
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
                     {material.subject}
                   </span>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3"> {/* Limit description to 3 lines */}
                     {material.description}
                   </p>
                 </div>
