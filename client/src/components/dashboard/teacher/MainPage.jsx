@@ -18,10 +18,11 @@ import SessionsSection from '../SessionsSection';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
-  const [activeSessions, setActiveSessions] = useState([]); // New state for active sessions
+  const [activeSessions, setActiveSessions] = useState([]); 
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
-  const [visibleMaterials, setVisibleMaterials] = useState(6); // Show first 4 materials
+  const [visibleMaterials, setVisibleMaterials] = useState(6);
+  const [activeCardIndex, setActiveCardIndex] = useState(0); // Add this state to track active card
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -102,6 +103,15 @@ const TeacherMainPage = () => {
     setVisibleMaterials(prev => prev + 6); // Show 4 more materials when clicked
   };
 
+  // Add this function to handle scroll events
+  const handleCardScroll = (event) => {
+    const container = event.currentTarget;
+    const scrollPosition = container.scrollLeft;
+    const cardWidth = container.offsetWidth * 0.85 + 16; // 85% width + gap
+    const newIndex = Math.round(scrollPosition / cardWidth);
+    setActiveCardIndex(newIndex);
+  };
+
   return (
     <Layout userType="teacher">
       <div className="space-y-12">
@@ -167,12 +177,16 @@ const TeacherMainPage = () => {
           {/* Mobile: Horizontal card slider with dots */}
           <div className="mt-6 md:hidden">
             {/* Card container with snap points */}
-            <div className="overflow-x-auto pb-4 flex space-x-4 
+            <div 
+              className="overflow-x-auto pb-4 flex space-x-4 
                  snap-x snap-mandatory scroll-smooth
-                 scrollbar-none" style={{ 
-                   scrollbarWidth: 'none', 
-                   msOverflowStyle: 'none' 
-                 }}>
+                 scrollbar-none" 
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none' 
+              }}
+              onScroll={handleCardScroll}
+            >
               <style jsx>{`
                 div.scrollbar-none::-webkit-scrollbar {
                   display: none;
@@ -240,7 +254,7 @@ const TeacherMainPage = () => {
               ))}
             </div>
             
-            {/* Navigation dots */}
+            {/* Navigation dots with active indicator */}
             {materials.length > 0 && (
               <div className="flex justify-center mt-4 space-x-2">
                 {materials.slice(0, visibleMaterials).map((_, index) => (
@@ -252,9 +266,15 @@ const TeacherMainPage = () => {
                         block: 'nearest',
                         inline: 'start'
                       });
+                      setActiveCardIndex(index);
                     }}
-                    className="w-2.5 h-2.5 rounded-full bg-blue-300 hover:bg-blue-500 transition-colors"
+                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                      index === activeCardIndex 
+                        ? 'bg-blue-600 w-4' // Active dot is larger and darker
+                        : 'bg-blue-300 hover:bg-blue-500'
+                    }`}
                     aria-label={`Go to slide ${index + 1}`}
+                    aria-current={index === activeCardIndex ? 'true' : 'false'}
                   />
                 ))}
               </div>
