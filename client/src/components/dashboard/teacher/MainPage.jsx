@@ -166,8 +166,9 @@ const TeacherMainPage = () => {
           
           {/* Mobile: Horizontal card slider with dots */}
           <div className="mt-6 md:hidden">
-            {/* Card container */}
-            <div className="overflow-x-auto pb-4 flex space-x-4 snap-x snap-mandatory 
+            {/* Card container with snap points */}
+            <div className="overflow-x-auto pb-4 flex space-x-4 
+                 snap-x snap-mandatory scroll-smooth
                  scrollbar-none" style={{ 
                    scrollbarWidth: 'none', 
                    msOverflowStyle: 'none' 
@@ -181,11 +182,10 @@ const TeacherMainPage = () => {
                 <div
                   key={material._id}
                   className="bg-gray-100 border border-blue-400 rounded-xl p-6 
-                  hover:shadow-md transition-all duration-100 flex-shrink-0 w-[85%] snap-start
-                  flex flex-col h-[280px]"
+                  hover:shadow-md transition-all duration-100 flex-shrink-0 w-[85%] 
+                  snap-center flex flex-col h-[280px]"
                   id={`card-${index}`}
                 >
-                  {/* Card content remains the same */}
                   <div
                     onClick={() => navigate(`/dashboard/material/${material._id}`)}
                     className="cursor-pointer flex-1 flex flex-col"
