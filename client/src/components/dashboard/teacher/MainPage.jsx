@@ -159,32 +159,117 @@ const TeacherMainPage = () => {
 
         {/* Materials Section */}
         <section className="px-4 sm:px-6">
-          {/* <div className="flex justify-between items-center mb-6"> */}
-            <div>
-              <h2 className="text-2xl font-serif text-gray-900 mb-2">Materials</h2>
-              <div className="h-1 w-20 bg-blue-600 rounded"></div>
-            </div>
-          {/* </div> */}
+          <div>
+            <h2 className="text-2xl font-serif text-gray-900 mb-2">Materials</h2>
+            <div className="h-1 w-20 bg-blue-600 rounded"></div>
+          </div>
           
-          {/* Modified grid structure without overflow */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-fit">
+          {/* Mobile: Horizontal card slider with dots */}
+          <div className="mt-6 md:hidden">
+            {/* Card container */}
+            <div className="overflow-x-auto pb-4 flex space-x-4 snap-x snap-mandatory scrollbar-hide">
+              {materials.slice(0, visibleMaterials).map((material, index) => (
+                <div
+                  key={material._id}
+                  className="bg-gray-100 border border-blue-400 rounded-xl p-6 
+                  hover:shadow-md transition-all duration-100 flex-shrink-0 w-[85%] snap-start
+                  flex flex-col h-[280px]"
+                  id={`card-${index}`}
+                >
+                  <div
+                    onClick={() => navigate(`/dashboard/material/${material._id}`)}
+                    className="cursor-pointer flex-1 flex flex-col"
+                  >
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
+                      {material.title}
+                    </h3>
+                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
+                      {material.subject}
+                    </span>
+                    <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                      {material.description}
+                    </p>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-gray-300 flex justify-end space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyMaterialLink(material._id);
+                      }}
+                      className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
+                      hover:bg-blue-50 active:scale-95"
+                      title="Copy material link"
+                    >
+                      <DocumentDuplicateIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/edit-material/${material._id}`);
+                      }}
+                      className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
+                      hover:bg-blue-50 active:scale-95"
+                      title="Edit material"
+                    >
+                      <PencilIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(material._id);
+                      }}
+                      className="p-2 text-red-500 hover:text-red-700 rounded-lg
+                      hover:bg-red-50 active:scale-95"
+                      title="Delete material"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Navigation dots */}
+            {materials.length > 0 && (
+              <div className="flex justify-center mt-4 space-x-2">
+                {materials.slice(0, visibleMaterials).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      document.getElementById(`card-${index}`).scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'start'
+                      });
+                    }}
+                    className="w-2.5 h-2.5 rounded-full bg-blue-300 hover:bg-blue-500 transition-colors"
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Desktop: Grid layout (hidden on mobile) */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-fit mt-6">
             {materials.slice(0, visibleMaterials).map((material) => (
               <div
                 key={material._id}
                 className="bg-gray-100 border border-blue-400 rounded-xl p-6 sm:p-8 
-                hover:shadow-md transition-all duration-100 h-full flex flex-col" // Added h-full and flex
+                hover:shadow-md transition-all duration-100 h-full flex flex-col"
               >
                 <div
                   onClick={() => navigate(`/dashboard/material/${material._id}`)}
                   className="cursor-pointer flex-1 flex flex-col"
                 >
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2"> {/* Limit title to 2 lines */}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
                     {material.title}
                   </h3>
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
                     {material.subject}
                   </span>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3"> {/* Limit description to 3 lines */}
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
                     {material.description}
                   </p>
                 </div>
