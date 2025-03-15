@@ -167,7 +167,16 @@ const TeacherMainPage = () => {
           {/* Mobile: Horizontal card slider with dots */}
           <div className="mt-6 md:hidden">
             {/* Card container */}
-            <div className="overflow-x-auto pb-4 flex space-x-4 snap-x snap-mandatory scrollbar-hide">
+            <div className="overflow-x-auto pb-4 flex space-x-4 snap-x snap-mandatory 
+                 scrollbar-none" style={{ 
+                   scrollbarWidth: 'none', 
+                   msOverflowStyle: 'none' 
+                 }}>
+              <style jsx>{`
+                div.scrollbar-none::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               {materials.slice(0, visibleMaterials).map((material, index) => (
                 <div
                   key={material._id}
@@ -176,6 +185,7 @@ const TeacherMainPage = () => {
                   flex flex-col h-[280px]"
                   id={`card-${index}`}
                 >
+                  {/* Card content remains the same */}
                   <div
                     onClick={() => navigate(`/dashboard/material/${material._id}`)}
                     className="cursor-pointer flex-1 flex flex-col"
