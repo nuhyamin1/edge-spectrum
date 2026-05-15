@@ -1,3 +1,5 @@
+# Python project .gitignore
+
 # Dependencies
 /node_modules
 /client/node_modules
@@ -57,4 +59,3 @@ perplexity-mcp
 
 #production build
 /client/build 
-

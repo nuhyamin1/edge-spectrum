@@ -2,8 +2,10 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const User = require('../models/User');
 
-const MONGODB_URI = 'mongodb://127.0.0.1:27017/learning_platform';
+const path = require('path');
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+const MONGODB_URI = process.env.MONGODB_URI;
 const createAdmin = async () => {
   try {
     console.log('MongoDB URI:', MONGODB_URI);
