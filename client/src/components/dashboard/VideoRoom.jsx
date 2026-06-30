@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaMobileAlt } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaMobileAlt, FaBook } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -238,6 +238,11 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [availableVoices, setAvailableVoices] = useState([]);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [showDictionary, setShowDictionary] = useState(false);
+  const [dictionaryWord, setDictionaryWord] = useState('');
+  const [dictionaryResult, setDictionaryResult] = useState(null);
+  const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
+  const [dictionaryError, setDictionaryError] = useState(null);
 
   useEffect(() => {
     const setTrackEnabled = async () => {
@@ -1021,6 +1026,28 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
+  const handleDictionaryLookup = async () => {
+    if (!dictionaryWord.trim()) return;
+    
+    setIsDictionaryLoading(true);
+    setDictionaryError(null);
+    setDictionaryResult(null);
+    
+    try {
+      const response = await axios.post('/api/dictionary', { word: dictionaryWord });
+      setDictionaryResult(response.data);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setDictionaryError('Word not found in dictionary. Please check the spelling.');
+      } else {
+        setDictionaryError('Failed to get definition. Please try again.');
+      }
+      console.error('Dictionary error:', err);
+    } finally {
+      setIsDictionaryLoading(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="h-full w-full bg-gray-100 p-4 flex items-center justify-center">
@@ -1489,6 +1516,81 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             {isMobileDevice && (
               <div className="text-xs text-gray-300 mt-1">
                 <FaMobileAlt className="inline mr-1" /> Using mobile TTS
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Dictionary Tool */}
+      <div className={`dictionary-tool ${showDictionary ? 'expanded' : ''}`}>
+        <button
+          onClick={() => setShowDictionary(!showDictionary)}
+          className="dictionary-toggle"
+          title="Dictionary Tool"
+        >
+          <FaBook />
+        </button>
+        
+        {showDictionary && (
+          <div className="dictionary-content">
+            <div className="dictionary-input-group">
+              <input
+                type="text"
+                value={dictionaryWord}
+                onChange={(e) => setDictionaryWord(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleDictionaryLookup()}
+                placeholder="Enter word to look up..."
+                className="dictionary-input"
+              />
+              <button
+                onClick={handleDictionaryLookup}
+                className="dictionary-button"
+                disabled={!dictionaryWord.trim() || isDictionaryLoading}
+              >
+                {isDictionaryLoading ? '...' : <FaBook />}
+              </button>
+            </div>
+            
+            {dictionaryError && (
+              <div className="dictionary-error text-red-400 text-xs mt-2">
+                {dictionaryError}
+              </div>
+            )}
+            
+            {dictionaryResult && (
+              <div className="dictionary-result mt-3 p-3 bg-white/10 rounded-lg max-h-64 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-white">{dictionaryResult.word}</h4>
+                  {dictionaryResult.phonetic && (
+                    <span className="text-gray-300 text-sm">{dictionaryResult.phonetic}</span>
+                  )}
+                </div>
+                
+                {dictionaryResult.meanings && dictionaryResult.meanings.map((meaning, index) => (
+                  <div key={index} className="mb-3">
+                    <h5 className="font-semibold text-blue-300 capitalize text-sm mb-1">
+                      {meaning.partOfSpeech}
+                    </h5>
+                    {meaning.definitions.map((def, defIndex) => (
+                      <div key={defIndex} className="ml-2 mb-2">
+                        <p className="text-gray-200 text-sm">
+                          <span className="font-medium">{defIndex + 1}.</span> {def.definition}
+                        </p>
+                        {def.example && (
+                          <p className="text-gray-400 text-xs italic mt-1">
+                            "{def.example}"
+                          </p>
+                        )}
+                        {def.synonyms && def.synonyms.length > 0 && (
+                          <p className="text-gray-300 text-xs mt-1">
+                            <span className="font-medium">Synonyms:</span> {def.synonyms.slice(0, 5).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             )}
           </div>

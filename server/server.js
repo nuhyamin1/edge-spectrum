@@ -96,6 +96,7 @@ app.use('/api/posts', require('./routes/posts')); // Add this line for posts rou
 app.use('/api/semesters', semesterRoutes);
 app.use('/api/pronounce', require('./routes/pronounce')); // Add pronunciation route
 app.use('/api/gtts', require('./routes/gtts')); // Add gtts route for mobile devices
+app.use('/api/dictionary', require('./routes/dictionary')); // Add dictionary route
 app.use('/api/admin', require('./routes/admin')); // Add admin routes
 
 // Error handling middleware
