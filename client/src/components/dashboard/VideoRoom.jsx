@@ -243,6 +243,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [dictionaryResult, setDictionaryResult] = useState(null);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [dictionaryError, setDictionaryError] = useState(null);
+  const [dictionaryLanguage, setDictionaryLanguage] = useState('en');
 
   useEffect(() => {
     const setTrackEnabled = async () => {
@@ -1034,7 +1035,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     setDictionaryResult(null);
     
     try {
-      const response = await axios.post('/api/dictionary', { word: dictionaryWord });
+      const response = await axios.post('/api/dictionary', { 
+        word: dictionaryWord,
+        language: dictionaryLanguage 
+      });
       setDictionaryResult(response.data);
     } catch (err) {
       if (err.response?.status === 404) {
@@ -1534,13 +1538,35 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         
         {showDictionary && (
           <div className="dictionary-content">
+            <div className="dictionary-language-selector mb-2">
+              <label className="text-gray-300 text-xs mb-1 block">Language:</label>
+              <select
+                value={dictionaryLanguage}
+                onChange={(e) => {
+                  setDictionaryLanguage(e.target.value);
+                  setDictionaryResult(null);
+                  setDictionaryError(null);
+                }}
+                className="dictionary-language-select"
+              >
+                <option value="en">English - English</option>
+                <option value="id-en">English - Indonesian</option>
+                <option value="id">Indonesian - English</option>
+              </select>
+            </div>
             <div className="dictionary-input-group">
               <input
                 type="text"
                 value={dictionaryWord}
                 onChange={(e) => setDictionaryWord(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleDictionaryLookup()}
-                placeholder="Enter word to look up..."
+                placeholder={
+                  dictionaryLanguage === 'id' 
+                    ? 'Enter Indonesian word...' 
+                    : dictionaryLanguage === 'id-en'
+                    ? 'Enter English word...'
+                    : 'Enter word to look up...'
+                }
                 className="dictionary-input"
               />
               <button
