@@ -16,6 +16,7 @@ import {
   CheckCircleIcon,
   GlobeAltIcon,
   EnvelopeIcon,
+  UserGroupIcon,
   PhoneIcon
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../../context/AuthContext';
@@ -40,6 +41,7 @@ const Layout = ({ children, userType }) => {
 
   const teacherMenus = [
     { path: '/dashboard', label: 'Overview', icon: HomeIcon },
+    { path: '/dashboard/students', label: 'Students', icon: UserGroupIcon },
     { path: '/dashboard/materials', label: 'Material List', icon: DocumentTextIcon },
     { path: '/dashboard/sessions', label: 'Session List', icon: CalendarIcon },
     { path: '/dashboard/assignments', label: 'Assignments', icon: ClipboardIcon },

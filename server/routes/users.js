@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const User = require('../src/models/User');
+const User = require('../models/User');
 const multer = require('multer');
 
 // Configure multer for memory storage instead of disk
@@ -25,14 +25,14 @@ router.get('/', auth, async (req, res) => {
   try {
     const { role } = req.query;
     
-    // Only teachers can fetch student list
-    if (role === 'student' && req.user.role !== 'teacher') {
+    // Only teachers and admins can fetch the registered student list
+    if (role === 'student' && !['teacher', 'admin'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Access denied. Only teachers can view student list.' });
     }
 
     const query = role ? { role } : {};
     const users = await User.find(query)
-      .select('name email role') // Only send necessary fields
+      .select('name email role createdAt isEmailVerified authProvider profilePicture')
       .sort({ name: 1 }); // Sort by name
 
     res.json(users);

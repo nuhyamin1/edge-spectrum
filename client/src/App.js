@@ -36,6 +36,7 @@ import MaterialList from './components/dashboard/teacher/MaterialList';
 import Materials from './components/dashboard/student/Materials';
 import ActiveSessions from './components/dashboard/student/ActiveSessions';
 import AdminDashboard from './components/dashboard/admin/AdminDashboard';
+import StudentAccounts from './components/dashboard/teacher/StudentAccounts';
 
 // AppRoutes component to contain all routes
 const AppRoutes = () => {
@@ -85,6 +86,15 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute allowedRoles={['teacher']}>
                 <SessionList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/students"
+            element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <StudentAccounts />
               </ProtectedRoute>
             }
           />
