@@ -936,91 +936,122 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     checkIfMobile();
   }, []);
 
-  // Initialize speech synthesis voices (for desktop only)
+  // Initialize speech synthesis voices
   useEffect(() => {
-    // Skip voice initialization for mobile devices
-    if (isMobileDevice) return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
     
     const synth = window.speechSynthesis;
     
     const loadVoices = () => {
-      const voices = synth.getVoices();
-      const englishVoices = voices.filter(voice => 
-        voice.lang.startsWith('en-')
-      );
-      setAvailableVoices(englishVoices);
-      
-      // Try to find Microsoft Ava voice
-      const avaVoice = englishVoices.find(voice => 
-        voice.name === "Microsoft Ava Online (Natural) - English (United States)"
-      );
-      
-      // Set Ava as default if available, otherwise use first English voice
-      if (!selectedVoice) {
-        setSelectedVoice(avaVoice || englishVoices[0]);
+      try {
+        const voices = synth.getVoices();
+        const englishVoices = voices.filter(voice => 
+          voice.lang && (voice.lang.startsWith('en-') || voice.lang.startsWith('en_') || voice.lang.toLowerCase() === 'en')
+        );
+        setAvailableVoices(englishVoices);
+        
+        // Try to find Microsoft Ava voice
+        const avaVoice = englishVoices.find(voice => 
+          voice.name === "Microsoft Ava Online (Natural) - English (United States)"
+        );
+        
+        // Set Ava as default if available, otherwise use first English voice
+        if (!selectedVoice && englishVoices.length > 0) {
+          setSelectedVoice(avaVoice || englishVoices[0]);
+        }
+      } catch (err) {
+        console.error('Error loading voices:', err);
       }
     };
 
     loadVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = loadVoices;
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = loadVoices;
     }
 
     return () => {
-      if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = null;
+      if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = null;
       }
     };
-  }, [selectedVoice, isMobileDevice]);
+  }, [selectedVoice]);
 
-  // Handle pronunciation based on device type
+  // Handle pronunciation based on device type and availability of Web Speech API
   const handlePronunciation = async () => {
     if (!pronunciationWord.trim()) return;
 
-    if (isMobileDevice) {
-      // Use ElevenLabs API for mobile devices
+    const hasSpeechSynthesis = typeof window !== 'undefined' && window.speechSynthesis;
+
+    if (hasSpeechSynthesis) {
       try {
         setIsLoadingAudio(true);
-        const response = await axios.post('/api/pronounce', {
-          text: pronunciationWord
-        });
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
         
-        if (response.data && response.data.audio) {
-          // Create audio from base64
-          const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
-          const audio = new Audio(audioSrc);
-          
-          audio.oncanplaythrough = () => {
-            setIsLoadingAudio(false);
-          };
-          
-          audio.onerror = (e) => {
-            console.error('Error loading audio:', e);
-            setIsLoadingAudio(false);
-          };
-          
-          await audio.play().catch(error => {
-            console.error('Error playing audio:', error);
-            setIsLoadingAudio(false);
-          });
+        const utterance = new SpeechSynthesisUtterance(pronunciationWord);
+        
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        } else {
+          // Fallback to default English language if no specific voice is selected/available
+          utterance.lang = 'en-US';
         }
+        
+        utterance.onend = () => {
+          setIsLoadingAudio(false);
+        };
+        
+        utterance.onerror = (e) => {
+          console.error('SpeechSynthesis utterance error:', e);
+          setIsLoadingAudio(false);
+        };
+        
+        window.speechSynthesis.speak(utterance);
       } catch (error) {
-        console.error('Error using ElevenLabs API for pronunciation:', error);
-        setIsLoadingAudio(false);
+        console.error('SpeechSynthesis speak failed, falling back to API:', error);
+        await handleApiPronunciationFallback();
       }
     } else {
-      // Use browser's speech synthesis for desktop
-      if (!selectedVoice) return;
+      // Fallback to ElevenLabs API if native SpeechSynthesis is not supported
+      await handleApiPronunciationFallback();
+    }
+  };
+
+  const handleApiPronunciationFallback = async () => {
+    try {
+      setIsLoadingAudio(true);
+      const response = await axios.post('/api/pronounce', {
+        text: pronunciationWord
+      });
       
-      const utterance = new SpeechSynthesisUtterance(pronunciationWord);
-      utterance.voice = selectedVoice;
-      window.speechSynthesis.speak(utterance);
+      if (response.data && response.data.audio) {
+        // Create audio from base64
+        const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
+        const audio = new Audio(audioSrc);
+        
+        audio.oncanplaythrough = () => {
+          setIsLoadingAudio(false);
+        };
+        
+        audio.onerror = (e) => {
+          console.error('Error loading API fallback audio:', e);
+          setIsLoadingAudio(false);
+        };
+        
+        await audio.play().catch(error => {
+          console.error('Error playing API fallback audio:', error);
+          setIsLoadingAudio(false);
+        });
+      } else {
+        setIsLoadingAudio(false);
+      }
+    } catch (error) {
+      console.error('Error using ElevenLabs API for pronunciation fallback:', error);
+      setIsLoadingAudio(false);
     }
   };
 
   const handleVoiceChange = (e) => {
-    if (isMobileDevice) return; // Voice selection not needed for mobile
-    
     const voice = availableVoices.find(v => v.name === e.target.value);
     if (voice) {
       setSelectedVoice(voice);
@@ -1487,7 +1518,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         
         {showPronunciation && (
           <div className="pronunciation-content">
-            {!isMobileDevice && (
+            {availableVoices.length > 0 && (
               <select 
                 value={selectedVoice?.name || ''} 
                 onChange={handleVoiceChange}
@@ -1512,14 +1543,20 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
               <button
                 onClick={handlePronunciation}
                 className="pronunciation-button"
-                disabled={(!isMobileDevice && !selectedVoice) || !pronunciationWord.trim() || isLoadingAudio}
+                disabled={!pronunciationWord.trim() || isLoadingAudio}
               >
                 {isLoadingAudio ? '...' : <FaVolumeUp />}
               </button>
             </div>
-            {isMobileDevice && (
-              <div className="text-xs text-gray-300 mt-1">
-                <FaMobileAlt className="inline mr-1" /> Using mobile TTS
+            {availableVoices.length > 0 ? (
+              <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                <FaVolumeUp size={10} className="inline" />
+                <span>Ready to pronounce</span>
+              </div>
+            ) : (
+              <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                <FaMobileAlt size={10} className="inline" />
+                <span>Using system voice</span>
               </div>
             )}
           </div>
