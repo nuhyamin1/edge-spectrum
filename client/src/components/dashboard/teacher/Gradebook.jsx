@@ -11,6 +11,7 @@ import {
   UserCircleIcon
 } from '@heroicons/react/24/outline';
 import { api } from '../../../context/AuthContext';
+import { MATERIAL_SUBJECTS } from '../../../constants/materialSubjects';
 
 const Gradebook = () => {
   const [semesters, setSemesters] = useState([]);
@@ -554,14 +555,17 @@ const Gradebook = () => {
             <form onSubmit={handleCreateSubject} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Subject Name</label>
-                <input
-                  type="text"
+                <select
                   required
-                  placeholder="e.g. English Speaking"
                   value={newSubjectName}
                   onChange={(e) => setNewSubjectName(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition text-sm"
-                />
+                >
+                  <option value="" disabled>Select subject</option>
+                  {MATERIAL_SUBJECTS.map((subject) => (
+                    <option key={subject} value={subject}>{subject}</option>
+                  ))}
+                </select>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -594,14 +598,17 @@ const Gradebook = () => {
             <form onSubmit={handleAddColumn} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Column / Assessment Name</label>
-                <input
-                  type="text"
+                <select
                   required
-                  placeholder="e.g. Speaking 1"
                   value={newColumnName}
                   onChange={(e) => setNewColumnName(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition text-sm"
-                />
+                >
+                  <option value="" disabled>Select subject</option>
+                  {MATERIAL_SUBJECTS.map((subject) => (
+                    <option key={subject} value={subject}>{subject}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Maximum Score</label>

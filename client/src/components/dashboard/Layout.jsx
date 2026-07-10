@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import AiChat from './AiChat';
 import { 
@@ -35,11 +35,38 @@ const Layout = ({ children, userType }) => {
     return saved !== null ? JSON.parse(saved) : true;
   });
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef(null);
   const isClassroomView = location.pathname.includes('/classroom/');
 
   useEffect(() => {
     localStorage.setItem('sidebarOpen', JSON.stringify(isSidebarOpen));
   }, [isSidebarOpen]);
+
+  useEffect(() => {
+    if (!isMoreMenuOpen) return;
+
+    const handlePointerDown = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setIsMoreMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsMoreMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMoreMenuOpen]);
 
   const teacherMenus = [
     { path: '/dashboard', label: 'Overview', icon: HomeIcon },
@@ -117,10 +144,12 @@ const Layout = ({ children, userType }) => {
 
                   {/* More Menu Dropdown */}
                   {secondaryMenus.length > 0 && (
-                    <div className="relative z-50">
+                    <div className="relative z-50" ref={moreMenuRef}>
                       <button
                         onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
                         className="flex items-center text-base font-medium text-gray-700 hover:text-blue-600"
+                        aria-expanded={isMoreMenuOpen}
+                        aria-haspopup="menu"
                       >
                         More
                         <ChevronLeftIcon className={`w-4 h-4 ml-1 transform transition-transform ${isMoreMenuOpen ? 'rotate-90' : '-rotate-90'}`} />
@@ -135,6 +164,7 @@ const Layout = ({ children, userType }) => {
                                 to={menu.path}
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                                 role="menuitem"
+                                onClick={() => setIsMoreMenuOpen(false)}
                               >
                                 {menu.label}
                               </Link>

@@ -8,6 +8,7 @@ import 'react-quill/dist/quill.snow.css';
 import './QuillEditor.css';
 import ImageResize from 'quill-image-resize-module-react';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { MATERIAL_SUBJECTS } from '../../../constants/materialSubjects';
 
 // Custom image blot definition
 const Image = Quill.import('formats/image');
@@ -476,10 +477,8 @@ const CreateMaterial = () => {
                   transition-all duration-300"
               />
 
-              <input
-                type="text"
+              <select
                 name="subject"
-                placeholder="Subject"
                 value={formData.subject}
                 onChange={handleChange}
                 required
@@ -487,7 +486,12 @@ const CreateMaterial = () => {
                   text-blue-900 placeholder-blue-300
                   focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400
                   transition-all duration-300"
-              />
+              >
+                <option value="" disabled>Select subject</option>
+                {MATERIAL_SUBJECTS.map((subject) => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
 
               <textarea
                 name="description"

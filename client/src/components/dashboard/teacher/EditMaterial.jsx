@@ -7,6 +7,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './QuillEditor.css';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { MATERIAL_SUBJECTS } from '../../../constants/materialSubjects';
 
 const EditMaterial = () => {
   const navigate = useNavigate();
@@ -160,18 +161,24 @@ const EditMaterial = () => {
               </div>
 
               <div>
-                <input
-                  type="text"
+                <select
                   name="subject"
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  placeholder="Subject"
                   className="w-full px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg
                   text-gray-100 placeholder-gray-500
                   focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue
                   transition-all duration-300"
-                />
+                >
+                  <option value="" disabled>Select subject</option>
+                  {formData.subject && !MATERIAL_SUBJECTS.includes(formData.subject) && (
+                    <option value={formData.subject}>{formData.subject}</option>
+                  )}
+                  {MATERIAL_SUBJECTS.map((subject) => (
+                    <option key={subject} value={subject}>{subject}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
