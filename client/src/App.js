@@ -37,6 +37,8 @@ import Materials from './components/dashboard/student/Materials';
 import ActiveSessions from './components/dashboard/student/ActiveSessions';
 import AdminDashboard from './components/dashboard/admin/AdminDashboard';
 import StudentAccounts from './components/dashboard/teacher/StudentAccounts';
+import Gradebook from './components/dashboard/teacher/Gradebook';
+import StudentReport from './components/dashboard/student/StudentReport';
 
 // AppRoutes component to contain all routes
 const AppRoutes = () => {
@@ -214,6 +216,17 @@ const AppRoutes = () => {
           />
 
           <Route
+            path="/dashboard/gradebook"
+            element={
+              <ProtectedRoute allowedRoles={['teacher']}>
+                <Layout userType="teacher">
+                  <Gradebook />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/dashboard/materials"
             element={
               <ProtectedRoute allowedRoles={['teacher']}>
@@ -236,6 +249,17 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <Materials />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/report-card"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <Layout userType="student">
+                  <StudentReport />
+                </Layout>
               </ProtectedRoute>
             }
           />

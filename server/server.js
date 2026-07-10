@@ -98,6 +98,7 @@ app.use('/api/pronounce', require('./routes/pronounce')); // Add pronunciation r
 app.use('/api/gtts', require('./routes/gtts')); // Add gtts route for mobile devices
 app.use('/api/dictionary', require('./routes/dictionary')); // Add dictionary route
 app.use('/api/admin', require('./routes/admin')); // Add admin routes
+app.use('/api/grades', require('./routes/grades')); // Add gradebook routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

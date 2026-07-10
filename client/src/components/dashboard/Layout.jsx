@@ -17,7 +17,9 @@ import {
   GlobeAltIcon,
   EnvelopeIcon,
   UserGroupIcon,
-  PhoneIcon
+  PhoneIcon,
+  TableCellsIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../../context/AuthContext';
 
@@ -45,6 +47,7 @@ const Layout = ({ children, userType }) => {
     { path: '/dashboard/materials', label: 'Material List', icon: DocumentTextIcon },
     { path: '/dashboard/sessions', label: 'Session List', icon: CalendarIcon },
     { path: '/dashboard/assignments', label: 'Assignments', icon: ClipboardIcon },
+    { path: '/dashboard/gradebook', label: 'Gradebook', icon: TableCellsIcon },
     { divider: true },
     { path: '/dashboard/create-material', label: 'Create Material', icon: DocumentPlusIcon },
     { path: '/dashboard/create-session', label: 'Create Session', icon: PlusCircleIcon },
@@ -54,7 +57,8 @@ const Layout = ({ children, userType }) => {
     { path: '/dashboard/student', label: 'Overview', icon: HomeIcon },
     { path: '/dashboard/student/materials', label: 'Materials', icon: DocumentTextIcon },
     { path: '/dashboard/available-sessions', label: 'Sessions', icon: AcademicCapIcon },
-    { path: '/dashboard/assignments', label: 'Assignments', icon: CheckCircleIcon }
+    { path: '/dashboard/assignments', label: 'Assignments', icon: CheckCircleIcon },
+    { path: '/dashboard/report-card', label: 'Report Card', icon: ChartBarIcon }
   ];
 
   const menus = currentUserType === 'teacher' ? teacherMenus : studentMenus;
