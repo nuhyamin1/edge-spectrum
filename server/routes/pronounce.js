@@ -2,19 +2,19 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-const AZURE_SPEECH_KEY = process.env.AZURE_SPEECH_KEY || process.env.SPEECH_KEY;
-const AZURE_SPEECH_REGION = process.env.AZURE_SPEECH_REGION || process.env.SPEECH_REGION;
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY || process.env.ELEVEN_LABS_API_KEY;
+const ELEVENLABS_MODEL = process.env.ELEVENLABS_MODEL || 'eleven_flash_v2_5';
 
 const DIALECTS = {
   'en-US': {
     label: 'American English',
-    voice: process.env.AZURE_SPEECH_VOICE_EN_US || 'en-US-JennyNeural',
-    gender: 'Female'
+    voice: process.env.ELEVENLABS_VOICE_EN_US || 'EXAVITQu4vr4xnSDxMaL',
+    voiceName: 'Sarah'
   },
   'en-GB': {
     label: 'British English',
-    voice: process.env.AZURE_SPEECH_VOICE_EN_GB || 'en-GB-SoniaNeural',
-    gender: 'Female'
+    voice: process.env.ELEVENLABS_VOICE_EN_GB || 'Xb7hH8MSUJpSbSDYk0k2',
+    voiceName: 'Alice'
   }
 };
 const MAX_CACHE_ITEMS = 200;
@@ -38,21 +38,14 @@ const sendPronunciation = (req, res, audioBuffer, dialectCode, dialect, cached =
 
   return res.json({
     audio: audioBuffer.toString('base64'),
-    provider: 'azure',
+    provider: 'elevenlabs',
     dialect: dialectCode,
     voice: dialect.voice,
+    voiceName: dialect.voiceName,
     label: dialect.label,
     ...(cached && { cached: true })
   });
 };
-
-const escapeSsml = (value) =>
-  value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
 
 const getErrorDetails = (error) => {
   if (Buffer.isBuffer(error.response?.data)) {
@@ -71,10 +64,10 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    if (!AZURE_SPEECH_KEY || !AZURE_SPEECH_REGION) {
+    if (!ELEVENLABS_API_KEY) {
       return res.status(500).json({
-        error: 'Azure Speech is not configured',
-        details: 'Set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION in the server environment.'
+        error: 'ElevenLabs is not configured',
+        details: 'Set ELEVENLABS_API_KEY in the server environment.'
       });
     }
 
@@ -94,25 +87,28 @@ router.post('/', async (req, res) => {
       );
     }
 
-    const ssml = `
-      <speak version="1.0" xml:lang="${selectedDialectCode}">
-        <voice xml:lang="${selectedDialectCode}" xml:gender="${selectedDialect.gender}" name="${selectedDialect.voice}">
-          <prosody rate="-8%">${escapeSsml(trimmedText)}</prosody>
-        </voice>
-      </speak>
-    `.trim();
-
     const response = await axios({
       method: 'POST',
-      url: `https://${AZURE_SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`,
+      url: `https://api.elevenlabs.io/v1/text-to-speech/${selectedDialect.voice}`,
+      params: {
+        output_format: 'mp3_44100_128'
+      },
       headers: {
         'Accept': 'audio/mpeg',
-        'Content-Type': 'application/ssml+xml',
-        'Ocp-Apim-Subscription-Key': AZURE_SPEECH_KEY,
-        'X-Microsoft-OutputFormat': 'audio-16khz-32kbitrate-mono-mp3',
-        'User-Agent': 'PF Speaking Master'
+        'Content-Type': 'application/json',
+        'xi-api-key': ELEVENLABS_API_KEY
       },
-      data: ssml,
+      data: {
+        text: trimmedText,
+        model_id: ELEVENLABS_MODEL,
+        language_code: 'en',
+        voice_settings: {
+          stability: 0.65,
+          similarity_boost: 0.8,
+          style: 0,
+          use_speaker_boost: true
+        }
+      },
       responseType: 'arraybuffer'
     });
 
@@ -125,7 +121,7 @@ router.post('/', async (req, res) => {
 
     return sendPronunciation(req, res, audioBuffer, selectedDialectCode, selectedDialect);
   } catch (error) {
-    console.error('Error calling Azure Speech API:', error);
+    console.error('Error calling ElevenLabs API:', getErrorDetails(error));
     res.status(500).json({ 
       error: 'Failed to get pronunciation',
       details: getErrorDetails(error)

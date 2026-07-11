@@ -63,7 +63,7 @@ const PronunciationChecker = () => {
               </>
             )}
           </button>
-          <span className="text-sm text-gray-500">Powered by Azure Speech</span>
+          <span className="text-sm text-gray-500">Powered by ElevenLabs</span>
         </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
       </div>

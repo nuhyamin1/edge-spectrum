@@ -8,7 +8,7 @@
 - [ ] Update `EMAIL_USER` and `EMAIL_PASS` with production email service credentials
 - [ ] Configure `CLIENT_URL` to match your production frontend URL
 - [ ] Verify `AGORA_APP_ID` and `AGORA_APP_CERTIFICATE` are correct for production
-- [ ] Update `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` with production Azure Speech credentials
+- [ ] Add `ELEVENLABS_API_KEY` with the production ElevenLabs credential
 
 ### Frontend (client/.env.production)
 - [ ] Set `REACT_APP_API_URL` to your production backend URL
