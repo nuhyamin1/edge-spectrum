@@ -273,6 +273,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [pinnedParticipantUid, setPinnedParticipantUid] = useState(null);
   const [activeSpeakerUid, setActiveSpeakerUid] = useState(null);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
   useEffect(() => {
     const setTrackEnabled = async () => {
@@ -1005,6 +1006,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   useEffect(() => {
     const handleResize = () => {
       setViewportWidth(window.innerWidth);
+      setViewportHeight(window.innerHeight);
     };
 
     window.addEventListener('resize', handleResize);
@@ -1166,7 +1168,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     () => users.filter(u => u.uid !== 'teacher'),
     [users]
   );
-  const participantPageSize = isMobileDevice || viewportWidth < 768
+  const isPhoneLandscapeLayout = viewportWidth <= 932 && viewportHeight <= 520 && viewportWidth > viewportHeight;
+  const isMobileGalleryLayout = isMobileDevice || viewportWidth <= 768 || isPhoneLandscapeLayout;
+  const participantPageSize = isMobileGalleryLayout
     ? MOBILE_PARTICIPANTS_PER_PAGE
     : DESKTOP_PARTICIPANTS_PER_PAGE;
   const pinnedParticipant = useMemo(
@@ -1301,6 +1305,50 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     );
   };
 
+  const renderTeacherGalleryTile = () => {
+    const teacherTrack = isTeacher && start && tracks ? tracks[1] : teacherUser?.videoTrack;
+    const teacherLabel = isTeacher ? `${user.name} (Teacher)` : 'Teacher';
+
+    return (
+      <div className="participant-tile mobile-teacher-tile" id="mobile-teacher-video">
+        <div className="absolute inset-0">
+          {teacherTrack ? (
+            <AgoraVideoPlayer
+              videoTrack={teacherTrack}
+              style={{ height: '100%', width: '100%' }}
+            />
+          ) : (
+            <div className="participant-placeholder">
+              <span>T</span>
+            </div>
+          )}
+        </div>
+        <div className="participant-name">
+          {teacherLabel}
+        </div>
+        <div className="teacher-corner-badge">Teacher</div>
+      </div>
+    );
+  };
+
+  const renderLocalGalleryTile = () => {
+    if (isTeacher || !start || !tracks) return null;
+
+    return (
+      <div className="participant-tile local-tile" id="mobile-local-video">
+        <div className="absolute inset-0">
+          <AgoraVideoPlayer
+            videoTrack={tracks[1]}
+            style={{ height: '100%', width: '100%' }}
+          />
+        </div>
+        <div className="participant-name">
+          {user.name} (You)
+        </div>
+      </div>
+    );
+  };
+
   const goToPreviousParticipantPage = () => {
     setParticipantPage(prev => Math.max(0, prev - 1));
   };
@@ -1411,7 +1459,39 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         <p>Rotate your phone for the best classroom view.</p>
       </div>
 
-      {/* Video room layout */}
+      {isMobileGalleryLayout ? (
+        <div className="mobile-zoom-room">
+          <div className="mobile-zoom-header">
+            <div className="room-stat-row">
+              <span>{displayedStudentCount}/{MAX_VIDEO_ROOM_STUDENTS}</span>
+              <span>{remainingCapacity} open</span>
+            </div>
+            <div className="participant-page-controls">
+              <button
+                onClick={goToPreviousParticipantPage}
+                disabled={currentParticipantPage === 0}
+                title="Previous participants"
+              >
+                <FaChevronLeft />
+              </button>
+              <span>{currentParticipantPage + 1}/{totalParticipantPages}</span>
+              <button
+                onClick={goToNextParticipantPage}
+                disabled={currentParticipantPage >= totalParticipantPages - 1}
+                title="Next participants"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          </div>
+
+          <div className="mobile-zoom-gallery">
+            {renderTeacherGalleryTile()}
+            {renderLocalGalleryTile()}
+            {visibleStudentUsers.map(remoteUser => renderRemoteVideoTile(remoteUser, { compact: true }))}
+          </div>
+        </div>
+      ) : (
       <div className="video-room-layout">
         <div className="teacher-stage">
           <div className="room-stat-row">
@@ -1582,6 +1662,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Mobile-optimized Control bar */}
       <div className="fixed bottom-0 left-0 right-0 p-2 md:p-4 flex justify-center space-x-2 md:space-x-4 z-50">

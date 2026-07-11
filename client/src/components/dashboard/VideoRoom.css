@@ -587,6 +587,10 @@
   overflow: hidden;
 }
 
+.mobile-zoom-room {
+  display: none;
+}
+
 .teacher-stage,
 .participant-panel {
   min-height: 0;
@@ -686,7 +690,13 @@
 
 .participant-page-controls {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.participant-page-controls span {
+  color: #d1d5db;
+  font-size: 13px;
 }
 
 .participant-page-controls button,
@@ -838,6 +848,18 @@
   background-color: rgba(34, 197, 94, 0.92);
 }
 
+.teacher-corner-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.92);
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
 .empty-participant-state {
   min-height: 160px;
   display: flex;
@@ -914,6 +936,131 @@
   
   .gap-4 {
     gap: 1px;
+  }
+}
+
+@media (max-width: 768px), (max-width: 932px) and (max-height: 520px) and (orientation: landscape) {
+  .video-room-container {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    min-height: 0;
+    border-radius: 0;
+    background: #0f172a;
+    overflow: hidden;
+  }
+
+  .video-room-layout {
+    display: none;
+  }
+
+  .mobile-zoom-room {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: 8px 8px 76px;
+    background: #0f172a;
+    overflow: hidden;
+  }
+
+  .mobile-zoom-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .mobile-zoom-header .room-stat-row {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-zoom-header .room-stat-row span {
+    min-height: 24px;
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  .mobile-zoom-header .participant-page-controls {
+    flex-shrink: 0;
+    gap: 6px;
+  }
+
+  .mobile-zoom-header .participant-page-controls button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .mobile-zoom-gallery {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 8px;
+    overflow-y: auto;
+    padding-bottom: 4px;
+  }
+
+  .mobile-zoom-gallery .participant-tile {
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+  }
+
+  .mobile-zoom-gallery .participant-tile.compact {
+    min-height: 0;
+  }
+
+  .mobile-zoom-gallery .participant-name {
+    max-width: calc(100% - 16px);
+    right: auto;
+    bottom: 8px;
+    font-size: 12px;
+  }
+
+  .mobile-zoom-gallery .participant-actions {
+    right: 8px;
+    top: 8px;
+    bottom: auto;
+  }
+
+  .mobile-zoom-gallery .participant-action-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mobile-teacher-tile {
+    order: -2;
+  }
+
+  .local-tile {
+    order: -1;
+  }
+}
+
+@media (max-width: 932px) and (max-height: 520px) and (orientation: landscape) {
+  .mobile-zoom-room {
+    padding: 6px 8px 64px;
+  }
+
+  .mobile-zoom-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .mobile-zoom-gallery .participant-name {
+    font-size: 11px;
+    padding: 3px 6px;
   }
 }
 
