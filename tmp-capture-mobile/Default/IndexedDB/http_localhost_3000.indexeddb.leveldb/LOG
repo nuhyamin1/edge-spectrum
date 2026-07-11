@@ -1,0 +1,6 @@
+2026/07/11-11:40:39.103 1eb4 Creating DB C:\Users\user\Desktop\LEARNING_PLATFORM\tmp-capture-mobile\Default\IndexedDB\http_localhost_3000.indexeddb.leveldb since it was missing.
+2026/07/11-11:40:39.117 1eb4 Reusing MANIFEST C:\Users\user\Desktop\LEARNING_PLATFORM\tmp-capture-mobile\Default\IndexedDB\http_localhost_3000.indexeddb.leveldb/MANIFEST-000001
+2026/07/11-11:40:39.244 55b4 Level-0 table #5: started
+2026/07/11-11:40:39.247 55b4 Level-0 table #5: 1309 bytes OK
+2026/07/11-11:40:39.249 55b4 Delete type=0 #3
+2026/07/11-11:40:39.250 1eb4 Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)

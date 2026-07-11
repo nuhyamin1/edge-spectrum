@@ -1,0 +1,6 @@
+2026/07/11-11:31:31.308 2f20 Creating DB C:\Users\user\Desktop\LEARNING_PLATFORM\tmp-chrome-profile\Default\IndexedDB\http_localhost_3000.indexeddb.leveldb since it was missing.
+2026/07/11-11:31:31.323 2f20 Reusing MANIFEST C:\Users\user\Desktop\LEARNING_PLATFORM\tmp-chrome-profile\Default\IndexedDB\http_localhost_3000.indexeddb.leveldb/MANIFEST-000001
+2026/07/11-11:31:31.583 544c Level-0 table #5: started
+2026/07/11-11:31:31.589 544c Level-0 table #5: 1262 bytes OK
+2026/07/11-11:31:31.592 544c Delete type=0 #3
+2026/07/11-11:31:31.593 544c Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)

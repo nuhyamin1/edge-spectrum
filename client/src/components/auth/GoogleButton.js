@@ -62,16 +62,16 @@ const GoogleButton = ({ role }) => {
 
   return (
     <button
+      type="button"
       onClick={handleGoogleSignIn}
-      className="w-full flex items-center justify-center space-x-2 py-4 px-6 rounded-xl border border-gray-300 hover:bg-gray-50 transition-colors duration-300"
+      className="google-auth-button"
       disabled={isLoading}
     >
       <img
         src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png"
         alt="Google"
-        className="w-5 h-5"
       />
-      <span className="text-gray-600 font-medium">
+      <span>
         {isLoading ? 'Signing in...' : 'Continue with Google'}
       </span>
     </button>

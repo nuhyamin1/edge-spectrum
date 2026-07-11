@@ -1,428 +1,284 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  FaArrowRight,
+  FaBookOpen,
+  FaChalkboardTeacher,
+  FaClipboardCheck,
+  FaComments,
+  FaMicrophone,
+  FaPlay,
+  FaVideo
+} from 'react-icons/fa';
+
+const featureCards = [
+  {
+    title: 'Live Speaking Rooms',
+    description: 'Practice fluency in guided sessions with video, attendance, hand raising, and teacher feedback.',
+    icon: FaVideo,
+    color: 'text-sky-600',
+    accent: 'bg-sky-50'
+  },
+  {
+    title: 'Pronunciation Practice',
+    description: 'Build confidence with focused pronunciation checks and repeatable speaking activities.',
+    icon: FaMicrophone,
+    color: 'text-emerald-600',
+    accent: 'bg-emerald-50'
+  },
+  {
+    title: 'Interactive Classroom',
+    description: 'Use discussion posts, exercises, whiteboards, and learning materials in one organized space.',
+    icon: FaChalkboardTeacher,
+    color: 'text-indigo-600',
+    accent: 'bg-indigo-50'
+  },
+  {
+    title: 'Assignment Tracking',
+    description: 'Students submit work, teachers review progress, and everyone can follow what comes next.',
+    icon: FaClipboardCheck,
+    color: 'text-amber-600',
+    accent: 'bg-amber-50'
+  }
+];
+
+const learningSteps = [
+  'Join a speaking session',
+  'Practice with classmates',
+  'Get feedback from your teacher'
+];
 
 const WelcomePage = () => {
   const navigate = useNavigate();
-  const [hoveredItem, setHoveredItem] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [contentVisible, setContentVisible] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
 
-  // Detect if on mobile device
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Check if device is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Particle system configuration
-  const particleConfig = {
-    count: isMobile ? 25 : 50, // Reduce particle count on mobile
-    color: '#8EB8FF',
-    speedFactor: 0.5,
-    sizeRange: [1, 3],
-    opacity: 0.6
-  };
-
-  // Load Google Fonts
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
-
-  // Particle animation setup
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    // Set canvas to full screen
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    
-    // Create particles
-    const particles = [];
-    for (let i = 0; i < particleConfig.count; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * (particleConfig.sizeRange[1] - particleConfig.sizeRange[0]) + particleConfig.sizeRange[0],
-        speedY: (Math.random() * 0.5 + 0.1) * particleConfig.speedFactor,
-        opacity: Math.random() * 0.4 + particleConfig.opacity,
-        rotation: Math.random() * Math.PI * 2
-      });
-    }
-    
-    // Animation loop
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Update and draw particles
-      particles.forEach(particle => {
-        // Update position
-        particle.y += particle.speedY;
-        particle.rotation += 0.01;
-        
-        // Reset if out of bounds
-        if (particle.y > canvas.height) {
-          particle.y = -10;
-          particle.x = Math.random() * canvas.width;
-        }
-        
-        // Draw particle
-        ctx.save();
-        ctx.translate(particle.x, particle.y);
-        ctx.rotate(particle.rotation);
-        ctx.beginPath();
-        ctx.fillStyle = particleConfig.color;
-        ctx.globalAlpha = particle.opacity;
-        
-        // Star shape
-        const spikes = 4;
-        const outerRadius = particle.size;
-        const innerRadius = particle.size / 2;
-        
-        for(let i = 0; i < spikes * 2; i++) {
-          const radius = i % 2 === 0 ? outerRadius : innerRadius;
-          const angle = (Math.PI * 2) * (i / (spikes * 2));
-          const x = radius * Math.cos(angle);
-          const y = radius * Math.sin(angle);
-          
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      });
-      
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    
-    animate();
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [particleConfig.count]);
-
-  const handleEnter = () => {
-    navigate('/login');
-  };
-
-  // Handle item selection on mobile
-  const handleItemClick = (item) => {
-    if (isMobile) {
-      setSelectedItem(item.id === selectedItem ? null : item.id);
-      setIsMobileMenuOpen(false);
-    }
-    
-    if (item.action) {
-      item.action();
-    }
-  };
-
-  // Content for each menu item
-  const menuItems = [
-    { 
-      id: 'what-is-pfsm', 
-      label: 'What is PFSM',
-      content: "PFSM is an interactive virtual learning platform that enables seamless teacher-student collaboration through dynamic classrooms, real-time sessions, rich material management, and assignment tracking. It combines secure authentication, role-based access, and modern tools like video conferencing to enhance digital education."
-    },
-    { 
-      id: 'vision', 
-      label: 'Vision',
-      content: "To revolutionize global education by creating an inclusive, tech-driven ecosystem where learning transcends physical boundaries through immersive, real-time collaboration."
-    },
-    { 
-      id: 'mission', 
-      label: 'Mission',
-      content: "Empower educators and learners with intuitive tools for interactive teaching, personalized content creation, and secure virtual classrooms, fostering engagement and accessibility in education."
-    },
-    {
-      id: 'features',
-      label: 'Features',
-      content: "• Interactive Virtual Classroom\n• Video Conference\n• Whiteboard\n• Social Feed\n• Pronunciation"
-    },
-    {
-      id: 'start-learning',
-      label: 'Start Learning',
-      content: "Begin your learning journey with PFSM. Join our interactive platform and enhance your speaking skills through personalized lessons and real-time practice sessions.",
-      action: handleEnter
-    }
-  ];
-
-  // Set a slight delay when hovering out to make the UI feel more responsive
-  useEffect(() => {
-    if (hoveredItem || selectedItem) {
-      setContentVisible(true);
-    } else {
-      const timer = setTimeout(() => {
-        setContentVisible(false);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [hoveredItem, selectedItem]);
-
-  // Toggle mobile menu
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const goToLogin = () => navigate('/login');
+  const goToRegister = () => navigate('/register');
 
   return (
-    <div 
-      className="min-h-screen w-full flex flex-col md:flex-row relative overflow-hidden select-none"
-      onClick={(e) => e.preventDefault()}
-      onContextMenu={(e) => e.preventDefault()}
-      style={{
-        backgroundImage: `url(${process.env.PUBLIC_URL}/pfsm-welcome.png)`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        cursor: 'default'
-      }}
-    >
-      {/* Canvas for particles */}
-      <canvas 
-        ref={canvasRef} 
-        className="absolute inset-0 z-10 pointer-events-none"
-        style={{ mixBlendMode: 'screen', cursor: 'none' }}
-      />
-
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/50 z-0" />
-
-      {/* Mobile Menu Button */}
-      <div className="md:hidden absolute top-4 right-4 z-50">
-        <button 
-          onClick={toggleMobileMenu}
-          className="p-2 rounded-full bg-blue-500/20 backdrop-blur-sm"
-          aria-label="Toggle menu"
-        >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-8 w-8" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="white"
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-950">
+      <header className="absolute left-0 right-0 top-0 z-30">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center gap-3 rounded-full bg-white/90 px-4 py-2 shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline-sky-600"
+            aria-label="Back to PF Speaking Master home"
           >
-            {isMobileMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
-      </div>
-
-      {/* Sidebar for desktop / Full overlay for mobile when menu is open */}
-      <div 
-        className={`
-          z-30 
-          md:relative md:w-96 md:flex md:flex-col md:items-start md:max-h-screen md:overflow-y-auto
-          ${isMobile ? (isMobileMenuOpen ? 'fixed inset-0 bg-black/90 flex flex-col items-center pt-16' : 'hidden') : 'relative'}
-        `}
-      >
-        {/* Logo and Brand Name */}
-        <div className={`px-8 pt-8 pb-6 cursor-default w-full ${isMobile ? 'flex justify-center' : ''}`}>
-          <div className="flex items-center space-x-4">
-            <img 
-              src={`${process.env.PUBLIC_URL}/pfsm_logo.png`} 
-              alt="PFSM Logo" 
-              className="h-12 md:h-16 w-auto"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))' }}
+            <img
+              src={`${process.env.PUBLIC_URL}/pfsm_logo.png`}
+              alt=""
+              className="h-11 w-14 object-contain"
             />
-            <div className="flex flex-col">
-              <div 
-                className="text-xl md:text-2xl font-medium pointer-events-none"
-                style={{
-                  fontFamily: "'Montserrat', sans-serif",
-                  background: 'linear-gradient(to right, #60a5fa, #3b82f6)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  textFillColor: 'transparent',
-                  textShadow: '0 0 10px rgba(59, 130, 246, 0.3)',
-                  letterSpacing: '1px'
-                }}
-              >
-                PF Speaking Master
-              </div>
-              <div 
-                className="text-xs md:text-sm"
-                style={{
-                  fontFamily: "'Montserrat', sans-serif",
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  letterSpacing: '2px',
-                  textShadow: '0 0 8px rgba(59, 130, 246, 0.4)',
-                  fontWeight: '300'
-                }}
-              >
-                Practice & Fluency
-              </div>
-            </div>
-          </div>
-        </div>
+            <span className="hidden text-left sm:block">
+              <span className="block text-sm font-bold leading-tight text-slate-950">PF Speaking Master</span>
+              <span className="block text-xs font-medium text-slate-500">Practice & Fluency</span>
+            </span>
+          </button>
 
-        {/* Menu Items */}
-        <div className="space-y-1 md:space-y-2 w-full">
-          {menuItems.map((item) => (
-            <div
-              key={item.id}
-              className={`
-                px-8 md:px-10 py-4 md:py-6 cursor-pointer relative
-                ${isMobile ? 'text-center' : ''}
-              `}
-              onMouseEnter={() => !isMobile && setHoveredItem(item.id)}
-              onMouseLeave={() => !isMobile && setHoveredItem(null)}
-              onClick={() => handleItemClick(item)}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={goToLogin}
+              className="rounded-full px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-white/70 focus-visible:outline-slate-950"
             >
-              {/* Glow effect container */}
-              <div 
-                className="absolute inset-0 rounded-lg opacity-0 transition-opacity duration-700"
-                style={{
-                  opacity: (hoveredItem === item.id || selectedItem === item.id) ? 0.3 : 0,
-                  background: 'radial-gradient(circle, rgba(147, 197, 253, 0.3) 0%, rgba(59, 130, 246, 0.8) 0%, rgba(59, 130, 246, 0) 100%)'
-                }}
-              />
-            
-              {/* Text with animation */}
-              <span 
-                className="relative transition-all duration-700 pointer-events-none"
-                style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: (hoveredItem === item.id || selectedItem === item.id) 
-                    ? (isMobile ? '1.8rem' : '2.4rem') 
-                    : (isMobile ? '1.6rem' : '2.2rem'),
-                  fontWeight: (hoveredItem === item.id || selectedItem === item.id) ? '600' : '500',
-                  color: (hoveredItem === item.id || selectedItem === item.id) ? '#ffffff' : 'rgba(255, 255, 255, 0.8)',
-                  textShadow: (hoveredItem === item.id || selectedItem === item.id)
-                    ? '0 0 15px rgba(147, 197, 253, 0.9), 0 0 30px rgba(59, 130, 246, 0.6), 0 0 45px rgba(37, 99, 235, 0.4)'
-                    : '0 0 8px rgba(59, 130, 246, 0.3)',
-                  transform: (hoveredItem === item.id || selectedItem === item.id) 
-                    ? (isMobile ? 'translateY(4px)' : 'translateX(12px)') 
-                    : 'translate(0)',
-                  letterSpacing: (hoveredItem === item.id || selectedItem === item.id) ? '2px' : '1px'
-                }}
-              >
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={goToRegister}
+              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-slate-950"
+            >
+              Join class
+            </button>
+          </div>
+        </nav>
+      </header>
 
-      {/* Glowing vertical line - visible only on desktop */}
-      <div 
-        className="hidden md:block absolute top-[40px] bottom-[40px] w-[4px] left-96"
+      <section
+        className="relative min-h-[82vh] overflow-hidden bg-slate-100"
         style={{
-          background: 'linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.8) 15%, rgba(147, 197, 253, 0.9) 50%, rgba(59, 130, 246, 0.8) 85%, transparent)',
-          boxShadow: '0 0 5px rgba(59, 130, 246, 0.5), 0 0 60px rgba(147, 197, 253, 0.5), 0 0 60px rgba(59, 130, 246, 0.3)',
-          zIndex: 30
+          backgroundImage: `linear-gradient(90deg, rgba(248, 250, 252, 0.96) 0%, rgba(248, 250, 252, 0.84) 46%, rgba(14, 116, 144, 0.08) 100%), url(${process.env.PUBLIC_URL}/pfsm_class.jpg)`,
+          backgroundPosition: 'center',
+          backgroundSize: 'cover'
         }}
-      />
+      >
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-50 to-transparent" />
 
-      {/* Content area - fills the rest of the space */}
-      <div className="relative flex-1 flex flex-col z-20 p-4">
-        {/* Content panel for desktop or selected item on mobile */}
-        <div 
-          className={`
-            transition-all duration-700 transform overflow-hidden 
-            ${isMobile 
-              ? 'mx-auto mt-6 px-4 py-6 w-full' 
-              : 'absolute top-8 right-8 max-w-lg w-full p-8'
-            }
-          `}
-          style={{
-            transform: contentVisible 
-              ? 'translateY(0) translateX(0)' 
-              : (isMobile ? 'translateY(-30px)' : 'translateY(-30px) translateX(30px)'),
-            opacity: contentVisible ? 1 : 0,
-          }}
-        >
-          {(hoveredItem || selectedItem) && (
-            <>
-              <h2 
-                className={`${isMobile ? 'text-4xl' : 'text-6xl'} mb-4 text-white text-center md:text-left`}
-                style={{ 
-                  fontFamily: "'Cormorant Garamond', serif",
-                  textShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.3)',
-                  letterSpacing: '1px',
-                  fontWeight: '600',
-                  animation: 'fadeIn 0.3s ease-out'
-                }}
-              >
-                {menuItems.find(item => item.id === (hoveredItem || selectedItem))?.label}
-              </h2>
-              <div 
-                className="text-white text-base md:text-lg leading-relaxed pointer-events-none"
-                style={{
-                  fontFamily: "'Montserrat', sans-serif",
-                  animation: 'fadeIn 0.5s ease-in-out',
-                  textShadow: '0 0 10px rgba(59, 130, 246, 0.3), 0 0 20px rgba(0, 0, 0, 0.3)',
-                  fontWeight: '300',
-                  maxWidth: '100%',
-                  transform: 'translateZ(0)',
-                  opacity: '0.80',
-                  whiteSpace: 'pre-line' // Preserve line breaks in content
-                }}
-              >
-                {menuItems.find(item => item.id === (hoveredItem || selectedItem))?.content}
-              </div>
-            </>
-          )}
-        </div>
+        <div className="relative z-10 mx-auto grid min-h-[82vh] max-w-7xl items-center gap-10 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="max-w-3xl text-slate-950">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur">
+              <FaBookOpen className="h-4 w-4" />
+              English speaking practice for modern classrooms
+            </div>
 
-        {/* Quote area - at bottom on mobile, bottom right on desktop */}
-        <div className={`
-          mt-auto 
-          ${isMobile ? 'pb-6 px-4 text-center' : 'absolute bottom-4 right-4 text-right'}
-          z-20 
-        `}>
-          <div className="text-white space-y-2 md:space-y-4 max-w-2xl">
-            <p
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
-              className="text-lg md:text-2xl font-light italic pointer-events-none"
-            >
-              "Language is the road map of a culture. It tells you where its people come from and where they are going."
+            <h1 className="max-w-4xl text-4xl font-extrabold leading-tight tracking-normal sm:text-5xl lg:text-7xl">
+              <span className="block">PF Speaking</span>
+              <span className="block">Master</span>
+            </h1>
+
+            <p className="mt-5 max-w-2xl text-base leading-8 text-slate-700 sm:text-lg">
+              A learning platform for building confident English speakers through live practice,
+              teacher feedback, classroom discussion, pronunciation work, and organized assignments.
             </p>
-            <p
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
-              className="text-base md:text-xl pointer-events-none"
-            >
-              ‒ Rita Mae Brown
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={goToLogin}
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-cyan-400 px-6 py-3 text-sm font-extrabold text-slate-950 shadow-lg shadow-cyan-950/20 transition hover:bg-cyan-300 focus-visible:outline-cyan-100"
+              >
+                Start learning
+                <FaArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => document.getElementById('platform-overview')?.scrollIntoView({ behavior: 'smooth' })}
+                className="inline-flex items-center justify-center gap-3 rounded-full border border-slate-300 bg-white/75 px-6 py-3 text-sm font-bold text-slate-900 shadow-sm backdrop-blur transition hover:bg-white focus-visible:outline-slate-950"
+              >
+                <FaPlay className="h-3 w-3" />
+                Explore platform
+              </button>
+            </div>
+          </div>
+
+          <div className="hidden justify-end lg:flex">
+            <div className="w-full max-w-md rounded-[2rem] border border-white/20 bg-white/10 p-5 text-white shadow-2xl shadow-slate-950/35 backdrop-blur-md">
+              <div className="rounded-[1.5rem] bg-white p-5 text-slate-950 shadow-xl">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-700">Today</p>
+                    <h2 className="mt-1 text-xl font-extrabold">Speaking Lab</h2>
+                  </div>
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                    Live
+                  </span>
+                </div>
+
+                <div className="space-y-4 py-5">
+                  {learningSteps.map((step, index) => (
+                    <div key={step} className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-950 text-sm font-extrabold text-white">
+                        {index + 1}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-700">{step}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 rounded-2xl bg-slate-50 p-3 text-center">
+                  <div>
+                    <p className="text-xl font-extrabold text-slate-950">4</p>
+                    <p className="text-[11px] font-semibold text-slate-500">rooms</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-extrabold text-slate-950">Live</p>
+                    <p className="text-[11px] font-semibold text-slate-500">feedback</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-extrabold text-slate-950">24/7</p>
+                    <p className="text-[11px] font-semibold text-slate-500">access</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="platform-overview" className="relative z-20 -mt-10 px-5 pb-16 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-5 rounded-3xl bg-white p-5 shadow-xl shadow-slate-200/80 md:grid-cols-3">
+          <div className="min-w-0 rounded-2xl bg-slate-950 p-6 text-white">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">What is PFSM</p>
+            <h2 className="mt-3 break-words text-2xl font-extrabold">A complete speaking classroom online.</h2>
+          </div>
+          <div className="min-w-0 rounded-2xl bg-cyan-50 p-6">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-700">Vision</p>
+            <p className="mt-3 text-sm leading-7 text-slate-700">
+              Make confident English speaking practice accessible, structured, and engaging for every learner.
+            </p>
+          </div>
+          <div className="min-w-0 rounded-2xl bg-rose-50 p-6">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-rose-700">Mission</p>
+            <p className="mt-3 text-sm leading-7 text-slate-700">
+              Give teachers practical tools for live guidance, personalized materials, and measurable student progress.
             </p>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      <section className="px-5 pb-20 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-cyan-700">Features</p>
+              <h2 className="mt-3 max-w-2xl text-3xl font-extrabold tracking-normal text-slate-950 sm:text-4xl">
+                Built for active speaking practice, not passive browsing.
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-slate-600">
+              PFSM brings the tools learners actually use in class into a single, focused workflow.
+            </p>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {featureCards.map(({ title, description, icon: Icon, color, accent }) => (
+              <article key={title} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${accent}`}>
+                  <Icon className={`h-5 w-5 ${color}`} />
+                </div>
+                <h3 className="text-lg font-extrabold text-slate-950">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-5 py-16 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div className="overflow-hidden rounded-3xl bg-slate-100 shadow-lg">
+            <img
+              src={`${process.env.PUBLIC_URL}/pfsm-welcome.png`}
+              alt="Graduate looking upward"
+              className="h-full min-h-[320px] w-full object-cover object-center"
+            />
+          </div>
+
+          <div>
+            <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-emerald-700">Learning journey</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-normal text-slate-950 sm:text-4xl">
+              From first practice to confident performance.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-slate-600">
+              Students can find materials, join scheduled sessions, submit assignments, and keep practicing
+              with classroom support. Teachers can guide sessions, share resources, and keep progress visible.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <FaComments className="mb-4 h-6 w-6 text-sky-600" />
+                <h3 className="font-extrabold text-slate-950">Discussion feed</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Keep questions, comments, and peer learning active after class.</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <FaBookOpen className="mb-4 h-6 w-6 text-rose-600" />
+                <h3 className="font-extrabold text-slate-950">Material library</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Organize lessons, links, uploads, and rich learning content.</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={goToLogin}
+              className="mt-8 inline-flex items-center gap-3 rounded-full bg-slate-950 px-6 py-3 text-sm font-extrabold text-white transition hover:bg-slate-800 focus-visible:outline-slate-950"
+            >
+              Enter platform
+              <FaArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 };
 
