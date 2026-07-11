@@ -9,6 +9,13 @@ const auth = require('../middleware/auth');
 const isTeacher = require('../middleware/isTeacher');
 const socketService = require('../services/socket');
 
+const MAX_STUDENTS_PER_SESSION = 40;
+
+const isStudentEnrolled = (session, studentId) =>
+    session.enrolledStudents.some(
+        enrolledStudentId => enrolledStudentId.toString() === studentId.toString()
+    );
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -520,8 +527,14 @@ router.post('/:id/attendance', auth, async (req, res) => {
             return res.status(404).json({ error: 'Session not found' });
         }
 
-        // If student is not enrolled, add them
-        if (!session.enrolledStudents.includes(studentId)) {
+        // If student is not enrolled, add them while respecting room capacity
+        if (!isStudentEnrolled(session, studentId)) {
+            if (session.enrolledStudents.length >= MAX_STUDENTS_PER_SESSION) {
+                return res.status(400).json({
+                    error: `This session is full. Maximum ${MAX_STUDENTS_PER_SESSION} students can join the video room.`
+                });
+            }
+
             session.enrolledStudents.push(studentId);
             await session.save();
         }
@@ -660,8 +673,14 @@ router.post('/:id/enroll', auth, async (req, res) => {
         }
 
         // Check if student is already enrolled
-        if (session.enrolledStudents.includes(req.user._id)) {
+        if (isStudentEnrolled(session, req.user._id)) {
             return res.status(400).json({ error: 'Already enrolled in this session' });
+        }
+
+        if (session.enrolledStudents.length >= MAX_STUDENTS_PER_SESSION) {
+            return res.status(400).json({
+                error: `This session is full. Maximum ${MAX_STUDENTS_PER_SESSION} students can enroll.`
+            });
         }
 
         session.enrolledStudents.push(req.user._id);

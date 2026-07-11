@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHome, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaMobileAlt, FaBook } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaMobileAlt, FaBook, FaThumbtack } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -13,6 +13,31 @@ const config = {
   codec: "vp8",
   appId: "47900e7641694ee59eefb1b7a2b4cff7"
 };
+
+const MAX_VIDEO_ROOM_STUDENTS = 40;
+const DESKTOP_PARTICIPANTS_PER_PAGE = 8;
+const MOBILE_PARTICIPANTS_PER_PAGE = 4;
+const REMOTE_STREAM_HIGH = 0;
+const REMOTE_STREAM_LOW = 1;
+
+const getUidString = (uid) => String(uid || '');
+
+const getParticipantName = (uid) => {
+  const uidString = getUidString(uid);
+  return uidString.includes('___')
+    ? uidString.split('___')[0]
+    : `Student ${uidString}`;
+};
+
+const getParticipantUserId = (uid) => {
+  const uidString = getUidString(uid);
+  return uidString.includes('___')
+    ? uidString.split('___')[1].split('_')[0]
+    : uidString;
+};
+
+const getVideoElementId = (prefix, uid) =>
+  `${prefix}-${getUidString(uid).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
 // Custom hook for screen sharing
 const useScreenShare = (client, userId) => {
@@ -244,6 +269,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [dictionaryError, setDictionaryError] = useState(null);
   const [dictionaryLanguage, setDictionaryLanguage] = useState('en');
+  const [participantPage, setParticipantPage] = useState(0);
+  const [pinnedParticipantUid, setPinnedParticipantUid] = useState(null);
+  const [activeSpeakerUid, setActiveSpeakerUid] = useState(null);
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
 
   useEffect(() => {
     const setTrackEnabled = async () => {
@@ -420,6 +449,16 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       setUsers((prevUsers) => prevUsers.filter((User) => User.uid !== user.uid));
     };
 
+    const handleVolumeIndicator = (volumes) => {
+      const loudestSpeaker = volumes
+        .filter(volume => volume.level > 5)
+        .sort((a, b) => b.level - a.level)[0];
+
+      if (loudestSpeaker) {
+        setActiveSpeakerUid(getUidString(loudestSpeaker.uid));
+      }
+    };
+
     const init = async () => {
       try {
         // Check if client is already connected or connecting
@@ -431,6 +470,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         client.on("user-published", handleUserPublished);
         client.on("user-unpublished", handleUserUnpublished);
         client.on("user-left", handleUserLeft);
+        client.on("volume-indicator", handleVolumeIndicator);
 
         // Add more detailed logging
         console.log("Joining channel with config:", {
@@ -447,6 +487,27 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         await client.join(config.appId, sessionId, null, uid);
         console.log("Successfully joined channel");
 
+        try {
+          if (client.setLowStreamParameter) {
+            client.setLowStreamParameter({
+              width: 160,
+              height: 90,
+              framerate: 15,
+              bitrate: 80
+            });
+          }
+
+          if (client.enableDualStream) {
+            await client.enableDualStream();
+          }
+
+          if (client.enableAudioVolumeIndicator) {
+            client.enableAudioVolumeIndicator();
+          }
+        } catch (streamOptimizationError) {
+          console.warn("Video room stream optimization is not available on this device:", streamOptimizationError);
+        }
+
         if (tracks) {
           console.log("Publishing tracks:", tracks);
           await client.publish(tracks);
@@ -458,23 +519,28 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       }
     };
 
+    let initTimer;
+
     // Make sure tracks are ready before initializing
     if (ready && tracks) {
       console.log("Initializing with tracks:", tracks);
       // Use a single initialization attempt with a reasonable delay
-      const initTimer = setTimeout(() => {
+      initTimer = setTimeout(() => {
         init();
       }, 500);
-      
-      return () => clearTimeout(initTimer);
     }
 
     // Cleanup function
     return () => {
       try {
+        if (initTimer) {
+          clearTimeout(initTimer);
+        }
+
         client.off("user-published", handleUserPublished);
         client.off("user-unpublished", handleUserUnpublished);
         client.off("user-left", handleUserLeft);
+        client.off("volume-indicator", handleVolumeIndicator);
 
         if (tracks) {
           tracks.forEach(track => {
@@ -936,6 +1002,15 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     checkIfMobile();
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Initialize speech synthesis voices
   useEffect(() => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -1083,6 +1158,157 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
+  const teacherUser = useMemo(
+    () => users.find(u => u.uid === 'teacher'),
+    [users]
+  );
+  const studentUsers = useMemo(
+    () => users.filter(u => u.uid !== 'teacher'),
+    [users]
+  );
+  const participantPageSize = isMobileDevice || viewportWidth < 768
+    ? MOBILE_PARTICIPANTS_PER_PAGE
+    : DESKTOP_PARTICIPANTS_PER_PAGE;
+  const pinnedParticipant = useMemo(
+    () => pinnedParticipantUid
+      ? studentUsers.find(remoteUser => getUidString(remoteUser.uid) === pinnedParticipantUid)
+      : null,
+    [pinnedParticipantUid, studentUsers]
+  );
+  const activeSpeakerUser = useMemo(
+    () => activeSpeakerUid
+      ? studentUsers.find(remoteUser => getUidString(remoteUser.uid) === activeSpeakerUid)
+      : null,
+    [activeSpeakerUid, studentUsers]
+  );
+  const spotlightParticipant = pinnedParticipant || activeSpeakerUser || null;
+  const pageableStudentUsers = useMemo(
+    () => spotlightParticipant
+      ? studentUsers.filter(remoteUser => getUidString(remoteUser.uid) !== getUidString(spotlightParticipant.uid))
+      : studentUsers,
+    [spotlightParticipant, studentUsers]
+  );
+  const totalParticipantPages = Math.max(1, Math.ceil(pageableStudentUsers.length / participantPageSize));
+  const currentParticipantPage = Math.min(participantPage, totalParticipantPages - 1);
+  const visibleStudentUsers = useMemo(
+    () => pageableStudentUsers.slice(
+      currentParticipantPage * participantPageSize,
+      currentParticipantPage * participantPageSize + participantPageSize
+    ),
+    [currentParticipantPage, pageableStudentUsers, participantPageSize]
+  );
+  const displayedStudentCount = studentUsers.length + (!isTeacher && start && tracks ? 1 : 0);
+  const remainingCapacity = Math.max(0, MAX_VIDEO_ROOM_STUDENTS - displayedStudentCount);
+
+  useEffect(() => {
+    if (participantPage > totalParticipantPages - 1) {
+      setParticipantPage(totalParticipantPages - 1);
+    }
+  }, [participantPage, totalParticipantPages]);
+
+  useEffect(() => {
+    if (
+      pinnedParticipantUid &&
+      !studentUsers.some(remoteUser => getUidString(remoteUser.uid) === pinnedParticipantUid)
+    ) {
+      setPinnedParticipantUid(null);
+    }
+  }, [pinnedParticipantUid, studentUsers]);
+
+  useEffect(() => {
+    const highPriorityUids = new Set([
+      teacherUser?.uid,
+      spotlightParticipant?.uid,
+      ...visibleStudentUsers.map(remoteUser => remoteUser.uid)
+    ].filter(Boolean).map(getUidString));
+
+    users.forEach(remoteUser => {
+      if (!remoteUser.videoTrack || !client.setRemoteVideoStreamType) return;
+
+      const streamType = highPriorityUids.has(getUidString(remoteUser.uid))
+        ? REMOTE_STREAM_HIGH
+        : REMOTE_STREAM_LOW;
+
+      client.setRemoteVideoStreamType(remoteUser.uid, streamType).catch(err => {
+        console.debug('Unable to adjust remote video stream quality:', err);
+      });
+    });
+  }, [client, users, teacherUser, spotlightParticipant, visibleStudentUsers]);
+
+  const renderRemoteVideoTile = (remoteUser, options = {}) => {
+    const {
+      compact = false,
+      showPin = true,
+      labelSuffix = '',
+      idPrefix = 'student-video'
+    } = options;
+    const displayName = getParticipantName(remoteUser.uid);
+    const videoId = getVideoElementId(idPrefix, remoteUser.uid);
+    const userId = getParticipantUserId(remoteUser.uid);
+    const hasRaisedHand = raisedHands.has(userId);
+    const isPinned = pinnedParticipantUid === getUidString(remoteUser.uid);
+    const isActive = activeSpeakerUid === getUidString(remoteUser.uid);
+
+    return (
+      <div
+        key={`${idPrefix}-${remoteUser.uid}`}
+        className={`participant-tile ${compact ? 'compact' : ''} ${isActive ? 'active-speaker' : ''}`}
+        id={videoId}
+      >
+        <div className="absolute inset-0">
+          {remoteUser.videoTrack ? (
+            <AgoraVideoPlayer
+              videoTrack={remoteUser.videoTrack}
+              style={{ height: '100%', width: '100%' }}
+            />
+          ) : (
+            <div className="participant-placeholder">
+              <span>{displayName.charAt(0).toUpperCase()}</span>
+            </div>
+          )}
+        </div>
+        <div className="participant-name">
+          {displayName}{labelSuffix}
+        </div>
+        <div className="participant-actions">
+          {showPin && (
+            <button
+              onClick={() => setPinnedParticipantUid(isPinned ? null : getUidString(remoteUser.uid))}
+              className={`participant-action-button ${isPinned ? 'active' : ''}`}
+              title={isPinned ? 'Unpin participant' : 'Pin participant'}
+            >
+              <FaThumbtack size={14} />
+            </button>
+          )}
+          <button
+            onClick={() => toggleFullscreen(videoId)}
+            className="participant-action-button"
+            title="Fullscreen"
+          >
+            <FaExpand size={14} />
+          </button>
+        </div>
+        {hasRaisedHand && (
+          <div className="hand-raised-badge">
+            <FaHandPaper className="inline" />
+            <span className="hidden sm:inline">Hand Raised</span>
+          </div>
+        )}
+        {isActive && (
+          <div className="active-speaker-badge">Speaking</div>
+        )}
+      </div>
+    );
+  };
+
+  const goToPreviousParticipantPage = () => {
+    setParticipantPage(prev => Math.max(0, prev - 1));
+  };
+
+  const goToNextParticipantPage = () => {
+    setParticipantPage(prev => Math.min(totalParticipantPages - 1, prev + 1));
+  };
+
   if (error) {
     return (
       <div className="h-full w-full bg-gray-100 p-4 flex items-center justify-center">
@@ -1103,10 +1329,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       </div>
     );
   }
-
-  // Filter out teacher from users list
-  const teacherUser = users.find(u => u.uid === 'teacher');
-  const studentUsers = users.filter(u => u.uid !== 'teacher');
 
   return (
     <div className="relative w-full h-full bg-gray-900 video-room-container">
@@ -1184,12 +1406,23 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
       )}
 
-      {/* Video grid - Modified for responsive layout */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 h-full">
-        {/* Left Column - Teacher and Session Info */}
-        <div className="md:col-span-5 flex flex-col space-y-4">
-          {/* Teacher Video */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="orientation-prompt">
+        <FaMobileAlt />
+        <p>Rotate your phone for the best classroom view.</p>
+      </div>
+
+      {/* Video room layout */}
+      <div className="video-room-layout">
+        <div className="teacher-stage">
+          <div className="room-stat-row">
+            <span>{displayedStudentCount}/{MAX_VIDEO_ROOM_STUDENTS} students</span>
+            <span>{remainingCapacity} seats open</span>
+            {qualityStats.sendBitrate ? (
+              <span>{Math.round(qualityStats.sendBitrate)} kbps</span>
+            ) : null}
+          </div>
+
+          <div className="teacher-video-card">
             {isTeacher && start && tracks ? (
               <div className="relative aspect-video" id="teacher-video">
                 <div className="absolute inset-0">
@@ -1198,12 +1431,13 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                <div className="participant-name">
                   {user.name} (Teacher)
                 </div>
                 <button
                   onClick={() => toggleFullscreen('teacher-video')}
-                  className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75 transition-opacity"
+                  className="teacher-fullscreen-button"
+                  title="Fullscreen"
                 >
                   <FaExpand size={16} />
                 </button>
@@ -1216,12 +1450,13 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                <div className="participant-name">
                   Teacher
                 </div>
                 <button
                   onClick={() => toggleFullscreen('teacher-video')}
-                  className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75 transition-opacity"
+                  className="teacher-fullscreen-button"
+                  title="Fullscreen"
                 >
                   <FaExpand size={16} />
                 </button>
@@ -1233,9 +1468,26 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             )}
           </div>
 
-          {/* Session Details - Collapsible on mobile */}
+          {spotlightParticipant && (
+            <div className="spotlight-card">
+              <div className="spotlight-header">
+                <span>{pinnedParticipant ? 'Pinned participant' : 'Active speaker'}</span>
+                {pinnedParticipant && (
+                  <button onClick={() => setPinnedParticipantUid(null)}>
+                    Unpin
+                  </button>
+                )}
+              </div>
+              {renderRemoteVideoTile(spotlightParticipant, {
+                compact: true,
+                showPin: true,
+                idPrefix: 'spotlight-video'
+              })}
+            </div>
+          )}
+
           {session && (
-            <div className="bg-white rounded-lg shadow-md p-4 session-details">
+            <div className="session-details">
               <h2 className="text-xl font-semibold mb-4">{session.title}</h2>
               <div className="space-y-2">
                 <div className="flex items-center">
@@ -1245,8 +1497,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 <div className="flex items-center">
                   <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Status:</span>
                   <span className={`px-2 py-1 rounded text-xs md:text-sm ${
-                    session.status === 'active' 
-                      ? 'bg-green-100 text-green-800' 
+                    session.status === 'active'
+                      ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}>
                     {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
@@ -1281,65 +1533,52 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           )}
         </div>
 
-        {/* Right Column - Student Videos */}
-        <div className="md:col-span-7 bg-white rounded-lg shadow-md p-4">
-          <h3 className="text-lg font-semibold mb-4">Participants ({studentUsers.length})</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="participant-panel">
+          <div className="participant-panel-header">
+            <div>
+              <h3>Participants ({displayedStudentCount})</h3>
+              <p>Page {currentParticipantPage + 1} of {totalParticipantPages}</p>
+            </div>
+            <div className="participant-page-controls">
+              <button
+                onClick={goToPreviousParticipantPage}
+                disabled={currentParticipantPage === 0}
+                title="Previous participants"
+              >
+                <FaChevronLeft />
+              </button>
+              <button
+                onClick={goToNextParticipantPage}
+                disabled={currentParticipantPage >= totalParticipantPages - 1}
+                title="Next participants"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          </div>
+
+          <div className="participant-grid">
             {!isTeacher && start && tracks && (
-              <div className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="participant-tile local-tile">
                 <div className="absolute inset-0">
                   <AgoraVideoPlayer
                     videoTrack={tracks[1]}
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                <div className="participant-name">
                   {user.name} (You)
                 </div>
               </div>
             )}
-            {studentUsers.map((remoteUser) => {
-              if (remoteUser.videoTrack) {
-                const displayName = remoteUser.uid.includes('___') 
-                  ? remoteUser.uid.split('___')[0] 
-                  : `Student ${remoteUser.uid}`;
-                const videoId = `student-video-${remoteUser.uid}`;
 
-                const userId = remoteUser.uid.includes('___')
-                  ? remoteUser.uid.split('___')[1].split('_')[0] 
-                  : remoteUser.uid;
-                const hasRaisedHand = raisedHands.has(userId);
+            {visibleStudentUsers.map(remoteUser => renderRemoteVideoTile(remoteUser, { compact: true }))}
 
-                return (
-                  <div key={remoteUser.uid} className="relative aspect-video bg-white rounded-lg shadow-md overflow-hidden" id={videoId}>
-                    <div className="absolute inset-0">
-                      <AgoraVideoPlayer
-                        videoTrack={remoteUser.videoTrack}
-                        style={{ height: '100%', width: '100%' }}
-                      />
-                    </div>
-                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                      {displayName}
-                    </div>
-                    <button
-                      onClick={() => toggleFullscreen(videoId)}
-                      className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75 transition-opacity"
-                    >
-                      <FaExpand size={16} />
-                    </button>
-                    
-                    {/* Add hand raise indicator */}
-                    {hasRaisedHand && (
-                      <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full flex items-center space-x-1 animate-pulse text-xs">
-                        <FaHandPaper className="inline" />
-                        <span className="hidden sm:inline">Hand Raised</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            })}
+            {visibleStudentUsers.length === 0 && (
+              <div className="empty-participant-state">
+                No student videos on this page yet.
+              </div>
+            )}
           </div>
         </div>
       </div>
