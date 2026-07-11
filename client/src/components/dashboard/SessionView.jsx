@@ -11,7 +11,8 @@ import {
   AcademicCapIcon,
   LinkIcon,
   ArrowLeftIcon,
-  DocumentIcon
+  DocumentIcon,
+  VideoCameraIcon
 } from '@heroicons/react/24/outline';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 
@@ -32,7 +33,12 @@ const SessionView = () => {
     try {
       const response = await axios.get(`/api/sessions/${id}`);
       setSession(response.data);
-      setIsEnrolled(response.data.enrolledStudents.some(student => student._id === user._id));
+      const currentUserId = user?._id || user?.id;
+      setIsEnrolled(
+        (response.data.enrolledStudents || []).some((student) =>
+          (student._id || student) === currentUserId
+        )
+      );
       setLoading(false);
     } catch (error) {
       console.error('Error fetching session:', error);
@@ -100,6 +106,51 @@ const SessionView = () => {
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to end session');
     }
+  };
+
+  const handleJoinLiveSession = () => {
+    if (!session) return;
+
+    if (session.status !== 'active') {
+      toast.error('This session is not currently active');
+      return;
+    }
+
+    if (isTeacher) {
+      navigate(`/teacher/classroom/${session._id}`);
+      return;
+    }
+
+    if (!isEnrolled) {
+      toast.error('Please enroll in this session before joining');
+      return;
+    }
+
+    if (!session.startedAt) {
+      toast.error('Session start time information is missing');
+      return;
+    }
+
+    const gracePeriod = session.gracePeriod || 5;
+    const startTime = new Date(session.startedAt);
+    const gracePeriodEnd = new Date(startTime.getTime() + gracePeriod * 60000);
+
+    if (new Date() > gracePeriodEnd) {
+      toast.error('Grace period has expired for this session');
+      return;
+    }
+
+    sessionStorage.setItem(
+      `gracePeriod_${session._id}`,
+      JSON.stringify({
+        startedAt: session.startedAt,
+        gracePeriod,
+        endTime: gracePeriodEnd.toISOString(),
+        sessionId: session._id
+      })
+    );
+
+    navigate(`/classroom/${session._id}`);
   };
 
   const formatDate = (dateString) => {
@@ -303,6 +354,18 @@ const SessionView = () => {
             <div className="mt-8 pt-6 border-t border-gray-700/50">
               {isTeacher ? (
                 <div className="flex space-x-4">
+                  {session.status === 'active' && (
+                    <button
+                      onClick={handleJoinLiveSession}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg
+                      hover:bg-green-600 transition-all duration-300
+                      border border-green-400 hover:border-green-300
+                      hover:shadow-lg hover:shadow-green-400/20"
+                    >
+                      <VideoCameraIcon className="w-5 h-5" />
+                      Join Live
+                    </button>
+                  )}
                   {session.status === 'scheduled' && (
                     <button
                       onClick={handleStartSession}
@@ -353,13 +416,14 @@ const SessionView = () => {
                   )}
                   {session.status === 'active' && isEnrolled && (
                     <button
-                      onClick={() => navigate(`/dashboard/classroom/${session._id}`)}
-                      className="px-4 py-2 bg-gray-800 text-green-400 rounded-lg 
-                      hover:bg-gray-700 transition-all duration-300 
+                      onClick={handleJoinLiveSession}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-green-400 rounded-lg
+                      hover:bg-gray-700 transition-all duration-300
                       border border-gray-700 hover:border-green-400/50
                       hover:shadow-lg hover:shadow-green-400/20"
                     >
-                      Join Classroom
+                      <VideoCameraIcon className="w-5 h-5" />
+                      Join Live
                     </button>
                   )}
                 </div>
