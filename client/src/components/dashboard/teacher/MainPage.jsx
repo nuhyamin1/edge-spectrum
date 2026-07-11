@@ -1,94 +1,86 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  AcademicCapIcon,
+  CalendarDaysIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  DocumentDuplicateIcon,
+  DocumentTextIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UserGroupIcon,
+} from '@heroicons/react/24/outline';
 import Layout from '../Layout';
+import SessionsSection from '../SessionsSection';
 import axios from '../../../utils/axios';
 import { toast } from 'react-toastify';
-import { 
-  PencilIcon, 
-  TrashIcon, 
-  DocumentDuplicateIcon, 
-  ChevronDownIcon,
-  AcademicCapIcon,
-  UserGroupIcon,
-  ChartBarIcon,
-  MicrophoneIcon
-} from '@heroicons/react/24/outline';
-import SessionsSection from '../SessionsSection';
-// import PronunciationChecker from '../PronunciationChecker';
+import { useAuth } from '../../../context/AuthContext';
+import {
+  DashboardStat,
+  MaterialOverviewCard,
+  OverviewEmptyState,
+  OverviewLoadingCards,
+  OverviewSectionHeading,
+} from '../shared/OverviewComponents';
+import '../Dashboard.css';
 
 const TeacherMainPage = () => {
   const [materials, setMaterials] = useState([]);
-  const [activeSessions, setActiveSessions] = useState([]); 
+  const [activeSessions, setActiveSessions] = useState([]);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [completedSessions, setCompletedSessions] = useState([]);
   const [visibleMaterials, setVisibleMaterials] = useState(6);
-  const [activeCardIndex, setActiveCardIndex] = useState(0); // Add this state to track active card
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { user } = useAuth();
 
   const fetchData = async () => {
     try {
       const [materialsRes, sessionsRes] = await Promise.all([
         axios.get('/api/materials'),
-        axios.get('/api/sessions?include=enrolledStudents')
+        axios.get('/api/sessions?include=enrolledStudents'),
       ]);
-      
-      setMaterials(materialsRes.data);
-      
-      // Split sessions into active, upcoming and completed
-      const sessions = sessionsRes.data;
-      
-      // Helper function to safely parse dates
-      const parseDate = (dateString) => {
-        if (!dateString) return null;
-        try {
-          return new Date(dateString);
-        } catch (e) {
-          console.error("Error parsing date:", dateString, e);
-          return null;
-        }
-      };
-      
-      // Active sessions: status is "active"
+
+      const sessions = sessionsRes.data || [];
+      setMaterials(materialsRes.data || []);
       setActiveSessions(
-        sessions.filter(session => session.status === 'active')
+        sessions
+          .filter((session) => session.status === 'active')
           .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
       );
-      
-      // Upcoming sessions: status is "scheduled"
       setUpcomingSessions(
-        sessions.filter(session => session.status === 'scheduled')
+        sessions
+          .filter((session) => session.status === 'scheduled')
           .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
       );
-      
-      // Completed sessions: status is "completed"
       setCompletedSessions(
-        sessions.filter(session => session.status === 'completed')
-          .sort((a, b) => {
-            const endedAtA = parseDate(a.endedAt) || parseDate(a.endTime);
-            const endedAtB = parseDate(b.endedAt) || parseDate(b.endTime);
-            if (!endedAtA || !endedAtB) return 0;
-            return endedAtB - endedAtA; // Most recent first
-          })
+        sessions
+          .filter((session) => session.status === 'completed')
+          .sort((a, b) => new Date(b.endedAt || b.endTime) - new Date(a.endedAt || a.endTime))
       );
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch dashboard data');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this material?')) {
-      try {
-        await axios.delete(`/api/materials/${id}`);
-        toast.success('Material deleted successfully');
-        fetchData(); // Refresh all data
-      } catch (error) {
-        toast.error('Failed to delete material');
-      }
+    if (!window.confirm('Are you sure you want to delete this material?')) return;
+
+    try {
+      await axios.delete(`/api/materials/${id}`);
+      toast.success('Material deleted successfully');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete material');
     }
   };
 
@@ -99,308 +91,161 @@ const TeacherMainPage = () => {
       .catch(() => toast.error('Failed to copy link'));
   };
 
-  const handleSeeMore = () => {
-    setVisibleMaterials(prev => prev + 6); // Show 4 more materials when clicked
-  };
-
-  // Add this function to handle scroll events
-  const handleCardScroll = (event) => {
-    const container = event.currentTarget;
-    const scrollPosition = container.scrollLeft;
-    const cardWidth = container.offsetWidth * 0.85 + 16; // 85% width + gap
-    const newIndex = Math.round(scrollPosition / cardWidth);
-    setActiveCardIndex(newIndex);
-  };
+  const firstName = user?.name?.trim().split(' ')[0] || 'Teacher';
+  const nextSession = activeSessions[0] || upcomingSessions[0];
+  const totalStudents = new Set(
+    [...activeSessions, ...upcomingSessions].flatMap((session) =>
+      (session.enrolledStudents || []).map((student) => student._id || student)
+    )
+  ).size;
 
   return (
     <Layout userType="teacher">
-      <div className="space-y-12">
-        {/* Hero Section */}
-        <div className="relative bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
-          <div className="relative px-8 py-16 md:px-12 lg:px-16">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-6">
-              Welcome to PF Speaking Master
-            </h1>
-            <p className="text-xl text-white/90 max-w-2xl mb-8">
-              Empower your students with interactive tools and real-time feedback for effective language learning.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <button 
-                onClick={() => navigate('/dashboard/create-session')}
-                className="bg-white text-blue-900 px-6 py-3 rounded-md font-medium hover:bg-blue-50 transition-colors"
-              >
-                Create Session
-              </button>
-              <button 
-                onClick={() => navigate('/dashboard/create-material')}
-                className="border-2 border-white text-white px-6 py-3 rounded-md font-medium hover:bg-white/10 transition-colors"
-              >
-                Create Material
-              </button>
+      <main className="overview-page">
+        <section className="overview-hero">
+          <div className="overview-hero-glow overview-hero-glow-one" />
+          <div className="overview-hero-glow overview-hero-glow-two" />
+          <div className="relative z-10 grid gap-8 lg:grid-cols-[1.45fr_0.8fr] lg:items-end">
+            <div>
+              <span className="overview-role-badge">Teacher workspace</span>
+              <h1 className="mt-5 max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                Welcome back, {firstName}.
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-blue-100 sm:text-lg">
+                Everything you need to prepare lessons, guide students, and keep today&apos;s classes moving.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <button type="button" onClick={() => navigate('/dashboard/create-session')} className="overview-primary-button">
+                  <PlusIcon className="h-5 w-5" aria-hidden="true" />
+                  Create session
+                </button>
+                <button type="button" onClick={() => navigate('/dashboard/create-material')} className="overview-ghost-button">
+                  <DocumentTextIcon className="h-5 w-5" aria-hidden="true" />
+                  Add material
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 min-h-fit overflow-visible">
-          <div className="bg-gray-100 border border-gray-400 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-              <MicrophoneIcon className="w-6 h-6 text-blue-600" />
+            <div className="overview-next-card">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-blue-200">Next on your schedule</p>
+                <ClockIcon className="h-5 w-5 text-blue-200" aria-hidden="true" />
+              </div>
+              {nextSession ? (
+                <>
+                  <p className="mt-5 text-xl font-bold text-white">{nextSession.title}</p>
+                  <p className="mt-2 text-sm text-blue-100">
+                    {nextSession.status === 'active'
+                      ? 'Live now'
+                      : new Date(nextSession.dateTime).toLocaleString('en-US', {
+                          weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        })}
+                  </p>
+                  <button type="button" onClick={() => navigate(`/dashboard/session/${nextSession._id}`)} className="mt-5 text-sm font-semibold text-white underline decoration-blue-300 underline-offset-4 hover:text-blue-100">
+                    Open session
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mt-5 text-lg font-bold text-white">Your schedule is clear</p>
+                  <p className="mt-2 text-sm leading-6 text-blue-100">Create a session when you are ready to meet your students.</p>
+                </>
+              )}
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Real-Time Feedback</h3>
-            <p className="text-gray-600">Get instant pronunciation and fluency insights to improve your speaking skills.</p>
           </div>
-          <div className="bg-gray-100 border border-gray-400 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-              <UserGroupIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Interactive Sessions</h3>
-            <p className="text-gray-600">Join live sessions with teachers and peers for collaborative learning.</p>
-          </div>
-          <div className="bg-gray-100 border border-gray-400 p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-              <ChartBarIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
-            <p className="text-gray-600">Monitor your improvement with detailed analytics and insights.</p>
-          </div>
-        </div>
+        </section>
 
-        {/* Materials Section */}
-        <section className="px-4 sm:px-6">
-          <div>
-            <h2 className="text-2xl font-serif text-gray-900 mb-2">Materials</h2>
-            <div className="h-1 w-20 bg-blue-600 rounded"></div>
-          </div>
-          
-          {/* Mobile: Horizontal card slider with dots */}
-          <div className="mt-6 md:hidden">
-            {/* Card container with snap points */}
-            <div 
-              className="overflow-x-auto pb-4 flex space-x-4 
-                 snap-x snap-mandatory scroll-smooth
-                 scrollbar-none" 
-              style={{ 
-                scrollbarWidth: 'none', 
-                msOverflowStyle: 'none' 
-              }}
-              onScroll={handleCardScroll}
-            >
-              <style jsx>{`
-                div.scrollbar-none::-webkit-scrollbar {
-                  display: none;
-                }
-              `}</style>
-              {materials.slice(0, visibleMaterials).map((material, index) => (
-                <div
-                  key={material._id}
-                  className="bg-gray-100 border border-blue-400 rounded-xl p-6 
-                  hover:shadow-md transition-all duration-100 flex-shrink-0 w-[85%] 
-                  snap-center flex flex-col h-[280px]"
-                  id={`card-${index}`}
-                >
-                  <div
-                    onClick={() => navigate(`/dashboard/material/${material._id}`)}
-                    className="cursor-pointer flex-1 flex flex-col"
-                  >
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
-                      {material.title}
-                    </h3>
-                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
-                      {material.subject}
-                    </span>
-                    <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                      {material.description}
-                    </p>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-gray-300 flex justify-end space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyMaterialLink(material._id);
-                      }}
-                      className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
-                      hover:bg-blue-50 active:scale-95"
-                      title="Copy material link"
-                    >
-                      <DocumentDuplicateIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/dashboard/edit-material/${material._id}`);
-                      }}
-                      className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
-                      hover:bg-blue-50 active:scale-95"
-                      title="Edit material"
-                    >
-                      <PencilIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(material._id);
-                      }}
-                      className="p-2 text-red-500 hover:text-red-700 rounded-lg
-                      hover:bg-red-50 active:scale-95"
-                      title="Delete material"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Navigation dots with active indicator */}
-            {materials.length > 0 && (
-              <div className="flex justify-center mt-4 space-x-2">
-                {materials.slice(0, visibleMaterials).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      document.getElementById(`card-${index}`).scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest',
-                        inline: 'start'
-                      });
-                      setActiveCardIndex(index);
-                    }}
-                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                      index === activeCardIndex 
-                        ? 'bg-blue-600 w-4' // Active dot is larger and darker
-                        : 'bg-blue-300 hover:bg-blue-500'
-                    }`}
-                    aria-label={`Go to slide ${index + 1}`}
-                    aria-current={index === activeCardIndex ? 'true' : 'false'}
+        <section className="overview-stats-grid" aria-label="Teaching overview">
+          <DashboardStat label="Learning materials" value={materials.length} helper="Ready to share" icon={DocumentTextIcon} />
+          <DashboardStat label="Live sessions" value={activeSessions.length} helper="Happening now" icon={AcademicCapIcon} tone="emerald" />
+          <DashboardStat label="Upcoming sessions" value={upcomingSessions.length} helper="On your schedule" icon={CalendarDaysIcon} tone="amber" />
+          <DashboardStat label="Active students" value={totalStudents} helper="Across current sessions" icon={UserGroupIcon} tone="violet" />
+        </section>
+
+        <section>
+          <OverviewSectionHeading
+            eyebrow="Lesson library"
+            title="Your teaching materials"
+            description="Open a lesson, share it with students, or make a quick edit."
+            actionLabel="View all materials"
+            onAction={() => navigate('/dashboard/materials')}
+          />
+          {isLoading ? (
+            <OverviewLoadingCards />
+          ) : materials.length === 0 ? (
+            <OverviewEmptyState
+              title="Create your first material"
+              description="Build a reusable lesson and it will appear here for quick access."
+              actionLabel="Create material"
+              onAction={() => navigate('/dashboard/create-material')}
+            />
+          ) : (
+            <>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {materials.slice(0, visibleMaterials).map((material, index) => (
+                  <MaterialOverviewCard
+                    key={material._id}
+                    material={material}
+                    index={index}
+                    onOpen={() => navigate(`/dashboard/material/${material._id}`)}
+                    actions={
+                      <>
+                        <button type="button" onClick={() => copyMaterialLink(material._id)} className="overview-icon-button" title="Copy material link" aria-label={`Copy link for ${material.title}`}>
+                          <DocumentDuplicateIcon className="h-4 w-4" />
+                        </button>
+                        <button type="button" onClick={() => navigate(`/dashboard/edit-material/${material._id}`)} className="overview-icon-button" title="Edit material" aria-label={`Edit ${material.title}`}>
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(material._id)} className="overview-icon-button overview-icon-button-danger" title="Delete material" aria-label={`Delete ${material.title}`}>
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      </>
+                    }
                   />
                 ))}
               </div>
-            )}
-          </div>
-          
-          {/* Desktop: Grid layout (hidden on mobile) */}
-          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-fit mt-6">
-            {materials.slice(0, visibleMaterials).map((material) => (
-              <div
-                key={material._id}
-                className="bg-gray-100 border border-blue-400 rounded-xl p-6 sm:p-8 
-                hover:shadow-md transition-all duration-100 h-full flex flex-col"
-              >
-                <div
-                  onClick={() => navigate(`/dashboard/material/${material._id}`)}
-                  className="cursor-pointer flex-1 flex flex-col"
-                >
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
-                    {material.title}
-                  </h3>
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full mb-4">
-                    {material.subject}
-                  </span>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                    {material.description}
-                  </p>
-                </div>
-                
-                <div className="pt-4 border-t border-gray-300 flex justify-end space-x-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyMaterialLink(material._id);
-                    }}
-                    className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
-                    hover:bg-blue-50 active:scale-95"
-                    title="Copy material link"
-                  >
-                    <DocumentDuplicateIcon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/dashboard/edit-material/${material._id}`);
-                    }}
-                    className="p-2 text-blue-500 hover:text-blue-700 rounded-lg
-                    hover:bg-blue-50 active:scale-95"
-                    title="Edit material"
-                  >
-                    <PencilIcon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(material._id);
-                    }}
-                    className="p-2 text-red-500 hover:text-red-700 rounded-lg
-                    hover:bg-red-50 active:scale-95"
-                    title="Delete material"
-                  >
-                    <TrashIcon className="w-5 h-5" />
+              {materials.length > visibleMaterials && (
+                <div className="mt-6 text-center">
+                  <button type="button" onClick={() => setVisibleMaterials((count) => count + 6)} className="overview-secondary-button">
+                    Show more materials
                   </button>
                 </div>
-              </div>
-            ))}
-          </div>
-          
-          {materials.length > visibleMaterials && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={handleSeeMore}
-                className="text-blue-600 hover:text-blue-700 transition-colors
-                flex items-center gap-2"
-              >
-                See more materials
-                <ChevronDownIcon className="w-5 h-5" />
-              </button>
-            </div>
+              )}
+            </>
           )}
         </section>
 
-        {/* Sessions Section */}
-        {/* <section className="space-y-8"> */}
-          {/* <div className="relative mb-8 flex justify-between items-center"> */}
-            <h2 className="text-3xl font-bold text-gray-900">
-              Teaching Sessions
-            </h2>
-          {/* </div> */}
+        <section>
+          <OverviewSectionHeading
+            eyebrow="Class activity"
+            title="Teaching sessions"
+            description="See what is live, what is coming next, and recently completed classes."
+            actionLabel="Manage sessions"
+            onAction={() => navigate('/dashboard/sessions')}
+          />
+          <div className="grid gap-5 xl:grid-cols-3">
+            <div className="overview-session-panel overview-session-panel-live">
+              <SessionsSection title="Live now" sessions={activeSessions} type="active" />
+            </div>
+            <div className="overview-session-panel">
+              <SessionsSection title="Coming up" sessions={upcomingSessions} type="upcoming" />
+            </div>
+            <div className="overview-session-panel">
+              <SessionsSection title="Recently completed" sessions={completedSessions} type="completed" />
+            </div>
+          </div>
+        </section>
 
-          {/* <div className="space-y-6"> */}
-            {/* Active Sessions */}
-            {/* <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-              border border-blue-200 hover:border-blue-400
-              transition-all duration-300"> */}
-              <SessionsSection 
-                title="Active Sessions"
-                sessions={activeSessions}
-                type="active"
-              />
-            {/* </div> */}
-
-            {/* Upcoming Sessions */}
-            {/* <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6  */}
-              {/* border border-blue-200 hover:border-blue-400
-              transition-all duration-300"> */}
-              <SessionsSection 
-                title="Upcoming Sessions"
-                sessions={upcomingSessions}
-                type="upcoming"
-              />
-            {/* </div> */}
-
-            {/* Completed Sessions */}
-            {/* <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 
-              border border-blue-200 hover:border-blue-400
-              transition-all duration-300"> */}
-              <SessionsSection 
-                title="Completed Sessions"
-                sessions={completedSessions}
-                type="completed"
-              />
-            {/* </div> */}
-          {/* </div> */}
-        {/* </section> */}
-      </div>
+        <section className="overview-bottom-banner">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+            <CheckCircleIcon className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="font-bold text-slate-900">Your workspace is ready</h2>
+            <p className="mt-1 text-sm text-slate-600">Use the shortcuts above to prepare your next class, or review student progress from the Gradebook.</p>
+          </div>
+        </section>
+      </main>
     </Layout>
   );
 };

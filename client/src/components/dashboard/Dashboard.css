@@ -79,4 +79,124 @@
 
 .group:hover .animate-once {
   animation: expand-vanish .2s forwards; /* Run once on hover */
-} 
+}
+
+/* Overview pages */
+.overview-page {
+  @apply space-y-10 pb-4 sm:space-y-12;
+}
+
+.overview-hero {
+  @apply relative overflow-hidden rounded-3xl bg-blue-900 px-6 py-8 shadow-xl shadow-blue-950/10 sm:px-10 sm:py-10 lg:px-12 lg:py-12;
+  background-image: linear-gradient(120deg, #1e3a72 0%, #294b86 100%);
+}
+
+.overview-student-hero {
+  background-image: linear-gradient(120deg, #23427c 0%, #344f91 100%);
+}
+
+.overview-hero-glow {
+  @apply pointer-events-none absolute rounded-full border border-white/5 bg-white/[0.025];
+}
+
+.overview-hero-glow-one {
+  @apply -right-24 -top-32 h-80 w-80;
+}
+
+.overview-hero-glow-two {
+  @apply -bottom-32 right-40 h-64 w-64;
+}
+
+.overview-role-badge {
+  @apply inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-100 backdrop-blur-sm;
+}
+
+.overview-primary-button,
+.overview-ghost-button,
+.overview-secondary-button {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2;
+}
+
+.overview-primary-button {
+  @apply bg-white text-blue-950 shadow-lg shadow-slate-950/10 hover:-translate-y-0.5 hover:bg-blue-50;
+}
+
+.overview-ghost-button {
+  @apply border border-white/30 bg-white/10 text-white hover:-translate-y-0.5 hover:bg-white/20;
+}
+
+.overview-secondary-button {
+  @apply border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700;
+}
+
+.overview-next-card {
+  @apply rounded-2xl border border-white/15 bg-white/10 p-6 backdrop-blur-md;
+}
+
+.overview-stats-grid {
+  @apply grid gap-4 sm:grid-cols-2 xl:grid-cols-4;
+}
+
+.overview-stat-card {
+  @apply flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md;
+}
+
+.overview-stat-icon {
+  @apply flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ring-1 ring-inset;
+}
+
+.overview-text-link {
+  @apply inline-flex items-center gap-2 text-sm font-bold text-blue-700 transition-colors hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2;
+}
+
+.overview-material-card {
+  @apply flex min-h-[250px] flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-950/5;
+}
+
+.overview-subject-badge {
+  @apply inline-flex max-w-[80%] truncate rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 ring-1 ring-inset ring-blue-100;
+}
+
+.overview-icon-button {
+  @apply rounded-lg p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400;
+}
+
+.overview-icon-button-danger {
+  @apply hover:bg-red-50 hover:text-red-600;
+}
+
+.overview-empty-state {
+  @apply flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center;
+}
+
+.overview-session-panel {
+  @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6;
+}
+
+.overview-session-panel-live {
+  @apply border-emerald-200 bg-emerald-50/30;
+}
+
+.overview-quick-action {
+  @apply flex items-center gap-4 rounded-2xl border bg-white p-5 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2;
+}
+
+.overview-quick-action-blue {
+  @apply border-blue-100 hover:border-blue-300;
+}
+
+.overview-quick-action-emerald {
+  @apply border-emerald-100 hover:border-emerald-300;
+}
+
+.overview-quick-action-violet {
+  @apply border-violet-100 hover:border-violet-300;
+}
+
+.overview-quick-action-icon {
+  @apply flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-blue-50 group-hover:text-blue-700;
+}
+
+.overview-bottom-banner {
+  @apply flex items-start gap-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-5 sm:items-center sm:p-6;
+}

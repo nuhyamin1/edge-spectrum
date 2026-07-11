@@ -24,9 +24,11 @@ const SessionsSection = ({ title, sessions, type }) => {
 
   return (
     <div className="h-full">
-      <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center">
-        <span className="relative">{title}</span>
-      </h3>
+      {title && (
+        <h3 className="mb-4 flex items-center text-xl font-bold text-gray-800 md:mb-6 md:text-2xl">
+          <span className="relative">{title}</span>
+        </h3>
+      )}
       
       {sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48 bg-white/80 backdrop-blur-xl rounded-xl border border-blue-200">
@@ -34,7 +36,7 @@ const SessionsSection = ({ title, sessions, type }) => {
         </div>
       ) : (
         <div className="grid gap-4 min-h-fit overflow-visible">
-          {sessions.map((session) => (
+          {displayedSessions.map((session) => (
             <div
               key={session._id}
               className="group relative bg-white/80 backdrop-blur-xl rounded-xl p-5 md:p-6
