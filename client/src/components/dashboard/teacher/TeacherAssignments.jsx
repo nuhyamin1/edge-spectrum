@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Card,
   CardContent,
   Dialog,
   DialogActions,
@@ -18,7 +17,7 @@ import {
   Paper,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, CalendarToday as CalendarIcon, Assignment as AssignmentIcon } from '@mui/icons-material';
-import { useAuth, api } from '../../../context/AuthContext';
+import { api } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ReactQuill from 'react-quill';
@@ -26,52 +25,113 @@ import 'react-quill/dist/quill.snow.css';
 import './TeacherAssignments.css';
 
 const styles = {
+  page: {
+    width: '100%',
+    minHeight: '70vh',
+    color: '#0F172A',
+  },
+  hero: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: { xs: 'stretch', md: 'center' },
+    gap: 2,
+    mb: 3,
+    p: { xs: 2.5, md: 3 },
+    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #0F3A6B 0%, #1D5C86 58%, #277F8E 100%)',
+    color: '#FFFFFF',
+    boxShadow: '0 18px 45px rgba(15, 58, 107, 0.18)',
+    flexDirection: { xs: 'column', md: 'row' },
+  },
+  heroEyebrow: {
+    fontSize: '0.78rem',
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#BAE6FD',
+    mb: 0.75,
+  },
+  createButton: {
+    alignSelf: { xs: 'flex-start', md: 'center' },
+    backgroundColor: '#FFFFFF',
+    color: '#0F3A6B',
+    borderRadius: '8px',
+    px: 2.5,
+    py: 1.15,
+    fontWeight: 800,
+    textTransform: 'none',
+    boxShadow: '0 10px 24px rgba(15, 23, 42, 0.18)',
+    '&:hover': {
+      backgroundColor: '#ECFEFF',
+      boxShadow: '0 14px 30px rgba(15, 23, 42, 0.22)',
+    },
+  },
   listContainer: {
     width: '100%',
-    maxWidth: '900px',
+    maxWidth: '980px',
     margin: '0 auto',
-    padding: '20px',
+    display: 'grid',
+    gap: 2,
   },
   assignmentCard: {
     width: '100%',
-    mb: 2,
-    transition: 'all 0.3s ease-in-out',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: '15px',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
+    backgroundColor: '#FFFFFF',
+    borderRadius: '8px',
+    border: '1px solid #DDE7F3',
+    boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
     '&:hover': {
-      transform: 'translateY(-4px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+      transform: 'translateY(-2px)',
+      borderColor: '#8CC7E8',
+      boxShadow: '0 16px 36px rgba(15, 58, 107, 0.13)',
     },
   },
   cardContent: {
-    padding: 3,
+    p: { xs: 2, md: 2.5 },
     cursor: 'pointer',
   },
   headerSection: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: 2,
     mb: 2,
   },
   titleSection: {
     display: 'flex',
-    alignItems: 'center',
-    gap: 1,
+    alignItems: 'flex-start',
+    gap: 1.5,
     '& h6': {
-      fontWeight: 600,
-      color: '#059',
+      fontWeight: 800,
+      color: '#0F172A',
+      lineHeight: 1.25,
     },
+  },
+  iconBadge: {
+    width: 40,
+    height: 40,
+    flexShrink: 0,
+    borderRadius: '8px',
+    display: 'grid',
+    placeItems: 'center',
+    backgroundColor: '#E0F2FE',
+    color: '#0369A1',
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: '8px',
+    border: '1px solid #E2E8F0',
+    backgroundColor: '#FFFFFF',
   },
   descriptionSection: {
     my: 2,
-    pl: 4,
+    color: '#334155',
     '& .ql-editor': {
       padding: 0,
     },
     '& .material-content': {
-      color: 'black',
+      color: '#334155',
       '& p': { marginBottom: '0.5em' },
       '& ul, & ol': { paddingLeft: '1.5em' },
       '& strong': { fontWeight: 'bold' },
@@ -90,12 +150,13 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 0.5,
-    bgcolor: 'rgba(96, 165, 250, 0.1)',
-    color: 'red',
+    bgcolor: '#EFF6FF',
+    color: '#1D4ED8',
     px: 1.5,
     py: 0.75,
-    borderRadius: '16px',
+    borderRadius: '999px',
     fontSize: '0.875rem',
+    border: '1px solid #BFDBFE',
   },
   statsContainer: {
     display: 'flex',
@@ -103,11 +164,11 @@ const styles = {
     flexWrap: 'wrap',
   },
   statChip: {
-    borderRadius: '16px',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#fff',
+    borderRadius: '999px',
+    fontWeight: 700,
+    border: '1px solid transparent',
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      backgroundColor: 'inherit',
     },
   },
   submissionItem: {
@@ -115,12 +176,13 @@ const styles = {
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: 'rgba(31, 41, 55, 0.5)',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
     borderRadius: '8px',
     p: 1,
     transition: 'all 0.2s ease-in-out',
     '&:hover': {
-      backgroundColor: 'rgba(31, 41, 55, 0.7)',
+      backgroundColor: '#F1F5F9',
     },
   },
   fileName: {
@@ -129,13 +191,20 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     mr: 1,
-    color: '#E5E7EB',
+    color: '#334155',
   },
   linkItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
-    color: '#60A5FA',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
+    borderRadius: '8px',
+    p: 1,
+    mb: 1,
+  },
+  link: {
+    color: '#0369A1',
     textDecoration: 'none',
     '&:hover': {
       textDecoration: 'underline',
@@ -152,10 +221,54 @@ const styles = {
       minHeight: '200px',
     },
   },
+  dialogPaper: {
+    borderRadius: '8px',
+    border: '1px solid #DDE7F3',
+    boxShadow: '0 24px 70px rgba(15, 23, 42, 0.2)',
+  },
+  dialogTitle: {
+    color: '#0F172A',
+    fontWeight: 800,
+    pb: 1,
+  },
+  textField: {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '8px',
+      backgroundColor: '#FFFFFF',
+    },
+  },
+  primaryButton: {
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 800,
+    backgroundColor: '#0F5E8C',
+    '&:hover': {
+      backgroundColor: '#0B4A70',
+    },
+  },
+  ghostButton: {
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 700,
+    color: '#475569',
+  },
+  emptyState: {
+    minHeight: 260,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    gap: 1,
+    border: '1px dashed #B8C7D9',
+    backgroundColor: '#FFFFFF',
+    borderRadius: '8px',
+    color: '#475569',
+    p: 4,
+  },
 };
 
 const TeacherAssignments = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [students, setStudents] = useState([]);
@@ -246,19 +359,6 @@ const TeacherAssignments = () => {
     }
   };
 
-  const handleOpenReview = (assignment, student, event) => {
-    event.stopPropagation();
-    setSelectedAssignment(assignment);
-    setSelectedStudent(student);
-    setReviewData({
-      status: student.status || '',
-      mark: student.mark || '',
-      feedback: student.feedback || '',
-      rejectionReason: student.rejectionReason || '',
-    });
-    setOpenReviewDialog(true);
-  };
-
   const handleReviewAssignment = async () => {
     try {
       await api.post(`/assignments/${selectedAssignment._id.toString()}/review`, {
@@ -266,6 +366,7 @@ const TeacherAssignments = () => {
         studentId: selectedStudent.studentId._id
       });
       setOpenReviewDialog(false);
+      setSelectedStudent(null);
       fetchAssignments();
       toast.success('Assignment reviewed successfully');
     } catch (error) {
@@ -378,61 +479,48 @@ const TeacherAssignments = () => {
   };
 
   return (
-    <Box p={3} sx={{ backgroundColor: 'transparent' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" sx={{ color: '#F3F4F6' }}>
-          Assignments
-        </Typography>
+    <Box sx={styles.page}>
+      <Box sx={styles.hero}>
+        <Box>
+          <Typography sx={styles.heroEyebrow}>Teacher workspace</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.15 }}>
+            Assignments
+          </Typography>
+          <Typography sx={{ mt: 1, maxWidth: 620, color: '#DFF7FF' }}>
+            Create tasks, track submissions, and review student work from one clean board.
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setOpenDialog(true)}
-          sx={{
-            backgroundColor: 'rgba(198, 208, 222, 0.5)',
-            borderColor: 'rgba(6, 52, 118, 0.5)',
-            color: '#60A5FF',
-            '&:hover': {
-              backgroundColor: 'rgba(31, 41, 55, 0.8)',
-            }
-          }}
+          sx={styles.createButton}
         >
           Create Assignment
         </Button>
       </Box>
 
       <Box sx={styles.listContainer}>
-        {assignments.map((assignment) => {
+        {assignments.length === 0 ? (
+          <Box sx={styles.emptyState}>
+            <Box sx={styles.iconBadge}>
+              <AssignmentIcon />
+            </Box>
+            <Typography variant="h6" sx={{ color: '#0F172A', fontWeight: 800 }}>
+              No assignments yet
+            </Typography>
+            <Typography>
+              Create the first assignment when you are ready to send work to students.
+            </Typography>
+          </Box>
+        ) : assignments.map((assignment) => {
           const stats = getSubmissionStats(assignment);
           return (
             <Paper 
               key={assignment._id}
               elevation={0}
-              sx={{
-                ...styles.assignmentCard,
-                '&:hover': {
-                  border: '1px solid rgba(96, 165, 250, 0.5)',
-                  boxShadow: '0 4px 20px rgba(96, 165, 250, 0.2)',
-                },
-                position: 'relative',
-                overflow: 'hidden',
-                backgroundColor: 'rgba(235, 240, 243, 0.8)',
-              }}
+              sx={styles.assignmentCard}
             >
-              {/* Glossy overlay effect */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), transparent)',
-                  opacity: 0,
-                  transition: 'opacity 0.3s',
-                  pointerEvents: 'none',
-                  '.MuiPaper-root:hover &': {
-                    opacity: 1
-                  }
-                }}
-              />
-
               <CardContent 
                 sx={{
                   ...styles.cardContent,
@@ -442,19 +530,27 @@ const TeacherAssignments = () => {
               >
                 <Box sx={styles.headerSection}>
                   <Box sx={styles.titleSection}>
-                    <AssignmentIcon sx={{ color: '#60A5FA' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#F3F4F6' }}>
-                      {assignment.title}
-                    </Typography>
+                    <Box sx={styles.iconBadge}>
+                      <AssignmentIcon fontSize="small" />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6">
+                        {assignment.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 0.5, color: '#64748B' }}>
+                        {assignment.assignToAll ? 'Assigned to all students' : 'Individual assignment'}
+                      </Typography>
+                    </Box>
                   </Box>
                   <Box sx={{ display: 'flex', gap: 1 }}>
                     <IconButton
                       onClick={(e) => handleEditAssignment(assignment, e)}
                       size="small"
                       sx={{
-                        color: '#60A5FA',
+                        ...styles.actionButton,
+                        color: '#0369A1',
                         '&:hover': {
-                          backgroundColor: 'rgba(96, 165, 250, 0.1)'
+                          backgroundColor: '#E0F2FE'
                         }
                       }}
                     >
@@ -464,9 +560,10 @@ const TeacherAssignments = () => {
                       onClick={(e) => handleDeleteAssignment(assignment._id, e)}
                       size="small"
                       sx={{
-                        color: '#EF4444',
+                        ...styles.actionButton,
+                        color: '#DC2626',
                         '&:hover': {
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)'
+                          backgroundColor: '#FEF2F2'
                         }
                       }}
                     >
@@ -486,8 +583,8 @@ const TeacherAssignments = () => {
                 
                 <Box sx={styles.metaSection}>
                   <Box sx={styles.dateChip}>
-                    <CalendarIcon fontSize="small" sx={{ color: '#60A5FA' }} />
-                    <Typography variant="body2" sx={{ fontWeight: 'medium', color: '#60A5FA' }}>
+                    <CalendarIcon fontSize="small" />
+                    <Typography variant="body2" sx={{ fontWeight: 800 }}>
                       Due: {formatDueDate(assignment.dueDate)}
                     </Typography>
                   </Box>
@@ -498,8 +595,9 @@ const TeacherAssignments = () => {
                       size="small"
                       sx={{
                         ...styles.statChip,
-                        backgroundColor: 'rgba(31, 41, 55, 0.5)',
-                        color: '#E5E7EB'
+                        backgroundColor: '#F8FAFC',
+                        borderColor: '#E2E8F0',
+                        color: '#475569'
                       }}
                     />
                     {stats.submitted > 0 && (
@@ -508,8 +606,9 @@ const TeacherAssignments = () => {
                         size="small"
                         sx={{
                           ...styles.statChip,
-                          backgroundColor: 'rgba(96, 165, 250, 0.1)',
-                          color: '#60A5FA'
+                          backgroundColor: '#EFF6FF',
+                          borderColor: '#BFDBFE',
+                          color: '#1D4ED8'
                         }}
                       />
                     )}
@@ -519,8 +618,9 @@ const TeacherAssignments = () => {
                         size="small"
                         sx={{
                           ...styles.statChip,
-                          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                          color: '#22C55E'
+                          backgroundColor: '#ECFDF5',
+                          borderColor: '#BBF7D0',
+                          color: '#047857'
                         }}
                       />
                     )}
@@ -530,8 +630,9 @@ const TeacherAssignments = () => {
                         size="small"
                         sx={{
                           ...styles.statChip,
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          color: '#EF4444'
+                          backgroundColor: '#FEF2F2',
+                          borderColor: '#FECACA',
+                          color: '#B91C1C'
                         }}
                       />
                     )}
@@ -543,8 +644,8 @@ const TeacherAssignments = () => {
         })}
       </Box>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create New Assignment</DialogTitle>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth PaperProps={{ sx: styles.dialogPaper }}>
+        <DialogTitle sx={styles.dialogTitle}>Create New Assignment</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <TextField
@@ -552,7 +653,7 @@ const TeacherAssignments = () => {
               label="Title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
             />
 
             <Typography variant="subtitle1" sx={{ mb: 1 }}>Description</Typography>
@@ -579,7 +680,7 @@ const TeacherAssignments = () => {
               type="datetime-local"
               value={formData.dueDate}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
               InputLabelProps={{ shrink: true }}
             />
 
@@ -597,7 +698,7 @@ const TeacherAssignments = () => {
                   setFormData({ ...formData, studentId: e.target.value });
                 }
               }}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
             >
               <MenuItem value="all">All Students</MenuItem>
               {students.map((student) => (
@@ -613,7 +714,7 @@ const TeacherAssignments = () => {
               type="number"
               value={formData.maxFiles}
               onChange={(e) => setFormData({ ...formData, maxFiles: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
               InputProps={{ inputProps: { min: 1 } }}
             />
 
@@ -623,13 +724,14 @@ const TeacherAssignments = () => {
               type="number"
               value={formData.maxLinks}
               onChange={(e) => setFormData({ ...formData, maxLinks: e.target.value })}
+              sx={styles.textField}
               InputProps={{ inputProps: { min: 1 } }}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleCreateAssignment} variant="contained" color="primary">
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setOpenDialog(false)} sx={styles.ghostButton}>Cancel</Button>
+          <Button onClick={handleCreateAssignment} variant="contained" sx={styles.primaryButton}>
             Create
           </Button>
         </DialogActions>
@@ -637,11 +739,15 @@ const TeacherAssignments = () => {
 
       <Dialog
         open={openReviewDialog}
-        onClose={() => setOpenReviewDialog(false)}
+        onClose={() => {
+          setOpenReviewDialog(false);
+          setSelectedStudent(null);
+        }}
         maxWidth="sm"
         fullWidth
+        PaperProps={{ sx: styles.dialogPaper }}
       >
-        <DialogTitle>Review Assignment</DialogTitle>
+        <DialogTitle sx={styles.dialogTitle}>Review Assignment</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <Typography variant="subtitle1" gutterBottom>
@@ -687,7 +793,7 @@ const TeacherAssignments = () => {
               label="Status"
               value={reviewData.status}
               onChange={(e) => setReviewData({ ...reviewData, status: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
             >
               <MenuItem value="accepted">Accept</MenuItem>
               <MenuItem value="rejected">Reject</MenuItem>
@@ -699,7 +805,7 @@ const TeacherAssignments = () => {
               type="number"
               value={reviewData.mark}
               onChange={(e) => setReviewData({ ...reviewData, mark: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
               InputProps={{ inputProps: { min: 0, max: 100 } }}
             />
 
@@ -710,7 +816,7 @@ const TeacherAssignments = () => {
               rows={4}
               value={reviewData.feedback}
               onChange={(e) => setReviewData({ ...reviewData, feedback: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
             />
 
             {reviewData.status === 'rejected' && (
@@ -721,20 +827,29 @@ const TeacherAssignments = () => {
                 rows={2}
                 value={reviewData.rejectionReason}
                 onChange={(e) => setReviewData({ ...reviewData, rejectionReason: e.target.value })}
+                sx={styles.textField}
               />
             )}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenReviewDialog(false)}>Cancel</Button>
-          <Button onClick={handleReviewAssignment} variant="contained" color="primary">
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => {
+              setOpenReviewDialog(false);
+              setSelectedStudent(null);
+            }}
+            sx={styles.ghostButton}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleReviewAssignment} variant="contained" sx={styles.primaryButton}>
             Submit Review
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Assignment</DialogTitle>
+      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth PaperProps={{ sx: styles.dialogPaper }}>
+        <DialogTitle sx={styles.dialogTitle}>Edit Assignment</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <TextField
@@ -742,7 +857,7 @@ const TeacherAssignments = () => {
               label="Title"
               value={editFormData.title}
               onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
             />
 
             <Typography variant="subtitle1" sx={{ mb: 1 }}>Description</Typography>
@@ -769,7 +884,7 @@ const TeacherAssignments = () => {
               type="datetime-local"
               value={editFormData.dueDate}
               onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
               InputLabelProps={{ shrink: true }}
             />
 
@@ -787,7 +902,7 @@ const TeacherAssignments = () => {
                   setEditFormData({ ...editFormData, studentId: e.target.value });
                 }
               }}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
             >
               <MenuItem value="all">All Students</MenuItem>
               {students.map((student) => (
@@ -803,7 +918,7 @@ const TeacherAssignments = () => {
               type="number"
               value={editFormData.maxFiles}
               onChange={(e) => setEditFormData({ ...editFormData, maxFiles: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{ ...styles.textField, mb: 2 }}
               InputProps={{ inputProps: { min: 1 } }}
             />
 
@@ -813,13 +928,14 @@ const TeacherAssignments = () => {
               type="number"
               value={editFormData.maxLinks}
               onChange={(e) => setEditFormData({ ...editFormData, maxLinks: e.target.value })}
+              sx={styles.textField}
               InputProps={{ inputProps: { min: 1 } }}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenEditDialog(false)}>Cancel</Button>
-          <Button onClick={handleUpdateAssignment} variant="contained" color="primary">
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setOpenEditDialog(false)} sx={styles.ghostButton}>Cancel</Button>
+          <Button onClick={handleUpdateAssignment} variant="contained" sx={styles.primaryButton}>
             Update
           </Button>
         </DialogActions>

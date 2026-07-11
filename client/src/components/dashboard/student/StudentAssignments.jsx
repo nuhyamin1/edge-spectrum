@@ -11,12 +11,11 @@ import {
   Grid,
   TextField,
   Typography,
-  Link,
   IconButton,
   Alert,
 } from '@mui/material';
 import { Add as AddIcon, Clear as ClearIcon, AccessTime as AccessTimeIcon } from '@mui/icons-material';
-import { useAuth, api } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { toast } from 'react-toastify';
 import 'react-quill/dist/quill.snow.css';
 import './StudentAssignments.css';
@@ -24,35 +23,66 @@ import './StudentAssignments.css';
 // Add these styles at the top of the file
 const styles = {
   container: {
-    backgroundColor: '#F0F9FF',
-    p: 3,
-    minHeight: '100vh',
+    color: '#0F172A',
+    minHeight: '70vh',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    mb: 4,
-    backgroundColor: '#E0F2FE',
-    p: 2,
-    borderRadius: 2,
+    alignItems: { xs: 'flex-start', md: 'center' },
+    gap: 2,
+    mb: 3,
+    p: { xs: 2.5, md: 3 },
+    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #0F3A6B 0%, #1D5C86 58%, #277F8E 100%)',
+    color: '#FFFFFF',
+    boxShadow: '0 18px 45px rgba(15, 58, 107, 0.18)',
+    flexDirection: { xs: 'column', md: 'row' },
+  },
+  heroEyebrow: {
+    fontSize: '0.78rem',
+    fontWeight: 800,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#BAE6FD',
+    mb: 0.75,
+  },
+  grid: {
+    maxWidth: '980px',
+    mx: 'auto',
   },
   card: {
     backgroundColor: 'white',
-    border: '1px solid #E5E7EB',
-    borderRadius: 2,
-    transition: 'all 0.3s ease',
+    border: '1px solid #DDE7F3',
+    borderRadius: '8px',
+    boxShadow: '0 10px 28px rgba(15, 23, 42, 0.06)',
+    transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
     '&:hover': {
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      borderColor: '#8CC7E8',
+      boxShadow: '0 16px 36px rgba(15, 58, 107, 0.13)',
+      transform: 'translateY(-2px)',
     },
+  },
+  cardContent: {
+    p: { xs: 2, md: 2.5 },
+    '&:last-child': { pb: { xs: 2, md: 2.5 } },
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 2,
+    alignItems: { xs: 'flex-start', sm: 'center' },
+    flexDirection: { xs: 'column', sm: 'row' },
+    mb: 2,
   },
   submissionItem: {
     display: 'flex',
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: 'rgba(96, 165, 250, 0.1)',
-    borderRadius: 1,
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
+    borderRadius: '8px',
     p: 1
   },
   fileName: {
@@ -67,8 +97,9 @@ const styles = {
     alignItems: 'center',
     gap: 1,
     mb: 1,
-    backgroundColor: 'rgba(96, 165, 250, 0.1)',
-    borderRadius: 1,
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
+    borderRadius: '8px',
     p: 1
   },
   link: {
@@ -85,17 +116,18 @@ const styles = {
   fileInput: {
     mb: 2,
     p: 2,
-    border: '1px dashed #60A5FA',
-    borderRadius: 1,
-    backgroundColor: 'rgba(96, 165, 250, 0.1)'
+    border: '1px dashed #8CC7E8',
+    borderRadius: '8px',
+    backgroundColor: '#F0F9FF'
   },
   status: {
     px: 2,
     py: 0.5,
-    borderRadius: 20,
+    borderRadius: '999px',
     display: 'inline-block',
     typography: 'body2',
-    fontWeight: 'medium',
+    fontWeight: 800,
+    border: '1px solid transparent',
   },
   pending: {
     backgroundColor: '#FEF3C7',
@@ -104,6 +136,7 @@ const styles = {
   submitted: {
     backgroundColor: '#DBEAFE',
     color: '#1E40AF',
+    borderColor: '#BFDBFE',
   },
   submitted_late: {
     backgroundColor: '#FFF7ED',
@@ -113,19 +146,23 @@ const styles = {
   accepted: {
     backgroundColor: '#DCFCE7',
     color: '#166534',
+    borderColor: '#BBF7D0',
   },
   rejected: {
     backgroundColor: '#FEE2E2',
     color: '#9B2C2C',
+    borderColor: '#FECACA',
   },
   countdown: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 1,
-    mb: 2,
-    p: 1,
-    borderRadius: 1,
+    gap: 0.75,
+    px: 1.25,
+    py: 0.75,
+    borderRadius: '999px',
     width: 'fit-content',
+    fontWeight: 800,
+    border: '1px solid transparent',
   },
   countdownWarning: {
     backgroundColor: '#FEF3C7',
@@ -146,7 +183,10 @@ const styles = {
   },
   descriptionSection: {
     my: 2,
-    pl: 4,
+    p: 2,
+    borderRadius: '8px',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
     '& .ql-editor': {
       padding: 0,
     },
@@ -155,20 +195,28 @@ const styles = {
     }
   },
   dialogPaper: {
-    backgroundColor: '#F0F9FF',
-    border: '1px solid #60A5FA',
+    borderRadius: '8px',
+    border: '1px solid #DDE7F3',
+    boxShadow: '0 24px 70px rgba(15, 23, 42, 0.2)',
+  },
+  dialogTitle: {
+    color: '#0F172A',
+    fontWeight: 800,
+    pb: 1,
   },
   textField: {
     '& .MuiOutlinedInput-root': {
       color: '#1F2937',
+      borderRadius: '8px',
+      backgroundColor: '#FFFFFF',
       '& fieldset': {
-        borderColor: '#60A5FA',
+        borderColor: '#CBD5E1',
       },
       '&:hover fieldset': {
-        borderColor: '#1E40AF',
+        borderColor: '#0F5E8C',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#1E40AF',
+        borderColor: '#0F5E8C',
       },
     },
     '& .MuiInputLabel-root': {
@@ -176,19 +224,51 @@ const styles = {
     },
   },
   button: {
-    backgroundColor: '#60A5FA',
+    backgroundColor: '#0F5E8C',
     color: '#FFFFFF',
+    borderRadius: '8px',
+    px: 2.5,
+    textTransform: 'none',
+    fontWeight: 800,
     '&:hover': {
-      backgroundColor: '#1E40AF',
+      backgroundColor: '#0B4A70',
+    },
+    '&.Mui-disabled': {
+      backgroundColor: '#E2E8F0',
+      color: '#94A3B8',
     },
   },
   outlinedButton: {
-    color: '#1E40AF',
-    borderColor: '#60A5FA',
+    color: '#0F5E8C',
+    borderColor: '#8CC7E8',
+    borderRadius: '8px',
+    textTransform: 'none',
+    fontWeight: 800,
     '&:hover': {
-      borderColor: '#1E40AF',
-      backgroundColor: 'rgba(96, 165, 250, 0.1)',
+      borderColor: '#0F5E8C',
+      backgroundColor: '#F0F9FF',
     },
+  },
+  feedbackBox: {
+    mt: 2,
+    p: 2,
+    borderRadius: '8px',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
+  },
+  emptyState: {
+    minHeight: 260,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    gap: 1,
+    border: '1px dashed #B8C7D9',
+    backgroundColor: '#FFFFFF',
+    borderRadius: '8px',
+    color: '#475569',
+    p: 4,
   },
 };
 
@@ -418,9 +498,25 @@ const StudentAssignments = () => {
   return (
     <Box sx={styles.container}>
       <Box sx={styles.header}>
-        <Typography variant="h4" sx={{ color: '#1F2937' }}>
-          Assignments
-        </Typography>
+        <Box>
+          <Typography sx={styles.heroEyebrow}>Student workspace</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.15 }}>
+            Assignments
+          </Typography>
+          <Typography sx={{ mt: 1, maxWidth: 620, color: '#DFF7FF' }}>
+            Check deadlines, submit files or links, and review teacher feedback in one place.
+          </Typography>
+        </Box>
+        <Box sx={{
+          px: 2,
+          py: 1,
+          borderRadius: '8px',
+          backgroundColor: 'rgba(255, 255, 255, 0.14)',
+          border: '1px solid rgba(255, 255, 255, 0.22)',
+          fontWeight: 800,
+        }}>
+          {assignments.length} assigned
+        </Box>
       </Box>
 
       {loading ? (
@@ -428,18 +524,33 @@ const StudentAssignments = () => {
       ) : error ? (
         <Alert severity="error">{error}</Alert>
       ) : assignments.length === 0 ? (
-        <Typography sx={{ color: '#4B5563' }}>No assignments found.</Typography>
+        <Box sx={styles.emptyState}>
+          <Typography variant="h6" sx={{ color: '#0F172A', fontWeight: 800 }}>
+            No assignments found
+          </Typography>
+          <Typography>
+            New assignments from your teacher will appear here.
+          </Typography>
+        </Box>
       ) : (
-        <Grid container spacing={3}>
-          {assignments.map((assignment) => (
+        <Grid container spacing={2} sx={styles.grid}>
+          {assignments.map((assignment) => {
+            const details = getAssignmentDetails(assignment);
+            return (
             <Grid item xs={12} key={assignment._id}>
               <Card sx={styles.card}>
-                <CardContent>
-                  <Typography variant="h5" gutterBottom sx={{ color: '#1F2937' }}>
-                    {assignment.title}
-                  </Typography>
-                  
-                  {renderCountdown(assignment.dueDate)}
+                <CardContent sx={styles.cardContent}>
+                  <Box sx={styles.cardHeader}>
+                    <Box>
+                      <Typography variant="h5" sx={{ color: '#0F172A', fontWeight: 900, lineHeight: 1.2 }}>
+                        {assignment.title}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 0.75, color: '#64748B' }}>
+                        Due {new Date(assignment.dueDate).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                    {renderCountdown(assignment.dueDate)}
+                  </Box>
 
                   <Box sx={styles.descriptionSection}>
                     <div
@@ -449,34 +560,30 @@ const StudentAssignments = () => {
                   </Box>
 
                   <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle1" gutterBottom sx={{ color: '#1F2937' }}>
-                      Due Date: {new Date(assignment.dueDate).toLocaleDateString()}
-                    </Typography>
-                    
-                    {getAssignmentDetails(assignment) && (
+                    {details && (
                       <>
-                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mt: 1, flexWrap: 'wrap' }}>
                           <Typography variant="body1" sx={{ color: '#4B5563' }}>
                             Status:
                           </Typography>
-                          <Box sx={getStatusStyle(getAssignmentDetails(assignment).status)}>
-                            {getStatusDisplay(getAssignmentDetails(assignment).status)}
+                          <Box sx={{ ...styles.status, ...getStatusStyle(details.status) }}>
+                            {getStatusDisplay(details.status)}
                           </Box>
                         </Box>
                         
-                        {getAssignmentDetails(assignment).mark && (
+                        {details.mark && (
                           <Typography variant="body1" sx={{ color: '#4B5563', mt: 1 }}>
-                            Mark: {getAssignmentDetails(assignment).mark}/100
+                            Mark: {details.mark}/100
                           </Typography>
                         )}
                         
-                        {getAssignmentDetails(assignment).feedback && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="subtitle1" sx={{ color: '#1F2937' }}>
-                              Feedback:
+                        {details.feedback && (
+                          <Box sx={styles.feedbackBox}>
+                            <Typography variant="subtitle1" sx={{ color: '#0F172A', fontWeight: 800 }}>
+                              Feedback
                             </Typography>
                             <Typography variant="body1" sx={{ color: '#4B5563', mt: 1 }}>
-                              {getAssignmentDetails(assignment).feedback}
+                              {details.feedback}
                             </Typography>
                           </Box>
                         )}
@@ -488,16 +595,16 @@ const StudentAssignments = () => {
                         variant="contained"
                         onClick={() => handleOpenSubmit(assignment)}
                         sx={styles.button}
-                        disabled={getAssignmentDetails(assignment)?.status === 'accepted'}
+                        disabled={details?.status === 'accepted'}
                       >
-                        {getAssignmentDetails(assignment)?.status === 'rejected' ? 'Update Submission' : 'Submit'}
+                        {details?.status === 'rejected' ? 'Update Submission' : 'Submit'}
                       </Button>
                     </Box>
                   </Box>
                 </CardContent>
               </Card>
             </Grid>
-          ))}
+          )})}
         </Grid>
       )}
 
@@ -508,7 +615,7 @@ const StudentAssignments = () => {
         fullWidth
         PaperProps={{ sx: styles.dialogPaper }}
       >
-        <DialogTitle sx={{ color: '#1F2937' }}>
+        <DialogTitle sx={styles.dialogTitle}>
           Submit Assignment
         </DialogTitle>
         <DialogContent>
@@ -566,7 +673,7 @@ const StudentAssignments = () => {
             </>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: '1px solid #60A5FA' }}>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={() => setOpenSubmitDialog(false)} sx={styles.outlinedButton}>
             Cancel
           </Button>
@@ -581,7 +688,7 @@ const StudentAssignments = () => {
         onClose={() => setConfirmLateSubmit(false)}
         PaperProps={{ sx: styles.dialogPaper }}
       >
-        <DialogTitle sx={{ color: '#1F2937' }}>
+        <DialogTitle sx={styles.dialogTitle}>
           Late Submission
         </DialogTitle>
         <DialogContent>
@@ -589,7 +696,7 @@ const StudentAssignments = () => {
             This assignment is past its due date. Are you sure you want to submit late?
           </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button onClick={() => setConfirmLateSubmit(false)} sx={styles.outlinedButton}>
             Cancel
           </Button>
