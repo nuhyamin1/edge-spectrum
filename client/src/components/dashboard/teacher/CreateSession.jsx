@@ -239,8 +239,8 @@ const CreateSession = () => {
                 </select>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="min-w-0">
                   <label className="block text-sm font-medium text-blue-900 mb-1">
                     Date and Time
                   </label>
@@ -257,7 +257,7 @@ const CreateSession = () => {
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <label className="block text-sm font-medium text-blue-900 mb-1">
                     Duration (minutes)
                   </label>
@@ -276,7 +276,7 @@ const CreateSession = () => {
                 </div>
               
 
-                <div>
+                <div className="min-w-0">
                   <label className="block text-sm font-medium text-blue-900 mb-1">
                     Grace Period (minutes)
                   </label>
