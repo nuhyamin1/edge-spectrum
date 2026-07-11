@@ -16,12 +16,32 @@ const initialGreeting = {
   role: 'ai',
   content: "Hi, I'm PFSM Bot. How can I help today?"
 };
+const CHAT_STORAGE_KEY = 'pfsm-ai-chat-conversation';
+
+const isInitialGreeting = (entry) => (
+  entry?.role === initialGreeting.role && entry?.content === initialGreeting.content
+);
+
+const loadStoredConversation = () => {
+  try {
+    const storedConversation = sessionStorage.getItem(CHAT_STORAGE_KEY);
+    const parsedConversation = storedConversation ? JSON.parse(storedConversation) : null;
+
+    if (Array.isArray(parsedConversation) && parsedConversation.length > 0) {
+      return parsedConversation;
+    }
+  } catch (error) {
+    sessionStorage.removeItem(CHAT_STORAGE_KEY);
+  }
+
+  return [initialGreeting];
+};
 
 const AiChat = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [conversation, setConversation] = useState([initialGreeting]);
+  const [conversation, setConversation] = useState(loadStoredConversation);
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -33,6 +53,10 @@ const AiChat = () => {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [conversation, loading, isOpen]);
+
+  useEffect(() => {
+    sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(conversation));
+  }, [conversation]);
 
   const clearImage = () => {
     setImageFile(null);
@@ -47,6 +71,7 @@ const AiChat = () => {
     setConversation([initialGreeting]);
     setMessage('');
     clearImage();
+    sessionStorage.removeItem(CHAT_STORAGE_KEY);
   };
 
   const handleImageChange = (event) => {
@@ -83,7 +108,7 @@ const AiChat = () => {
       content: trimmedMessage || 'Please look at this image.',
       image: imagePreview
     };
-    const history = conversation.filter((entry) => entry !== initialGreeting);
+    const history = conversation.filter((entry) => !isInitialGreeting(entry));
 
     setConversation((prev) => [...prev, userEntry]);
     setMessage('');
