@@ -20,6 +20,32 @@ const DIALECTS = {
 const MAX_CACHE_ITEMS = 200;
 const pronunciationCache = new Map();
 
+const sendPronunciation = (req, res, audioBuffer, dialectCode, dialect, cached = false) => {
+  const acceptsAudio = req.get('Accept')
+    ?.split(',')
+    .some((type) => type.trim().toLowerCase().startsWith('audio/mpeg'));
+
+  if (acceptsAudio) {
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audioBuffer.length,
+      'Cache-Control': 'private, max-age=3600',
+      'X-Pronunciation-Dialect': dialectCode,
+      'X-Pronunciation-Voice': dialect.voice
+    });
+    return res.send(audioBuffer);
+  }
+
+  return res.json({
+    audio: audioBuffer.toString('base64'),
+    provider: 'azure',
+    dialect: dialectCode,
+    voice: dialect.voice,
+    label: dialect.label,
+    ...(cached && { cached: true })
+  });
+};
+
 const escapeSsml = (value) =>
   value
     .replace(/&/g, '&amp;')
@@ -58,14 +84,14 @@ router.post('/', async (req, res) => {
     const cachedAudio = pronunciationCache.get(cacheKey);
 
     if (cachedAudio) {
-      return res.json({
-        audio: cachedAudio,
-        provider: 'azure',
-        dialect: selectedDialectCode,
-        voice: selectedDialect.voice,
-        label: selectedDialect.label,
-        cached: true
-      });
+      return sendPronunciation(
+        req,
+        res,
+        cachedAudio,
+        selectedDialectCode,
+        selectedDialect,
+        true
+      );
     }
 
     const ssml = `
@@ -90,20 +116,14 @@ router.post('/', async (req, res) => {
       responseType: 'arraybuffer'
     });
 
-    const audioBase64 = Buffer.from(response.data).toString('base64');
+    const audioBuffer = Buffer.from(response.data);
 
     if (pronunciationCache.size >= MAX_CACHE_ITEMS) {
       pronunciationCache.delete(pronunciationCache.keys().next().value);
     }
-    pronunciationCache.set(cacheKey, audioBase64);
-    
-    res.json({
-      audio: audioBase64,
-      provider: 'azure',
-      dialect: selectedDialectCode,
-      voice: selectedDialect.voice,
-      label: selectedDialect.label
-    });
+    pronunciationCache.set(cacheKey, audioBuffer);
+
+    return sendPronunciation(req, res, audioBuffer, selectedDialectCode, selectedDialect);
   } catch (error) {
     console.error('Error calling Azure Speech API:', error);
     res.status(500).json({ 

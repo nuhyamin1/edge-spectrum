@@ -260,6 +260,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [showFeedback, setShowFeedback] = useState(false);
   const feedbackTimeoutRef = useRef(null);
+  const pronunciationAudioContextRef = useRef(null);
+  const pronunciationAudioSourceRef = useRef(null);
   const [isFeedbackCollapsed, setIsFeedbackCollapsed] = useState(false);
   const [pronunciationWord, setPronunciationWord] = useState('');
   const [pronunciationDialect, setPronunciationDialect] = useState('en-US');
@@ -1017,12 +1019,35 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      pronunciationAudioSourceRef.current?.stop();
+      pronunciationAudioContextRef.current?.close();
+    };
+  }, []);
+
   // Prefer server-generated voices so mobile browsers do not use unreliable local TTS.
   const handlePronunciation = async () => {
     if (!pronunciationWord.trim()) return;
 
+    let audioContext = pronunciationAudioContextRef.current;
+
+    if (!audioContext && typeof window !== 'undefined') {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        audioContext = new AudioContext();
+        pronunciationAudioContextRef.current = audioContext;
+      }
+    }
+
+    // Calling resume directly from the tap keeps Android's audio permission active.
+    const resumePromise = audioContext?.state === 'suspended'
+      ? audioContext.resume()
+      : Promise.resolve();
+
     try {
-      await handleApiPronunciation();
+      await resumePromise;
+      await handleApiPronunciation(audioContext);
     } catch (error) {
       console.error('Server pronunciation failed:', error);
       if (!isMobileDevice) {
@@ -1034,32 +1059,54 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
-  const handleApiPronunciation = async () => {
+  const handleApiPronunciation = async (audioContext) => {
     setIsLoadingAudio(true);
     setPronunciationError(null);
 
     const response = await axios.post('/api/pronounce', {
       text: pronunciationWord,
       dialect: pronunciationDialect
+    }, {
+      responseType: 'arraybuffer',
+      headers: { Accept: 'audio/mpeg' }
     });
 
-    if (!response.data?.audio) {
+    if (!response.data?.byteLength) {
       throw new Error('Pronunciation response did not include audio.');
     }
 
-    const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
-    const audio = new Audio(audioSrc);
+    if (audioContext) {
+      const decodedAudio = await audioContext.decodeAudioData(response.data.slice(0));
+      pronunciationAudioSourceRef.current?.stop();
 
-    audio.onended = () => {
+      const source = audioContext.createBufferSource();
+      source.buffer = decodedAudio;
+      source.connect(audioContext.destination);
+      source.onended = () => {
+        if (pronunciationAudioSourceRef.current === source) {
+          pronunciationAudioSourceRef.current = null;
+          setIsLoadingAudio(false);
+        }
+      };
+      pronunciationAudioSourceRef.current = source;
+      source.start(0);
+      return;
+    }
+
+    const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+
+    try {
+      await audio.play();
+      await new Promise((resolve, reject) => {
+        audio.onended = resolve;
+        audio.onerror = () => reject(new Error('Pronunciation audio could not be played.'));
+      });
+    } finally {
+      URL.revokeObjectURL(audioUrl);
       setIsLoadingAudio(false);
-    };
-
-    audio.onerror = () => {
-      setIsLoadingAudio(false);
-      setPronunciationError('Pronunciation audio could not be played.');
-    };
-
-    await audio.play();
+    }
   };
 
   const handleBrowserPronunciationFallback = () => {
