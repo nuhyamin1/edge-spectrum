@@ -165,7 +165,7 @@ const TeacherMainPage = () => {
         <section>
           <OverviewSectionHeading
             eyebrow="Lesson library"
-            title="Your teaching materials"
+            title="Teaching materials"
             description="Open a lesson, share it with students, or make a quick edit."
             actionLabel="View all materials"
             onAction={() => navigate('/dashboard/materials')}
