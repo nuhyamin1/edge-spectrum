@@ -19,6 +19,10 @@ const DESKTOP_PARTICIPANTS_PER_PAGE = 8;
 const MOBILE_PARTICIPANTS_PER_PAGE = 4;
 const REMOTE_STREAM_HIGH = 0;
 const REMOTE_STREAM_LOW = 1;
+const PRONUNCIATION_DIALECTS = [
+  { value: 'en-US', label: 'American English (AmE)' },
+  { value: 'en-GB', label: 'British English (BrE)' }
+];
 
 const getUidString = (uid) => String(uid || '');
 
@@ -258,9 +262,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const feedbackTimeoutRef = useRef(null);
   const [isFeedbackCollapsed, setIsFeedbackCollapsed] = useState(false);
   const [pronunciationWord, setPronunciationWord] = useState('');
+  const [pronunciationDialect, setPronunciationDialect] = useState('en-US');
+  const [pronunciationError, setPronunciationError] = useState(null);
   const [showPronunciation, setShowPronunciation] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState(null);
-  const [availableVoices, setAvailableVoices] = useState([]);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
@@ -1013,126 +1017,72 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Initialize speech synthesis voices
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    
-    const synth = window.speechSynthesis;
-    
-    const loadVoices = () => {
-      try {
-        const voices = synth.getVoices();
-        const englishVoices = voices.filter(voice => 
-          voice.lang && (voice.lang.startsWith('en-') || voice.lang.startsWith('en_') || voice.lang.toLowerCase() === 'en')
-        );
-        setAvailableVoices(englishVoices);
-        
-        // Try to find Microsoft Ava voice
-        const avaVoice = englishVoices.find(voice => 
-          voice.name === "Microsoft Ava Online (Natural) - English (United States)"
-        );
-        
-        // Set Ava as default if available, otherwise use first English voice
-        if (!selectedVoice && englishVoices.length > 0) {
-          setSelectedVoice(avaVoice || englishVoices[0]);
-        }
-      } catch (err) {
-        console.error('Error loading voices:', err);
-      }
-    };
-
-    loadVoices();
-    if (synth.onvoiceschanged !== undefined) {
-      synth.onvoiceschanged = loadVoices;
-    }
-
-    return () => {
-      if (synth.onvoiceschanged !== undefined) {
-        synth.onvoiceschanged = null;
-      }
-    };
-  }, [selectedVoice]);
-
-  // Handle pronunciation based on device type and availability of Web Speech API
+  // Prefer server-generated voices so mobile browsers do not use unreliable local TTS.
   const handlePronunciation = async () => {
     if (!pronunciationWord.trim()) return;
 
-    const hasSpeechSynthesis = typeof window !== 'undefined' && window.speechSynthesis;
-
-    if (hasSpeechSynthesis) {
-      try {
-        setIsLoadingAudio(true);
-        // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(pronunciationWord);
-        
-        if (selectedVoice) {
-          utterance.voice = selectedVoice;
-        } else {
-          // Fallback to default English language if no specific voice is selected/available
-          utterance.lang = 'en-US';
-        }
-        
-        utterance.onend = () => {
-          setIsLoadingAudio(false);
-        };
-        
-        utterance.onerror = (e) => {
-          console.error('SpeechSynthesis utterance error:', e);
-          setIsLoadingAudio(false);
-        };
-        
-        window.speechSynthesis.speak(utterance);
-      } catch (error) {
-        console.error('SpeechSynthesis speak failed, falling back to API:', error);
-        await handleApiPronunciationFallback();
-      }
-    } else {
-      // Fallback to ElevenLabs API if native SpeechSynthesis is not supported
-      await handleApiPronunciationFallback();
-    }
-  };
-
-  const handleApiPronunciationFallback = async () => {
     try {
-      setIsLoadingAudio(true);
-      const response = await axios.post('/api/pronounce', {
-        text: pronunciationWord
-      });
-      
-      if (response.data && response.data.audio) {
-        // Create audio from base64
-        const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
-        const audio = new Audio(audioSrc);
-        
-        audio.oncanplaythrough = () => {
-          setIsLoadingAudio(false);
-        };
-        
-        audio.onerror = (e) => {
-          console.error('Error loading API fallback audio:', e);
-          setIsLoadingAudio(false);
-        };
-        
-        await audio.play().catch(error => {
-          console.error('Error playing API fallback audio:', error);
-          setIsLoadingAudio(false);
-        });
+      await handleApiPronunciation();
+    } catch (error) {
+      console.error('Server pronunciation failed:', error);
+      if (!isMobileDevice) {
+        handleBrowserPronunciationFallback();
       } else {
+        setPronunciationError('Pronunciation audio is unavailable. Please try again later.');
         setIsLoadingAudio(false);
       }
-    } catch (error) {
-      console.error('Error using ElevenLabs API for pronunciation fallback:', error);
-      setIsLoadingAudio(false);
     }
   };
 
-  const handleVoiceChange = (e) => {
-    const voice = availableVoices.find(v => v.name === e.target.value);
-    if (voice) {
-      setSelectedVoice(voice);
+  const handleApiPronunciation = async () => {
+    setIsLoadingAudio(true);
+    setPronunciationError(null);
+
+    const response = await axios.post('/api/pronounce', {
+      text: pronunciationWord,
+      dialect: pronunciationDialect
+    });
+
+    if (!response.data?.audio) {
+      throw new Error('Pronunciation response did not include audio.');
     }
+
+    const audioSrc = `data:audio/mpeg;base64,${response.data.audio}`;
+    const audio = new Audio(audioSrc);
+
+    audio.onended = () => {
+      setIsLoadingAudio(false);
+    };
+
+    audio.onerror = () => {
+      setIsLoadingAudio(false);
+      setPronunciationError('Pronunciation audio could not be played.');
+    };
+
+    await audio.play();
+  };
+
+  const handleBrowserPronunciationFallback = () => {
+    const hasSpeechSynthesis = typeof window !== 'undefined' && window.speechSynthesis;
+
+    if (!hasSpeechSynthesis) {
+      setPronunciationError('Pronunciation audio is unavailable. Please try again later.');
+      setIsLoadingAudio(false);
+      return;
+    }
+
+    setPronunciationError('Using desktop system voice because online pronunciation is unavailable.');
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(pronunciationWord);
+    utterance.lang = pronunciationDialect;
+    utterance.onend = () => setIsLoadingAudio(false);
+    utterance.onerror = () => {
+      setPronunciationError('Pronunciation audio is unavailable. Please try again later.');
+      setIsLoadingAudio(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const handleDictionaryLookup = async () => {
@@ -1838,25 +1788,26 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         
         {showPronunciation && (
           <div className="pronunciation-content">
-            {availableVoices.length > 0 && (
-              <select 
-                value={selectedVoice?.name || ''} 
-                onChange={handleVoiceChange}
-                className="voice-select"
-              >
-                {availableVoices.map(voice => (
-                  <option key={voice.name} value={voice.name}>
-                    {voice.name}
-                  </option>
-                ))}
-              </select>
-            )}
-            
+            <select
+              value={pronunciationDialect}
+              onChange={(e) => setPronunciationDialect(e.target.value)}
+              className="voice-select"
+            >
+              {PRONUNCIATION_DIALECTS.map(dialect => (
+                <option key={dialect.value} value={dialect.value}>
+                  {dialect.label}
+                </option>
+              ))}
+            </select>
+
             <div className="pronunciation-input-group">
               <input
                 type="text"
                 value={pronunciationWord}
-                onChange={(e) => setPronunciationWord(e.target.value)}
+                onChange={(e) => {
+                  setPronunciationWord(e.target.value);
+                  setPronunciationError(null);
+                }}
                 placeholder="Enter word to pronounce..."
                 className="pronunciation-input"
               />
@@ -1868,15 +1819,15 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 {isLoadingAudio ? '...' : <FaVolumeUp />}
               </button>
             </div>
-            {availableVoices.length > 0 ? (
-              <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+            {pronunciationError ? (
+              <div className="pronunciation-status error">
                 <FaVolumeUp size={10} className="inline" />
-                <span>Ready to pronounce</span>
+                <span>{pronunciationError}</span>
               </div>
             ) : (
               <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                <FaMobileAlt size={10} className="inline" />
-                <span>Using system voice</span>
+                <FaVolumeUp size={10} className="inline" />
+                <span>Using online English voice</span>
               </div>
             )}
           </div>

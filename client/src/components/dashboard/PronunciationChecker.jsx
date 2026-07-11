@@ -14,7 +14,7 @@ const PronunciationChecker = () => {
     setError(null);
     
     try {
-      const response = await axios.post('/api/pronounce', { text });
+      const response = await axios.post('/api/pronounce', { text, dialect: 'en-US' });
       
       // Create an audio element and play the returned audio
       const audio = new Audio(`data:audio/mpeg;base64,${response.data.audio}`);
@@ -63,7 +63,7 @@ const PronunciationChecker = () => {
               </>
             )}
           </button>
-          <span className="text-sm text-gray-500">Powered by ElevenLabs</span>
+          <span className="text-sm text-gray-500">Powered by Azure Speech</span>
         </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
       </div>
