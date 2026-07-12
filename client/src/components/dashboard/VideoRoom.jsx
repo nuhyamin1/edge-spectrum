@@ -1826,51 +1826,92 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       </div>
       )}
 
-      {/* Mobile-optimized Control bar */}
-      <div className="fixed bottom-0 left-0 right-0 p-2 md:p-4 flex justify-center space-x-2 md:space-x-4 z-50">
-        <button
-          onClick={toggleAudio}
-          className={`p-2 md:p-3 rounded-full ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
-          title={isAudioMuted ? "Unmute Audio" : "Mute Audio"}
-        >
-          {isAudioMuted ? <FaMicrophoneSlash size={16} /> : <FaMicrophone size={16} />}
-        </button>
-        <button
-          onClick={toggleVideo}
-          className={`p-2 md:p-3 rounded-full ${isVideoMuted ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
-          title={isVideoMuted ? "Turn On Video" : "Turn Off Video"}
-        >
-          {isVideoMuted ? <FaVideoSlash size={16} /> : <FaVideo size={16} />}
-        </button>
-        <button
-          onClick={toggleScreenShare}
-          className={`p-2 md:p-3 rounded-full ${isScreenSharing ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
-          disabled={!ready}
-          title="Share Screen"
-        >
-          <FaDesktop size={16} />
-        </button>
-        <button
-          onClick={handleWhiteboardToggle}
-          className={`p-2 md:p-3 rounded-full ${showWhiteboard ? 'bg-green-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
-          title={showWhiteboard ? "Hide Whiteboard" : "Show Whiteboard"}
-        >
-          <FaEdit size={16} />
-        </button>
-        <button
-          onClick={toggleHandRaise}
-          className={`p-2 md:p-3 rounded-full ${isHandRaised ? 'bg-yellow-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
-          title={isHandRaised ? "Lower Hand" : "Raise Hand"}
-        >
-          <FaHandPaper className={isHandRaised ? 'animate-pulse' : ''} size={16} />
-        </button>
-        <button 
-          onClick={handleRecording} 
-          className={`p-2 md:p-3 rounded-full ${isRecording ? 'bg-red-500' : 'bg-blue-500'} hover:opacity-90 transition-opacity duration-200`}
-          title={isRecording ? 'Stop Recording' : 'Start Recording'}
-        >
-          {isRecording ? <FaStop size={16} /> : <FaCircle style={{ color: '#ff0000' }} size={16} />}
-        </button>
+      {/* Meeting controls */}
+      <div className="meeting-controls-shell">
+        <div className="meeting-controls" role="toolbar" aria-label="Meeting controls">
+          <button
+            type="button"
+            onClick={toggleAudio}
+            className={`meeting-control ${isAudioMuted ? 'is-danger' : ''}`}
+            title={isAudioMuted ? 'Unmute microphone' : 'Mute microphone'}
+            aria-label={isAudioMuted ? 'Unmute microphone' : 'Mute microphone'}
+            aria-pressed={isAudioMuted}
+          >
+            <span className="meeting-control-icon">
+              {isAudioMuted ? <FaMicrophoneSlash /> : <FaMicrophone />}
+            </span>
+            <span className="meeting-control-label">{isAudioMuted ? 'Unmute' : 'Mute'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleVideo}
+            className={`meeting-control ${isVideoMuted ? 'is-danger' : ''}`}
+            title={isVideoMuted ? 'Turn on camera' : 'Turn off camera'}
+            aria-label={isVideoMuted ? 'Turn on camera' : 'Turn off camera'}
+            aria-pressed={isVideoMuted}
+          >
+            <span className="meeting-control-icon">
+              {isVideoMuted ? <FaVideoSlash /> : <FaVideo />}
+            </span>
+            <span className="meeting-control-label">{isVideoMuted ? 'Start video' : 'Stop video'}</span>
+          </button>
+
+          <span className="meeting-controls-divider" aria-hidden="true" />
+
+          <button
+            type="button"
+            onClick={toggleScreenShare}
+            className={`meeting-control ${isScreenSharing ? 'is-active' : ''}`}
+            disabled={!ready}
+            title={isScreenSharing ? 'Stop sharing screen' : 'Share screen'}
+            aria-label={isScreenSharing ? 'Stop sharing screen' : 'Share screen'}
+            aria-pressed={isScreenSharing}
+          >
+            <span className="meeting-control-icon"><FaDesktop /></span>
+            <span className="meeting-control-label">{isScreenSharing ? 'Stop share' : 'Share'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleWhiteboardToggle}
+            className={`meeting-control ${showWhiteboard ? 'is-active' : ''}`}
+            title={showWhiteboard ? 'Hide whiteboard' : 'Show whiteboard'}
+            aria-label={showWhiteboard ? 'Hide whiteboard' : 'Show whiteboard'}
+            aria-pressed={showWhiteboard}
+          >
+            <span className="meeting-control-icon"><FaEdit /></span>
+            <span className="meeting-control-label">Whiteboard</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleHandRaise}
+            className={`meeting-control ${isHandRaised ? 'is-warning' : ''}`}
+            title={isHandRaised ? 'Lower hand' : 'Raise hand'}
+            aria-label={isHandRaised ? 'Lower hand' : 'Raise hand'}
+            aria-pressed={isHandRaised}
+          >
+            <span className="meeting-control-icon">
+              <FaHandPaper className={isHandRaised ? 'animate-pulse' : ''} />
+            </span>
+            <span className="meeting-control-label">{isHandRaised ? 'Lower hand' : 'Raise hand'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleRecording}
+            className={`meeting-control ${isRecording ? 'is-danger recording' : ''}`}
+            title={isRecording ? 'Stop recording' : 'Start recording'}
+            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+            aria-pressed={isRecording}
+          >
+            <span className="meeting-control-icon">
+              {isRecording ? <FaStop /> : <FaCircle className="recording-dot" />}
+            </span>
+            <span className="meeting-control-label">{isRecording ? 'Stop record' : 'Record'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Breakout Room Controls */}
