@@ -19,6 +19,7 @@ const DESKTOP_PARTICIPANTS_PER_PAGE = 8;
 const MOBILE_PARTICIPANTS_PER_PAGE = 4;
 const REMOTE_STREAM_HIGH = 0;
 const REMOTE_STREAM_LOW = 1;
+const SCREEN_SHARE_UID_PREFIX = 'screen-share___';
 const PRONUNCIATION_DIALECTS = [
   { value: 'en-US', label: 'American English (AmE)' },
   { value: 'en-GB', label: 'British English (BrE)' }
@@ -43,25 +44,25 @@ const getParticipantUserId = (uid) => {
 const getVideoElementId = (prefix, uid) =>
   `${prefix}-${getUidString(uid).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
+const isScreenShareUid = (uid) => getUidString(uid).startsWith(SCREEN_SHARE_UID_PREFIX);
+
+const getScreenShareOwnerId = (uid) => {
+  const uidString = getUidString(uid);
+  if (!isScreenShareUid(uidString)) return null;
+  return uidString.slice(SCREEN_SHARE_UID_PREFIX.length).split('_')[0];
+};
+
 // Custom hook for screen sharing
-const useScreenShare = (client) => {
+const useScreenShare = (channelName, ownerId) => {
   const [screenTrack, setScreenTrack] = useState(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [error, setError] = useState(null);
   const screenTrackRef = useRef(null);
-  const previousVideoTrackRef = useRef(null);
+  const screenClientRef = useRef(null);
+  const isStoppingScreenShareRef = useRef(false);
 
   const startScreenShare = async () => {
     try {
-      // Store and unpublish the current video track if it exists
-      const localTracks = client.localTracks;
-      const videoTrack = localTracks.find(track => track.trackMediaType === "video");
-      
-      if (videoTrack) {
-        previousVideoTrackRef.current = videoTrack;
-        await client.unpublish(videoTrack);
-      }
-
       // Create screen sharing track
       const screenVideoTrack = await AgoraRTC.createScreenVideoTrack({
         encoderConfig: {
@@ -76,20 +77,34 @@ const useScreenShare = (client) => {
       });
 
       screenTrackRef.current = screenVideoTrack;
+      const screenClient = AgoraRTC.createClient({ mode: config.mode, codec: config.codec });
+      screenClientRef.current = screenClient;
 
       // Set up screen sharing ended event
       screenVideoTrack.on("track-ended", async () => {
         await stopScreenShare();
       });
 
-      await client.publish(screenVideoTrack);
+      const screenUid = `${SCREEN_SHARE_UID_PREFIX}${ownerId}_${Math.floor(Math.random() * 1000000)}`;
+      await screenClient.join(config.appId, channelName, null, screenUid);
+      await screenClient.publish(screenVideoTrack);
       setScreenTrack(screenVideoTrack);
       setIsScreenSharing(true);
+      setError(null);
       return true;
 
     } catch (error) {
       setError(error.message);
       console.error("Screen sharing failed:", error);
+
+      if (screenClientRef.current && screenClientRef.current.connectionState !== 'DISCONNECTED') {
+        try {
+          await screenClientRef.current.leave();
+        } catch (leaveError) {
+          console.warn('Could not leave the screen-share channel:', leaveError);
+        }
+      }
+      screenClientRef.current = null;
 
       if (screenTrackRef.current) {
         screenTrackRef.current.close();
@@ -97,46 +112,53 @@ const useScreenShare = (client) => {
       }
       setScreenTrack(null);
       setIsScreenSharing(false);
-      
-      // If screen sharing fails, republish the previous video track
-      const cameraTrack = previousVideoTrackRef.current;
-      if (cameraTrack) {
-        try {
-          await client.publish(cameraTrack);
-          previousVideoTrackRef.current = null;
-        } catch (e) {
-          console.error("Failed to restore camera track:", e);
-        }
-      }
       return false;
     }
   };
 
   const stopScreenShare = async () => {
-    try {
-      const activeScreenTrack = screenTrackRef.current;
-      if (activeScreenTrack) {
-        await client.unpublish(activeScreenTrack);
-        activeScreenTrack.close();
-        screenTrackRef.current = null;
-        setScreenTrack(null);
-        setIsScreenSharing(false);
+    if (isStoppingScreenShareRef.current) return;
+    isStoppingScreenShareRef.current = true;
 
-        // Republish the previous video track if it exists
-        const cameraTrack = previousVideoTrackRef.current;
-        if (cameraTrack) {
-          await client.publish(cameraTrack);
-          if (cameraTrack.restart) {
-            cameraTrack.restart();
-          }
-          previousVideoTrackRef.current = null;
-        }
+    const activeScreenTrack = screenTrackRef.current;
+    const screenClient = screenClientRef.current;
+
+    try {
+      if (screenClient?.connectionState === 'CONNECTED' && activeScreenTrack) {
+        await screenClient.unpublish(activeScreenTrack);
+      }
+      if (screenClient && screenClient.connectionState !== 'DISCONNECTED') {
+        await screenClient.leave();
       }
     } catch (error) {
       setError(error.message);
       console.error("Error stopping screen share:", error);
+    } finally {
+      activeScreenTrack?.close();
+      screenTrackRef.current = null;
+      screenClientRef.current = null;
+      setScreenTrack(null);
+      setIsScreenSharing(false);
+      isStoppingScreenShareRef.current = false;
     }
   };
+
+  useEffect(() => {
+    return () => {
+      const activeScreenTrack = screenTrackRef.current;
+      const screenClient = screenClientRef.current;
+
+      if (screenClient?.connectionState === 'CONNECTED' && activeScreenTrack) {
+        screenClient.unpublish(activeScreenTrack).catch(() => {});
+      }
+      if (screenClient && screenClient.connectionState !== 'DISCONNECTED') {
+        screenClient.leave().catch(() => {});
+      }
+      activeScreenTrack?.close();
+      screenTrackRef.current = null;
+      screenClientRef.current = null;
+    };
+  }, []);
 
   return {
     screenTrack,
@@ -258,6 +280,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
   const { user } = useAuth();
+  const activeAgoraChannel = currentBreakoutRoom
+    ? `${sessionId}_breakout_${currentBreakoutRoom}`
+    : sessionId;
+  const screenShareOwnerId = isTeacher ? 'teacher' : user.id;
   
   // Use our custom hooks
   const { 
@@ -266,7 +292,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     error: screenShareError, 
     startScreenShare, 
     stopScreenShare 
-  } = useScreenShare(client);
+  } = useScreenShare(activeAgoraChannel, screenShareOwnerId);
   
   const qualityStats = useQualityMonitor(client);
   const { isRecording, startRecording, stopRecording } = useRecording();
@@ -490,8 +516,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         if (mediaType === "video") {
           const videoTrack = user.videoTrack;
           
-          // Check if this is a screen sharing track
-          if (videoTrack && videoTrack._source === "screen") {
+          // Screen shares use their own Agora UID so the presenter's camera stays published.
+          if (videoTrack && isScreenShareUid(user.uid)) {
             console.log("Received screen share from:", user.uid);
             setRemoteScreenTrack(videoTrack);
             setRemoteScreenUser(user);
@@ -536,7 +562,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     const handleUserUnpublished = (user, mediaType) => {
       if (mediaType === "video") {
         // Check if this was the screen sharing user
-        if (remoteScreenUser && user.uid === remoteScreenUser.uid) {
+        if (isScreenShareUid(user.uid)) {
           console.log("Screen share ended from:", user.uid);
           setRemoteScreenTrack(null);
           setRemoteScreenUser(null);
@@ -565,6 +591,11 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
     // Function to handle user left events
     const handleUserLeft = (user) => {
+      if (isScreenShareUid(user.uid)) {
+        setRemoteScreenTrack(null);
+        setRemoteScreenUser(null);
+        return;
+      }
       setUsers((prevUsers) => prevUsers.filter((User) => User.uid !== user.uid));
     };
 
@@ -687,14 +718,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       }
     };
   }, [sessionId, client, ready, tracks, isTeacher, user.name, user.id]);
-
-  useEffect(() => {
-    return () => {
-      if (screenTrack) {
-        screenTrack.close();
-      }
-    };
-  }, [screenTrack]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -1277,6 +1300,27 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     () => users.filter(u => u.uid !== 'teacher'),
     [users]
   );
+  const remoteScreenPresenter = useMemo(() => {
+    const ownerId = getScreenShareOwnerId(remoteScreenUser?.uid);
+    if (!ownerId) return null;
+
+    return users.find(remoteUser => (
+      ownerId === 'teacher'
+        ? getUidString(remoteUser.uid) === 'teacher'
+        : getParticipantUserId(remoteUser.uid) === ownerId
+    )) || null;
+  }, [remoteScreenUser, users]);
+  const screenShareCameraTrack = isScreenSharing
+    ? tracks?.[1]
+    : remoteScreenPresenter?.videoTrack;
+  const screenShareCameraLabel = isScreenSharing
+    ? `${user.name} (You)`
+    : remoteScreenPresenter
+      ? getParticipantName(remoteScreenPresenter.uid)
+      : '';
+  const showScreenShareCamera = Boolean(screenShareCameraTrack) && !(
+    isScreenSharing && (isVideoMuted || isCameraPictureInPicture)
+  );
   const isPhoneLandscapeLayout = viewportWidth <= 932 && viewportHeight <= 520 && viewportWidth > viewportHeight;
   const isMobileGalleryLayout = isMobileDevice || viewportWidth <= 768 || isPhoneLandscapeLayout;
   const participantPageSize = isMobileGalleryLayout
@@ -1543,7 +1587,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             />
             
             {/* Floating Video Window */}
-            {tracks && tracks[1] && !isVideoMuted && !isCameraPictureInPicture && (
+            {showScreenShareCamera && (
               <div
                 className={`absolute cursor-move rounded-lg overflow-hidden shadow-lg transition-all ${
                   isVideoExpanded ? 'w-96 h-72' : 'w-48 h-36'
@@ -1558,9 +1602,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
               >
                 <div className="relative w-full h-full">
                   <AgoraVideoPlayer
-                    videoTrack={tracks[1]}
+                    videoTrack={screenShareCameraTrack}
                     style={{ height: '100%', width: '100%', objectFit: 'cover' }}
                   />
+                  {screenShareCameraLabel && (
+                    <div className="participant-name">{screenShareCameraLabel}</div>
+                  )}
                   <button
                     onClick={() => setIsVideoExpanded(!isVideoExpanded)}
                     className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded hover:bg-opacity-75"
