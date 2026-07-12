@@ -39,6 +39,8 @@ import AdminDashboard from './components/dashboard/admin/AdminDashboard';
 import StudentAccounts from './components/dashboard/teacher/StudentAccounts';
 import Gradebook from './components/dashboard/teacher/Gradebook';
 import StudentReport from './components/dashboard/student/StudentReport';
+import DesktopVideoLobby from './components/desktop/DesktopVideoLobby';
+import DesktopVideoRoom from './components/desktop/DesktopVideoRoom';
 
 // AppRoutes component to contain all routes
 const AppRoutes = () => {
@@ -49,6 +51,22 @@ const AppRoutes = () => {
     <MotionConfig reducedMotion="user">
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
+          <Route
+            path="/desktop"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'student']}>
+                <DesktopVideoLobby />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/desktop/room/:sessionId"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'student']}>
+                <DesktopVideoRoom />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<WelcomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

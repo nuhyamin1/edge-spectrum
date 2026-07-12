@@ -904,7 +904,7 @@ const VideoRoom = ({ sessionId, isTeacher, session, onExit }) => {
   // Initialize socket connection
   useEffect(() => {
     // Initialize socket connection
-    const socket = io(process.env.REACT_APP_SOCKET_SERVER || 'http://localhost:5000', {
+    const socket = io(process.env.REACT_APP_SOCKET_SERVER || process.env.REACT_APP_API_URL || 'http://localhost:5000', {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5

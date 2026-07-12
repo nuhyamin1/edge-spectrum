@@ -1,0 +1,61 @@
+.desktop-video-shell {
+  min-height: 100vh;
+  color: #eef4ff;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(56, 189, 248, .16), transparent 32rem),
+    radial-gradient(circle at 90% 15%, rgba(139, 92, 246, .16), transparent 28rem),
+    #070b16;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.desktop-video-lobby { width: min(1180px, calc(100% - 56px)); margin: 0 auto; padding: 28px 0 56px; }
+.desktop-video-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 28px; }
+.desktop-video-brand, .desktop-video-account { display: flex; align-items: center; gap: 14px; }
+.desktop-video-logo { display: grid; place-items: center; width: 46px; height: 46px; color: white; border-radius: 15px; background: linear-gradient(145deg, #38bdf8, #6366f1); box-shadow: 0 12px 30px rgba(56,189,248,.2); }
+.desktop-video-brand p, .desktop-video-brand h1, .desktop-video-account strong, .desktop-video-account span { margin: 0; display: block; }
+.desktop-video-brand p { color: #8491aa; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.desktop-video-brand h1 { font-size: 21px; }
+.desktop-video-account { color: #cbd5e1; }
+.desktop-video-account > div { text-align: right; }
+.desktop-video-account strong { font-size: 13px; }
+.desktop-video-account span { color: #7f8ba3; font-size: 11px; text-transform: capitalize; }
+.desktop-video-account button { display: grid; place-items: center; width: 38px; height: 38px; color: #a9b5ca; border: 1px solid #263149; border-radius: 12px; background: #111827; cursor: pointer; transition: .2s ease; }
+.desktop-video-account button:hover { color: white; border-color: #3b82f6; transform: translateY(-1px); }
+
+.desktop-video-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; padding: 42px; border: 1px solid rgba(100,116,139,.22); border-radius: 28px; background: linear-gradient(135deg, rgba(20,30,52,.94), rgba(12,18,34,.88)); box-shadow: 0 24px 80px rgba(0,0,0,.28); }
+.desktop-video-kicker { color: #38bdf8; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.desktop-video-intro h2 { max-width: 650px; margin: 10px 0 8px; font-size: clamp(30px, 4vw, 49px); line-height: 1.03; letter-spacing: -.04em; }
+.desktop-video-intro p { max-width: 630px; margin: 0; color: #99a7bd; font-size: 15px; line-height: 1.65; }
+.desktop-video-ready { flex: 0 0 auto; padding: 10px 14px; color: #b9f6d2; font-size: 12px; font-weight: 700; border: 1px solid rgba(34,197,94,.23); border-radius: 999px; background: rgba(34,197,94,.08); }
+.desktop-video-ready i, .desktop-video-status i { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 12px #22c55e; }
+.desktop-video-section-title { display: flex; align-items: center; justify-content: space-between; margin: 35px 2px 16px; }
+.desktop-video-section-title h3, .desktop-video-section-title p { margin: 0; }
+.desktop-video-section-title h3 { font-size: 18px; }
+.desktop-video-section-title p { margin-top: 3px; color: #72809a; font-size: 12px; }
+.desktop-video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(275px, 1fr)); gap: 16px; }
+.desktop-video-card { padding: 22px; overflow: hidden; border: 1px solid #202b42; border-radius: 21px; background: rgba(15,23,42,.9); box-shadow: 0 14px 40px rgba(0,0,0,.18); transition: .2s ease; }
+.desktop-video-card:hover { border-color: #334666; transform: translateY(-2px); }
+.desktop-video-card.is-live { border-color: rgba(34,197,94,.34); background: linear-gradient(150deg, rgba(20,43,45,.95), rgba(15,23,42,.92) 52%); }
+.desktop-video-card-top { display: flex; align-items: center; justify-content: space-between; color: #4c607e; }
+.desktop-video-status { padding: 6px 9px; color: #91a0b8; font-size: 10px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase; border-radius: 999px; background: #1b263b; }
+.desktop-video-status i { width: 6px; height: 6px; background: #77869f; box-shadow: none; }
+.desktop-video-status.is-active { color: #b9f6d2; background: rgba(34,197,94,.12); }
+.desktop-video-status.is-active i { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+.desktop-video-card h3 { min-height: 48px; margin: 23px 0 4px; font-size: 19px; line-height: 1.3; }
+.desktop-video-subject { margin: 0 0 20px; color: #8493aa; font-size: 13px; }
+.desktop-video-meta { display: grid; gap: 9px; padding: 15px 0; border-top: 1px solid #202b42; }
+.desktop-video-meta span { display: flex; align-items: center; gap: 9px; color: #9ba9bd; font-size: 12px; }
+.desktop-video-meta svg { color: #526785; }
+.desktop-video-join, .desktop-video-room-error button { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; margin-top: 7px; padding: 12px 15px; color: white; font-weight: 800; border: 0; border-radius: 12px; background: linear-gradient(135deg, #0ea5e9, #4f46e5); cursor: pointer; box-shadow: 0 10px 25px rgba(59,130,246,.2); }
+.desktop-video-join:disabled { color: #67758c; background: #202a3d; box-shadow: none; cursor: not-allowed; }
+.desktop-video-empty { display: grid; place-items: center; min-height: 260px; padding: 50px; color: #78869c; text-align: center; border: 1px dashed #2a354b; border-radius: 22px; }
+.desktop-video-empty > svg { margin-bottom: 12px; font-size: 34px; }
+.desktop-video-empty h3, .desktop-video-empty p { margin: 4px 0; }
+.desktop-video-spinner { width: 34px; height: 34px; border: 3px solid #253149; border-top-color: #38bdf8; border-radius: 50%; animation: desktop-spin .8s linear infinite; }
+.desktop-video-room { width: 100vw; height: 100vh; overflow: hidden; background: #050814; }
+.desktop-video-room-error { width: min(520px, calc(100% - 40px)); margin: auto; padding-top: 24vh; text-align: center; }
+.desktop-video-room-error h1 { font-size: 30px; }
+.desktop-video-room-error p { color: #9aa8bd; line-height: 1.6; }
+.desktop-video-room-error button { width: auto; margin: 24px auto 0; }
+@keyframes desktop-spin { to { transform: rotate(360deg); } }
+@media (max-width: 720px) { .desktop-video-lobby { width: min(100% - 28px, 1180px); } .desktop-video-header { align-items: flex-start; } .desktop-video-account > div { display: none; } .desktop-video-intro { align-items: flex-start; flex-direction: column; padding: 28px; } }

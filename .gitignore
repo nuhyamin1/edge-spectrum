@@ -19,6 +19,8 @@
 # Production
 /build
 /client/build
+/desktop/dist
+/desktop/node_modules
 
 # Misc
 .DS_Store

@@ -251,6 +251,38 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+// Get the small, role-scoped session list used by the Video Room desktop app.
+router.get('/video-room/list', auth, async (req, res) => {
+    try {
+        const now = new Date();
+        const query = req.user.role === 'teacher'
+            ? {
+                teacher: req.user._id,
+                status: { $ne: 'completed' }
+            }
+            : {
+                enrolledStudents: req.user._id,
+                $or: [
+                    { status: 'active' },
+                    { dateTime: { $gt: now } }
+                ]
+            };
+
+        const sessions = await Session.find(query)
+            .populate('teacher', 'name email')
+            .sort({ status: 1, dateTime: 1 })
+            .lean();
+
+        res.json(sessions.map(session => ({
+            ...session,
+            status: session.status || 'scheduled'
+        })));
+    } catch (error) {
+        console.error('Error fetching desktop Video Room sessions:', error);
+        res.status(500).json({ error: 'Failed to fetch Video Room sessions' });
+    }
+});
+
 // Get all sessions (for teachers - their own sessions)
 router.get('/teacher', auth, isTeacher, async (req, res) => {
     try {

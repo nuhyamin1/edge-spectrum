@@ -1,0 +1,53 @@
+{
+  "name": "pf-speaking-master-video-room",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Desktop Video Room for PF Speaking Master",
+  "main": "main.cjs",
+  "author": "PF Speaking Master",
+  "scripts": {
+    "start": "electron .",
+    "dev": "wait-on http://localhost:3000 && electron .",
+    "dist": "node scripts/build.cjs",
+    "dist:win": "node scripts/build.cjs"
+  },
+  "devDependencies": {
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
+    "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.pfspeakingmaster.videoroom",
+    "productName": "PF Video Room",
+    "artifactName": "PF-Video-Room-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.cjs",
+      "config.json",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.education",
+      "extendInfo": {
+        "NSCameraUsageDescription": "PF Video Room uses your camera during class calls.",
+        "NSMicrophoneUsageDescription": "PF Video Room uses your microphone during class calls."
+      }
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Education"
+    }
+  }
+}

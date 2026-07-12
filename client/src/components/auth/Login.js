@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from '../../utils/axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import AuthLayout from './AuthLayout';
@@ -11,7 +11,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const isDesktopLogin = typeof location.state?.from === 'string' && location.state.from.startsWith('/desktop');
 
   const handleChange = (event) => setFormData({ ...formData, [event.target.name]: event.target.value });
 
@@ -22,7 +24,12 @@ const Login = () => {
       const response = await axios.post('/api/auth/login', formData);
       login(response.data.user, response.data.token);
       toast.success('Welcome back!');
-      navigate(response.data.user.role === 'teacher' ? '/dashboard' : '/dashboard/student');
+      const requestedPath = location.state?.from;
+      navigate(
+        typeof requestedPath === 'string' && requestedPath.startsWith('/desktop')
+          ? requestedPath
+          : response.data.user.role === 'teacher' ? '/dashboard' : '/dashboard/student'
+      );
     } catch (error) {
       toast.error(error.response?.data?.message || 'We could not sign you in. Please try again.');
     } finally {
@@ -59,9 +66,13 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="login-divider"><span>or</span></div>
-        <GoogleButton />
-        <p className="login-form__switch">New to PF Speaking Master? <Link to="/register">Create an account</Link></p>
+        {!isDesktopLogin && (
+          <>
+            <div className="login-divider"><span>or</span></div>
+            <GoogleButton />
+            <p className="login-form__switch">New to PF Speaking Master? <Link to="/register">Create an account</Link></p>
+          </>
+        )}
       </div>
     </AuthLayout>
   );
