@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaMobileAlt, FaBook, FaThumbtack } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaBook, FaThumbtack } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -44,11 +44,12 @@ const getVideoElementId = (prefix, uid) =>
   `${prefix}-${getUidString(uid).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
 // Custom hook for screen sharing
-const useScreenShare = (client, userId) => {
+const useScreenShare = (client) => {
   const [screenTrack, setScreenTrack] = useState(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [error, setError] = useState(null);
-  const [previousVideoTrack, setPreviousVideoTrack] = useState(null);
+  const screenTrackRef = useRef(null);
+  const previousVideoTrackRef = useRef(null);
 
   const startScreenShare = async () => {
     try {
@@ -57,7 +58,7 @@ const useScreenShare = (client, userId) => {
       const videoTrack = localTracks.find(track => track.trackMediaType === "video");
       
       if (videoTrack) {
-        setPreviousVideoTrack(videoTrack);
+        previousVideoTrackRef.current = videoTrack;
         await client.unpublish(videoTrack);
       }
 
@@ -74,6 +75,8 @@ const useScreenShare = (client, userId) => {
         screenSourceType: "screen"
       });
 
+      screenTrackRef.current = screenVideoTrack;
+
       // Set up screen sharing ended event
       screenVideoTrack.on("track-ended", async () => {
         await stopScreenShare();
@@ -82,38 +85,51 @@ const useScreenShare = (client, userId) => {
       await client.publish(screenVideoTrack);
       setScreenTrack(screenVideoTrack);
       setIsScreenSharing(true);
+      return true;
 
     } catch (error) {
       setError(error.message);
       console.error("Screen sharing failed:", error);
+
+      if (screenTrackRef.current) {
+        screenTrackRef.current.close();
+        screenTrackRef.current = null;
+      }
+      setScreenTrack(null);
+      setIsScreenSharing(false);
       
       // If screen sharing fails, republish the previous video track
-      if (previousVideoTrack) {
+      const cameraTrack = previousVideoTrackRef.current;
+      if (cameraTrack) {
         try {
-          await client.publish(previousVideoTrack);
-          setPreviousVideoTrack(null);
+          await client.publish(cameraTrack);
+          previousVideoTrackRef.current = null;
         } catch (e) {
           console.error("Failed to restore camera track:", e);
         }
       }
+      return false;
     }
   };
 
   const stopScreenShare = async () => {
     try {
-      if (screenTrack) {
-        screenTrack.close();
-        await client.unpublish(screenTrack);
+      const activeScreenTrack = screenTrackRef.current;
+      if (activeScreenTrack) {
+        await client.unpublish(activeScreenTrack);
+        activeScreenTrack.close();
+        screenTrackRef.current = null;
         setScreenTrack(null);
         setIsScreenSharing(false);
 
         // Republish the previous video track if it exists
-        if (previousVideoTrack) {
-          await client.publish(previousVideoTrack);
-          if (previousVideoTrack.restart) {
-            previousVideoTrack.restart();
+        const cameraTrack = previousVideoTrackRef.current;
+        if (cameraTrack) {
+          await client.publish(cameraTrack);
+          if (cameraTrack.restart) {
+            cameraTrack.restart();
           }
-          setPreviousVideoTrack(null);
+          previousVideoTrackRef.current = null;
         }
       }
     } catch (error) {
@@ -237,6 +253,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [isRoomListDragging, setIsRoomListDragging] = useState(false);
   const roomListDragStart = useRef({ x: 0, y: 0 });
   const dragStartPos = useRef({ x: 0, y: 0 });
+  const cameraPictureInPictureRef = useRef(null);
+  const wasScreenSharingRef = useRef(false);
   const client = useClient();
   const { ready, tracks } = useMicrophoneAndCameraTracks();
   const { user } = useAuth();
@@ -248,7 +266,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     error: screenShareError, 
     startScreenShare, 
     stopScreenShare 
-  } = useScreenShare(client, user.id);
+  } = useScreenShare(client);
   
   const qualityStats = useQualityMonitor(client);
   const { isRecording, startRecording, stopRecording } = useRecording();
@@ -280,6 +298,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [activeSpeakerUid, setActiveSpeakerUid] = useState(null);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+  const [isCameraPictureInPicture, setIsCameraPictureInPicture] = useState(false);
 
   useEffect(() => {
     const setTrackEnabled = async () => {
@@ -307,11 +326,104 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     setIsVideoMuted(prev => !prev);
   };
 
+  useEffect(() => {
+    const videoElement = cameraPictureInPictureRef.current;
+    const cameraTrack = tracks?.[1];
+
+    if (!videoElement || !cameraTrack?.getMediaStreamTrack) return undefined;
+
+    const cameraStream = new MediaStream([cameraTrack.getMediaStreamTrack()]);
+    videoElement.srcObject = cameraStream;
+    videoElement.play().catch(() => {
+      // The Share Screen click will retry playback with a user gesture.
+    });
+
+    const handlePictureInPictureEnter = () => setIsCameraPictureInPicture(true);
+    const handlePictureInPictureLeave = () => setIsCameraPictureInPicture(false);
+    const handleWebkitPresentationChange = () => {
+      setIsCameraPictureInPicture(videoElement.webkitPresentationMode === 'picture-in-picture');
+    };
+
+    videoElement.addEventListener('enterpictureinpicture', handlePictureInPictureEnter);
+    videoElement.addEventListener('leavepictureinpicture', handlePictureInPictureLeave);
+    videoElement.addEventListener('webkitpresentationmodechanged', handleWebkitPresentationChange);
+
+    return () => {
+      videoElement.removeEventListener('enterpictureinpicture', handlePictureInPictureEnter);
+      videoElement.removeEventListener('leavepictureinpicture', handlePictureInPictureLeave);
+      videoElement.removeEventListener('webkitpresentationmodechanged', handleWebkitPresentationChange);
+      if (videoElement.srcObject === cameraStream) {
+        videoElement.srcObject = null;
+      }
+    };
+  }, [tracks]);
+
+  const openCameraPictureInPicture = useCallback(async () => {
+    const videoElement = cameraPictureInPictureRef.current;
+
+    if (!videoElement || isVideoMuted) return false;
+
+    try {
+      if (videoElement.paused) {
+        await videoElement.play();
+      }
+
+      if (document.pictureInPictureEnabled && videoElement.requestPictureInPicture) {
+        if (document.pictureInPictureElement !== videoElement) {
+          await videoElement.requestPictureInPicture();
+        }
+        return true;
+      }
+
+      if (
+        videoElement.webkitSupportsPresentationMode &&
+        videoElement.webkitSetPresentationMode
+      ) {
+        videoElement.webkitSetPresentationMode('picture-in-picture');
+        return true;
+      }
+    } catch (pictureInPictureError) {
+      console.info('Camera Picture-in-Picture is unavailable:', pictureInPictureError);
+    }
+
+    return false;
+  }, [isVideoMuted]);
+
+  const closeCameraPictureInPicture = useCallback(async () => {
+    const videoElement = cameraPictureInPictureRef.current;
+
+    try {
+      if (document.pictureInPictureElement === videoElement) {
+        await document.exitPictureInPicture();
+      } else if (
+        videoElement?.webkitPresentationMode === 'picture-in-picture' &&
+        videoElement.webkitSetPresentationMode
+      ) {
+        videoElement.webkitSetPresentationMode('inline');
+      }
+    } catch (pictureInPictureError) {
+      console.info('Could not close camera Picture-in-Picture:', pictureInPictureError);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (wasScreenSharingRef.current && !isScreenSharing) {
+      closeCameraPictureInPicture();
+    }
+    wasScreenSharingRef.current = isScreenSharing;
+  }, [closeCameraPictureInPicture, isScreenSharing]);
+
   const toggleScreenShare = async () => {
     if (!isScreenSharing) {
-      await startScreenShare();
+      const pictureInPictureOpened = await openCameraPictureInPicture();
+      const screenShareStarted = await startScreenShare();
+
+      if (!screenShareStarted && pictureInPictureOpened) {
+        await closeCameraPictureInPicture();
+      }
     } else {
       await stopScreenShare();
+      await closeCameraPictureInPicture();
     }
   };
 
@@ -1376,7 +1488,18 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   }
 
   return (
-    <div className="relative w-full h-full bg-gray-900 video-room-container">
+    <div className={`relative w-full h-full bg-gray-900 video-room-container${isMobileGalleryLayout ? ' mobile-gallery-layout' : ''}`}>
+      {tracks?.[1] && (
+        <video
+          ref={cameraPictureInPictureRef}
+          className="screen-share-camera-pip-source"
+          autoPlay
+          muted
+          playsInline
+          aria-hidden="true"
+        />
+      )}
+
       {/* Error display */}
       <ErrorDisplay error={error || screenShareError} />
       
@@ -1420,7 +1543,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             />
             
             {/* Floating Video Window */}
-            {tracks && tracks[1] && !isVideoMuted && (
+            {tracks && tracks[1] && !isVideoMuted && !isCameraPictureInPicture && (
               <div
                 className={`absolute cursor-move rounded-lg overflow-hidden shadow-lg transition-all ${
                   isVideoExpanded ? 'w-96 h-72' : 'w-48 h-36'
@@ -1450,11 +1573,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           </div>
         </div>
       )}
-
-      <div className="orientation-prompt">
-        <FaMobileAlt />
-        <p>Rotate your phone for the best classroom view.</p>
-      </div>
 
       {isMobileGalleryLayout ? (
         <div className="mobile-zoom-room">
