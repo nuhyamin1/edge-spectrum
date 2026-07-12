@@ -357,88 +357,125 @@
   }
 }
 
-.feedback-controls {
+.feedback-popover {
   position: fixed;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 8px 8px 8px 32px;
-  border-radius: 8px 0 0 8px;
-  transition: transform 0.3s ease;
-  max-height: 80vh;
+  bottom: 88px;
+  left: 50%;
+  z-index: 1040;
+  width: min(440px, calc(100vw - 24px));
+  max-height: calc(100vh - 150px);
+  max-height: calc(100dvh - 150px);
+  padding: 16px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.97);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.46);
+  color: #e2e8f0;
+  transform: translateX(-50%);
+  animation: learningToolsPanelIn 0.2s ease-out;
 }
 
-.feedback-controls::-webkit-scrollbar {
-  width: 6px;
-}
-
-.feedback-controls::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.feedback-controls::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
-}
-
-.feedback-controls.collapsed {
-  transform: translateX(calc(100% - 16px)) translateY(-50%);
-}
-
-.feedback-toggle {
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: transparent;
-  border: none;
-  border-radius: 4px;
-  width: 24px;
-  height: 40px;
-  color: white;
-  cursor: pointer;
+.feedback-popover-header {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.feedback-popover-header > div > span {
+  display: block;
+  margin-bottom: 3px;
+  color: #60a5fa;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.feedback-popover-header h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.feedback-popover-header p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.feedback-popover-header button {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: background-color 0.2s ease;
-}
-
-.feedback-toggle:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.feedback-button {
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 14px;
-  color: white;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
   cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
+}
+
+.feedback-popover-header button:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.feedback-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.feedback-option {
+  min-width: 0;
+  min-height: 46px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 120px;
-  opacity: 0.9;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
-.feedback-button:hover {
-  opacity: 1;
-  transform: scale(1.02);
+.feedback-option:hover {
+  border-color: rgba(147, 197, 253, 0.28);
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-1px);
 }
 
-.feedback-button svg {
-  font-size: 14px;
+.feedback-option:focus-visible,
+.feedback-popover-header button:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+.feedback-option-swatch {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 12px;
 }
 
 /* Dictionary pronunciation fields */
@@ -1564,20 +1601,12 @@
     font-size: 14px;
   }
   
-  /* Adjust feedback controls for mobile */
-  .feedback-controls {
-    padding: 6px 6px 6px 24px;
-    max-width: 160px;
-  }
-  
-  .feedback-toggle {
-    width: 20px;
-  }
-  
-  .feedback-button {
-    padding: 4px 8px;
-    font-size: 12px;
-    min-width: 100px;
+  .feedback-popover {
+    bottom: 70px;
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 130px);
+    padding: 13px;
+    border-radius: 14px;
   }
   
   /* Adjust pronunciation fields for mobile */
@@ -1609,8 +1638,13 @@
     bottom: 62px;
   }
 
-  .learning-tools-panel {
+  .learning-tools-panel,
+  .feedback-popover {
     max-height: calc(100dvh - 78px);
+  }
+
+  .feedback-popover {
+    bottom: 62px;
   }
 
   .video-room-container {

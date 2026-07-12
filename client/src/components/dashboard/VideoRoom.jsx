@@ -306,7 +306,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const feedbackTimeoutRef = useRef(null);
   const pronunciationAudioContextRef = useRef(null);
   const pronunciationAudioSourceRef = useRef(null);
-  const [isFeedbackCollapsed, setIsFeedbackCollapsed] = useState(false);
+  const [showFeedbackPalette, setShowFeedbackPalette] = useState(false);
   const [pronunciationDialect, setPronunciationDialect] = useState('en-US');
   const [pronunciationError, setPronunciationError] = useState(null);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -820,6 +820,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       console.log('Emitting feedback:', feedbackData);
       socketRef.current.emit('teacher-feedback', feedbackData);
       showFeedbackMessage(message);
+      setShowFeedbackPalette(false);
     }
   };
 
@@ -1293,6 +1294,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
   const toggleDictionaryTool = () => {
     setShowDictionary(previous => !previous);
+    setShowFeedbackPalette(false);
+  };
+
+  const toggleFeedbackPalette = () => {
+    setShowFeedbackPalette(previous => !previous);
+    setShowDictionary(false);
   };
 
   const teacherUser = useMemo(
@@ -1941,6 +1948,20 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             <span className="meeting-control-label">Words</span>
           </button>
 
+          {isTeacher && (
+            <button
+              type="button"
+              onClick={toggleFeedbackPalette}
+              className={`meeting-control ${showFeedbackPalette ? 'is-active' : ''}`}
+              title="Quick feedback"
+              aria-label="Quick feedback"
+              aria-pressed={showFeedbackPalette}
+            >
+              <span className="meeting-control-icon"><FaComments /></span>
+              <span className="meeting-control-label">Feedback</span>
+            </button>
+          )}
+
           <span className="meeting-controls-divider" aria-hidden="true" />
 
           <button
@@ -2064,28 +2085,45 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       {/* Feedback Overlay */}
       <FeedbackOverlay message={feedbackMessage} isVisible={showFeedback} />
 
-      {/* Feedback Controls */}
-      {isTeacher && (
-        <div className={`feedback-controls ${isFeedbackCollapsed ? 'collapsed' : ''}`}>
-          <button 
-            className="feedback-toggle"
-            onClick={() => setIsFeedbackCollapsed(!isFeedbackCollapsed)}
-            title={isFeedbackCollapsed ? "Show feedback options" : "Hide feedback options"}
-          >
-            {isFeedbackCollapsed ? <FaChevronLeft /> : <FaChevronRight />}
-          </button>
-          {feedbackMessages.map((feedback, index) => (
+      {/* Teacher quick feedback */}
+      {isTeacher && showFeedbackPalette && (
+        <section className="feedback-popover" aria-label="Quick feedback options">
+          <div className="feedback-popover-header">
+            <div>
+              <span>Teacher tool</span>
+              <h2>Quick feedback</h2>
+              <p>Send an encouraging message to everyone in the room.</p>
+            </div>
             <button
-              key={index}
-              className="feedback-button"
-              style={{ backgroundColor: feedback.color }}
-              onClick={() => handleFeedback(feedback.text)}
-              title={feedback.text}
+              type="button"
+              onClick={() => setShowFeedbackPalette(false)}
+              aria-label="Close quick feedback"
+              title="Close"
             >
-              {feedback.icon} {feedback.text}
+              <FaTimesCircle />
             </button>
-          ))}
-        </div>
+          </div>
+          <div className="feedback-option-grid">
+            {feedbackMessages.map((feedback, index) => (
+              <button
+                type="button"
+                key={index}
+                className="feedback-option"
+                onClick={() => handleFeedback(feedback.text)}
+                title={feedback.text}
+              >
+                <span
+                  className="feedback-option-swatch"
+                  style={{ backgroundColor: feedback.color }}
+                  aria-hidden="true"
+                >
+                  {feedback.icon}
+                </span>
+                <span>{feedback.text}</span>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Learning tools */}
