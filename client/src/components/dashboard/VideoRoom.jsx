@@ -307,10 +307,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const pronunciationAudioContextRef = useRef(null);
   const pronunciationAudioSourceRef = useRef(null);
   const [isFeedbackCollapsed, setIsFeedbackCollapsed] = useState(false);
-  const [pronunciationWord, setPronunciationWord] = useState('');
   const [pronunciationDialect, setPronunciationDialect] = useState('en-US');
   const [pronunciationError, setPronunciationError] = useState(null);
-  const [showPronunciation, setShowPronunciation] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
@@ -1162,8 +1160,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   }, []);
 
   // Prefer server-generated voices so mobile browsers do not use unreliable local TTS.
-  const handlePronunciation = async () => {
-    if (!pronunciationWord.trim()) return;
+  const handlePronunciation = async (text) => {
+    const pronunciationText = typeof text === 'string' ? text.trim() : '';
+    if (!pronunciationText) return;
 
     let audioContext = pronunciationAudioContextRef.current;
 
@@ -1182,11 +1181,11 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
     try {
       await resumePromise;
-      await handleApiPronunciation(audioContext);
+      await handleApiPronunciation(audioContext, pronunciationText);
     } catch (error) {
       console.error('Server pronunciation failed:', error);
       if (!isMobileDevice) {
-        handleBrowserPronunciationFallback();
+        handleBrowserPronunciationFallback(pronunciationText);
       } else {
         setPronunciationError('Pronunciation audio is unavailable. Please try again later.');
         setIsLoadingAudio(false);
@@ -1194,12 +1193,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
-  const handleApiPronunciation = async (audioContext) => {
+  const handleApiPronunciation = async (audioContext, pronunciationText) => {
     setIsLoadingAudio(true);
     setPronunciationError(null);
 
     const response = await axios.post('/api/pronounce', {
-      text: pronunciationWord,
+      text: pronunciationText,
       dialect: pronunciationDialect
     }, {
       responseType: 'arraybuffer',
@@ -1244,7 +1243,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     }
   };
 
-  const handleBrowserPronunciationFallback = () => {
+  const handleBrowserPronunciationFallback = (pronunciationText) => {
     const hasSpeechSynthesis = typeof window !== 'undefined' && window.speechSynthesis;
 
     if (!hasSpeechSynthesis) {
@@ -1256,7 +1255,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     setPronunciationError('Using desktop system voice because online pronunciation is unavailable.');
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(pronunciationWord);
+    const utterance = new SpeechSynthesisUtterance(pronunciationText);
     utterance.lang = pronunciationDialect;
     utterance.onend = () => setIsLoadingAudio(false);
     utterance.onerror = () => {
@@ -1290,6 +1289,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     } finally {
       setIsDictionaryLoading(false);
     }
+  };
+
+  const toggleDictionaryTool = () => {
+    setShowDictionary(previous => !previous);
   };
 
   const teacherUser = useMemo(
@@ -1356,6 +1359,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   );
   const displayedStudentCount = studentUsers.length + (!isTeacher && start && tracks ? 1 : 0);
   const remainingCapacity = Math.max(0, MAX_VIDEO_ROOM_STUDENTS - displayedStudentCount);
+  const dictionaryPronunciationText = dictionaryLanguage === 'id'
+    ? dictionaryResult?.meanings?.[0]?.definitions?.[0]?.definition || ''
+    : dictionaryResult?.word || dictionaryWord;
 
   useEffect(() => {
     if (participantPage > totalParticipantPages - 1) {
@@ -1623,27 +1629,38 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
       {isMobileGalleryLayout ? (
         <div className="mobile-zoom-room">
-          <div className="mobile-zoom-header">
-            <div className="room-stat-row">
-              <span>{displayedStudentCount}/{MAX_VIDEO_ROOM_STUDENTS}</span>
-              <span>{remainingCapacity} open</span>
+          <div className="room-header mobile-room-header">
+            <div className="room-header-identity">
+              <span className="room-live-indicator" aria-hidden="true" />
+              <div className="room-header-copy">
+                <h1>{session?.title || 'Live Classroom'}</h1>
+                <p>{session?.subject || (isTeacher ? 'Teacher room' : 'Student room')}</p>
+              </div>
             </div>
-            <div className="participant-page-controls">
-              <button
-                onClick={goToPreviousParticipantPage}
-                disabled={currentParticipantPage === 0}
-                title="Previous participants"
-              >
-                <FaChevronLeft />
-              </button>
-              <span>{currentParticipantPage + 1}/{totalParticipantPages}</span>
-              <button
-                onClick={goToNextParticipantPage}
-                disabled={currentParticipantPage >= totalParticipantPages - 1}
-                title="Next participants"
-              >
-                <FaChevronRight />
-              </button>
+            <div className="room-header-actions">
+              <span className="room-header-badge participant-count-badge">
+                <FaUsers aria-hidden="true" />
+                {displayedStudentCount}/{MAX_VIDEO_ROOM_STUDENTS}
+              </span>
+              <div className="participant-page-controls">
+                <button
+                  onClick={goToPreviousParticipantPage}
+                  disabled={currentParticipantPage === 0}
+                  title="Previous participants"
+                  aria-label="Previous participant page"
+                >
+                  <FaChevronLeft />
+                </button>
+                <span>{currentParticipantPage + 1}/{totalParticipantPages}</span>
+                <button
+                  onClick={goToNextParticipantPage}
+                  disabled={currentParticipantPage >= totalParticipantPages - 1}
+                  title="Next participants"
+                  aria-label="Next participant page"
+                >
+                  <FaChevronRight />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1655,15 +1672,41 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
       ) : (
       <div className="video-room-layout">
-        <div className="teacher-stage">
-          <div className="room-stat-row">
-            <span>{displayedStudentCount}/{MAX_VIDEO_ROOM_STUDENTS} students</span>
-            <span>{remainingCapacity} seats open</span>
-            {qualityStats.sendBitrate ? (
-              <span>{Math.round(qualityStats.sendBitrate)} kbps</span>
-            ) : null}
+        <div className="room-header desktop-room-header">
+          <div className="room-header-identity">
+            <span className="room-live-indicator" aria-hidden="true" />
+            <div className="room-header-copy">
+              <div className="room-header-title-row">
+                <h1>{session?.title || 'Live Classroom'}</h1>
+                <span className="room-live-label">Live</span>
+              </div>
+              <p>
+                {session?.subject || 'Online class'}
+                <span aria-hidden="true"> · </span>
+                {isTeacher ? 'Teacher view' : 'Student view'}
+              </p>
+            </div>
           </div>
 
+          <div className="room-header-actions">
+            <span className="room-header-badge connection-badge">
+              <span className="connection-dot" aria-hidden="true" />
+              {start ? 'Connected' : 'Connecting'}
+            </span>
+            <span className="room-header-badge participant-count-badge">
+              <FaUsers aria-hidden="true" />
+              {displayedStudentCount}/{MAX_VIDEO_ROOM_STUDENTS} students
+            </span>
+            <span className="room-header-badge seats-badge">{remainingCapacity} seats open</span>
+            {qualityStats.sendBitrate ? (
+              <span className="room-header-badge bitrate-badge">
+                {Math.round(qualityStats.sendBitrate)} kbps
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="teacher-stage">
           <div className="teacher-video-card">
             {isTeacher && start && tracks ? (
               <div className="relative aspect-video" id="teacher-video">
@@ -1884,6 +1927,22 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             <span className="meeting-control-label">Whiteboard</span>
           </button>
 
+          <span className="meeting-controls-divider" aria-hidden="true" />
+
+          <button
+            type="button"
+            onClick={toggleDictionaryTool}
+            className={`meeting-control ${showDictionary ? 'is-active' : ''}`}
+            title="Dictionary and pronunciation"
+            aria-label="Dictionary and pronunciation"
+            aria-pressed={showDictionary}
+          >
+            <span className="meeting-control-icon"><FaBook /></span>
+            <span className="meeting-control-label">Words</span>
+          </button>
+
+          <span className="meeting-controls-divider" aria-hidden="true" />
+
           <button
             type="button"
             onClick={toggleHandRaise}
@@ -2029,84 +2088,40 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         </div>
       )}
 
-      {/* Pronunciation Tool */}
-      <div className={`pronunciation-tool ${showPronunciation ? 'expanded' : ''}`}>
-        <button
-          onClick={() => setShowPronunciation(!showPronunciation)}
-          className="pronunciation-toggle"
-          title="Pronunciation Tool"
-        >
-          <FaVolumeUp />
-        </button>
-        
-        {showPronunciation && (
-          <div className="pronunciation-content">
-            <select
-              value={pronunciationDialect}
-              onChange={(e) => setPronunciationDialect(e.target.value)}
-              className="voice-select"
-            >
-              {PRONUNCIATION_DIALECTS.map(dialect => (
-                <option key={dialect.value} value={dialect.value}>
-                  {dialect.label}
-                </option>
-              ))}
-            </select>
-
-            <div className="pronunciation-input-group">
-              <input
-                type="text"
-                value={pronunciationWord}
-                onChange={(e) => {
-                  setPronunciationWord(e.target.value);
-                  setPronunciationError(null);
-                }}
-                placeholder="Enter word to pronounce..."
-                className="pronunciation-input"
-              />
+      {/* Learning tools */}
+      <aside className={`learning-tools ${showDictionary ? 'expanded' : ''}`}>
+        {showDictionary && (
+          <section className="learning-tools-panel" aria-label="Dictionary tool panel">
+            <div className="learning-tools-panel-header">
+              <div>
+                <span className="learning-tools-eyebrow">Learning tool</span>
+                <h2>Dictionary</h2>
+                <p>Look up, translate, and hear words in one place.</p>
+              </div>
               <button
-                onClick={handlePronunciation}
-                className="pronunciation-button"
-                disabled={!pronunciationWord.trim() || isLoadingAudio}
+                type="button"
+                className="learning-tools-close"
+                onClick={() => setShowDictionary(false)}
+                aria-label="Close dictionary tool"
+                title="Close"
               >
-                {isLoadingAudio ? '...' : <FaVolumeUp />}
+                <FaTimesCircle />
               </button>
             </div>
-            {pronunciationError ? (
-              <div className="pronunciation-status error">
-                <FaVolumeUp size={10} className="inline" />
-                <span>{pronunciationError}</span>
-              </div>
-            ) : (
-              <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                <FaVolumeUp size={10} className="inline" />
-                <span>Using online English voice</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* Dictionary Tool */}
-      <div className={`dictionary-tool ${showDictionary ? 'expanded' : ''}`}>
-        <button
-          onClick={() => setShowDictionary(!showDictionary)}
-          className="dictionary-toggle"
-          title="Dictionary Tool"
-        >
-          <FaBook />
-        </button>
-        
-        {showDictionary && (
-          <div className="dictionary-content">
+            <div className="dictionary-content">
             <div className="dictionary-language-selector mb-2">
-              <label className="text-gray-300 text-xs mb-1 block">Language:</label>
+              <label className="learning-tools-field-label" htmlFor="dictionary-language">
+                Language
+              </label>
               <select
+                id="dictionary-language"
                 value={dictionaryLanguage}
                 onChange={(e) => {
                   setDictionaryLanguage(e.target.value);
                   setDictionaryResult(null);
                   setDictionaryError(null);
+                  setPronunciationError(null);
                 }}
                 className="dictionary-language-select"
               >
@@ -2117,10 +2132,21 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             </div>
             <div className="dictionary-input-group">
               <input
+                id="dictionary-word"
                 type="text"
                 value={dictionaryWord}
-                onChange={(e) => setDictionaryWord(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleDictionaryLookup()}
+                onChange={(e) => {
+                  setDictionaryWord(e.target.value);
+                  setDictionaryResult(null);
+                  setDictionaryError(null);
+                  setPronunciationError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && dictionaryWord.trim() && !isDictionaryLoading) {
+                    handleDictionaryLookup();
+                  }
+                }}
+                aria-label="Word to look up"
                 placeholder={
                   dictionaryLanguage === 'id' 
                     ? 'Enter Indonesian word...' 
@@ -2131,12 +2157,66 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 className="dictionary-input"
               />
               <button
+                type="button"
                 onClick={handleDictionaryLookup}
                 className="dictionary-button"
                 disabled={!dictionaryWord.trim() || isDictionaryLoading}
+                aria-label="Look up word"
               >
                 {isDictionaryLoading ? '...' : <FaBook />}
               </button>
+            </div>
+
+            <div className="dictionary-pronunciation-section">
+              <div className="dictionary-pronunciation-heading">
+                <span>Pronunciation</span>
+                <small>
+                  {dictionaryLanguage === 'id' ? 'English translation' : 'English word'}
+                </small>
+              </div>
+              <div className="dictionary-pronunciation-controls">
+                <select
+                  id="dictionary-pronunciation-dialect"
+                  value={pronunciationDialect}
+                  onChange={(e) => {
+                    setPronunciationDialect(e.target.value);
+                    setPronunciationError(null);
+                  }}
+                  className="voice-select"
+                  aria-label="Pronunciation dialect"
+                >
+                  {PRONUNCIATION_DIALECTS.map(dialect => (
+                    <option key={dialect.value} value={dialect.value}>
+                      {dialect.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handlePronunciation(dictionaryPronunciationText)}
+                  className="pronunciation-button"
+                  disabled={!dictionaryPronunciationText.trim() || isLoadingAudio}
+                  aria-label={`Play pronunciation for ${dictionaryPronunciationText || 'current word'}`}
+                  title="Play pronunciation"
+                >
+                  {isLoadingAudio ? '...' : <FaVolumeUp />}
+                </button>
+              </div>
+              {pronunciationError ? (
+                <div className="pronunciation-status error">
+                  <FaVolumeUp size={10} className="inline" />
+                  <span>{pronunciationError}</span>
+                </div>
+              ) : (
+                <div className="pronunciation-status">
+                  <FaVolumeUp size={10} className="inline" />
+                  <span>
+                    {dictionaryLanguage === 'id' && !dictionaryResult
+                      ? 'Look up the word first to hear its English translation.'
+                      : 'Choose an accent, then play the pronunciation.'}
+                  </span>
+                </div>
+              )}
             </div>
             
             {dictionaryError && (
@@ -2180,9 +2260,10 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
                 ))}
               </div>
             )}
-          </div>
+            </div>
+          </section>
         )}
-      </div>
+      </aside>
     </div>
   );
 };
