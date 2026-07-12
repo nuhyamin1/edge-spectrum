@@ -11,6 +11,7 @@ import DiscussionRoom from '../DiscussionRoom';
 import ExerciseRoom from '../ExerciseRoom';
 import MaterialRoom from '../MaterialRoom';
 import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaFolder } from 'react-icons/fa';
+import { exitAppFullscreen, requestAppFullscreen } from '../../../utils/browserFullscreen';
 
 const StudentClassroom = () => {
   const { sessionId } = useParams();
@@ -26,6 +27,17 @@ const StudentClassroom = () => {
   const [activeTab, setActiveTab] = useState('attendance');
   const [exerciseContent, setExerciseContent] = useState('');
   const sidebarRef = useRef(null);
+
+  const enterVideoRoom = () => {
+    requestAppFullscreen();
+    setIsMobileMenuOpen(false);
+    setActiveTab('video');
+  };
+
+  const exitVideoRoom = () => {
+    exitAppFullscreen();
+    setActiveTab('attendance');
+  };
   
   // Handle click outside sidebar to close mobile menu
   useEffect(() => {
@@ -300,7 +312,7 @@ const StudentClassroom = () => {
         </button>
 
         <button 
-          onClick={() => setActiveTab('video')}
+          onClick={enterVideoRoom}
           className={`p-2 rounded-lg transition-colors duration-200 ${
             activeTab === 'video' 
               ? 'text-blue-500 bg-gray-700' 
@@ -386,7 +398,12 @@ const StudentClassroom = () => {
             </div>
           )}
           {activeTab === 'video' && (
-            <VideoRoom sessionId={sessionId} isTeacher={false} session={session} />
+            <VideoRoom
+              sessionId={sessionId}
+              isTeacher={false}
+              session={session}
+              onExit={exitVideoRoom}
+            />
           )}
           {activeTab === 'whiteboard' && (
             <Whiteboard sessionId={sessionId} />

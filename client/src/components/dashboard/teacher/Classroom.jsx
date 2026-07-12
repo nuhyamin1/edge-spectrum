@@ -12,6 +12,7 @@ import ExerciseRoom from '../ExerciseRoom';
 import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaPlayCircle, FaTimesCircle, FaFolder } from 'react-icons/fa';
 import DiscussionRoom from '../DiscussionRoom';
 import MaterialRoom from '../MaterialRoom';
+import { exitAppFullscreen, requestAppFullscreen } from '../../../utils/browserFullscreen';
 
 const Classroom = () => {
   const { sessionId } = useParams();
@@ -24,6 +25,17 @@ const Classroom = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const socketRef = useRef(null);
   const sidebarRef = useRef(null);
+
+  const enterVideoRoom = () => {
+    requestAppFullscreen();
+    setIsMobileMenuOpen(false);
+    setActiveTab('video');
+  };
+
+  const exitVideoRoom = () => {
+    exitAppFullscreen();
+    setActiveTab('attendance');
+  };
 
   const updateAttendanceStatus = useCallback((studentId, status) => {
     setAttendanceStatus(prev => ({
@@ -370,7 +382,7 @@ const Classroom = () => {
         </button>
 
         <button 
-          onClick={() => setActiveTab('video')}
+          onClick={enterVideoRoom}
           className={`p-2 rounded-lg transition-colors duration-200 ${
             activeTab === 'video' 
               ? 'text-blue-500 bg-gray-700' 
@@ -522,7 +534,12 @@ const Classroom = () => {
                 </div>
               )}
               {activeTab === 'video' && (
-                <VideoRoom sessionId={sessionId} isTeacher={true} session={session} />
+                <VideoRoom
+                  sessionId={sessionId}
+                  isTeacher={true}
+                  session={session}
+                  onExit={exitVideoRoom}
+                />
               )}
               {activeTab === 'whiteboard' && (
                 <Whiteboard sessionId={sessionId} />

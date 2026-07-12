@@ -7,6 +7,7 @@ import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
 import axios from 'axios';
+import { exitAppFullscreen, getFullscreenElement, requestAppFullscreen } from '../../utils/browserFullscreen';
 
 const config = {
   mode: "rtc",
@@ -307,7 +308,7 @@ const useLocalMediaTracks = () => {
 };
 
 
-const VideoRoom = ({ sessionId, isTeacher, session }) => {
+const VideoRoom = ({ sessionId, isTeacher, session, onExit }) => {
   const [users, setUsers] = useState([]);
   const [start, setStart] = useState(false);
   const [error, setError] = useState(null);
@@ -319,6 +320,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [videoPosition, setVideoPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [isVideoExpanded, setIsVideoExpanded] = useState(false);
+  const [isBrowserFullscreen, setIsBrowserFullscreen] = useState(() => Boolean(getFullscreenElement()));
   const [breakoutRooms, setBreakoutRooms] = useState([]);
   const [showBreakoutPanel, setShowBreakoutPanel] = useState(false);
   const [showDeviceSettings, setShowDeviceSettings] = useState(false);
@@ -343,6 +345,38 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     ? `${sessionId}_breakout_${currentBreakoutRoom}`
     : sessionId;
   const screenShareOwnerId = isTeacher ? 'teacher' : user.id;
+
+  useEffect(() => {
+    const updateFullscreenState = () => {
+      setIsBrowserFullscreen(Boolean(getFullscreenElement()));
+    };
+
+    document.documentElement.classList.add('video-room-page-lock');
+    document.body.classList.add('video-room-page-lock');
+    document.addEventListener('fullscreenchange', updateFullscreenState);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenState);
+    updateFullscreenState();
+
+    return () => {
+      document.documentElement.classList.remove('video-room-page-lock');
+      document.body.classList.remove('video-room-page-lock');
+      document.removeEventListener('fullscreenchange', updateFullscreenState);
+      document.removeEventListener('webkitfullscreenchange', updateFullscreenState);
+    };
+  }, []);
+
+  const toggleBrowserFullscreen = () => {
+    if (getFullscreenElement()) {
+      exitAppFullscreen();
+    } else {
+      requestAppFullscreen();
+    }
+  };
+
+  const handleExitVideoRoom = () => {
+    exitAppFullscreen();
+    if (onExit) onExit();
+  };
   
   // Use our custom hooks
   const { 
@@ -1083,8 +1117,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
   const toggleFullscreen = (elementId) => {
     const element = document.getElementById(elementId);
+    const currentFullscreenElement = getFullscreenElement();
     
-    if (!document.fullscreenElement) {
+    if (currentFullscreenElement !== element) {
       if (element.requestFullscreen) {
         element.requestFullscreen();
       } else if (element.webkitRequestFullscreen) {
@@ -1711,7 +1746,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
   if (error) {
     return (
-      <div className="h-full w-full bg-gray-100 p-4 flex items-center justify-center">
+      <div className="video-room-status-screen bg-gray-100 p-4 flex items-center justify-center">
         <div className="bg-red-50 text-red-700 p-4 rounded-lg shadow">
           <p className="font-medium">Error: {error}</p>
           <p className="text-sm mt-2">Please refresh the page and try again.</p>
@@ -1722,7 +1757,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
   if (!ready) {
     return (
-      <div className="h-full w-full bg-gray-100 p-4 flex items-center justify-center">
+      <div className="video-room-status-screen bg-gray-100 p-4 flex items-center justify-center">
         <div className="bg-white p-4 rounded-lg shadow">
           <p className="text-gray-600">Initializing video... Please allow camera and microphone access.</p>
         </div>
@@ -2220,6 +2255,31 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           >
             <span className="meeting-control-icon"><FaCog /></span>
             <span className="meeting-control-label">Settings</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleBrowserFullscreen}
+            className={`meeting-control ${isBrowserFullscreen ? 'is-active' : ''}`}
+            title={isBrowserFullscreen ? 'Exit browser fullscreen' : 'Enter browser fullscreen'}
+            aria-label={isBrowserFullscreen ? 'Exit browser fullscreen' : 'Enter browser fullscreen'}
+            aria-pressed={isBrowserFullscreen}
+          >
+            <span className="meeting-control-icon">
+              {isBrowserFullscreen ? <FaCompress /> : <FaExpand />}
+            </span>
+            <span className="meeting-control-label">{isBrowserFullscreen ? 'Window' : 'Fullscreen'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExitVideoRoom}
+            className="meeting-control is-danger"
+            title="Exit video room"
+            aria-label="Exit video room"
+          >
+            <span className="meeting-control-icon"><FaTimesCircle /></span>
+            <span className="meeting-control-label">Exit</span>
           </button>
         </div>
       </div>
