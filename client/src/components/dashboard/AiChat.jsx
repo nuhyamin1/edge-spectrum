@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../utils/axios';
+import { useAuth } from '../../context/AuthContext';
 import {
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
@@ -12,22 +13,35 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 
-const initialGreeting = {
-  role: 'ai',
-  content: "Hi, I'm PFSM Bot. How can I help today?"
-};
+const legacyGreetingContent = "Hi, I'm PFSM Bot. How can I help today?";
 const CHAT_STORAGE_KEY = 'pfsm-ai-chat-conversation';
+const WELCOME_BUBBLE_STORAGE_KEY = 'pfsm-ai-chat-welcome-bubble';
 
-const isInitialGreeting = (entry) => (
-  entry?.role === initialGreeting.role && entry?.content === initialGreeting.content
+const getFirstName = (user) => {
+  const fallback = user?.role === 'teacher' ? 'Teacher' : 'there';
+  return user?.name?.trim().split(/\s+/)[0] || fallback;
+};
+
+const createInitialGreeting = (user) => ({
+  role: 'ai',
+  content: `Welcome back, ${getFirstName(user)}! I'm PFSM Bot. I can help you find pages, understand lessons, review assignments, or answer questions about the website.`,
+  isGreeting: true
+});
+
+const isGreeting = (entry) => (
+  entry?.role === 'ai' && (entry?.isGreeting || entry?.content === legacyGreetingContent)
 );
 
-const loadStoredConversation = () => {
+const loadStoredConversation = (initialGreeting) => {
   try {
     const storedConversation = sessionStorage.getItem(CHAT_STORAGE_KEY);
     const parsedConversation = storedConversation ? JSON.parse(storedConversation) : null;
 
     if (Array.isArray(parsedConversation) && parsedConversation.length > 0) {
+      if (parsedConversation.length === 1 && isGreeting(parsedConversation[0])) {
+        return [initialGreeting];
+      }
+
       return parsedConversation;
     }
   } catch (error) {
@@ -39,12 +53,16 @@ const loadStoredConversation = () => {
 
 const AiChat = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const initialGreeting = useMemo(() => createInitialGreeting(user), [user]);
+  const userWelcomeKey = `${WELCOME_BUBBLE_STORAGE_KEY}:${user?._id || user?.id || user?.email || 'guest'}`;
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [conversation, setConversation] = useState(loadStoredConversation);
+  const [conversation, setConversation] = useState(() => loadStoredConversation(initialGreeting));
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [showWelcomeBubble, setShowWelcomeBubble] = useState(false);
   const messagesContainerRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -57,6 +75,37 @@ const AiChat = () => {
   useEffect(() => {
     sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(conversation));
   }, [conversation]);
+
+  useEffect(() => {
+    setConversation((currentConversation) => (
+      currentConversation.length === 1 && isGreeting(currentConversation[0])
+        ? [initialGreeting]
+        : currentConversation
+    ));
+  }, [initialGreeting]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setShowWelcomeBubble(sessionStorage.getItem(userWelcomeKey) !== 'dismissed');
+  }, [user, userWelcomeKey]);
+
+  const dismissWelcomeBubble = () => {
+    setShowWelcomeBubble(false);
+    sessionStorage.setItem(userWelcomeKey, 'dismissed');
+  };
+
+  const handleToggleChat = () => {
+    setIsOpen((open) => {
+      const nextOpen = !open;
+
+      if (nextOpen) {
+        dismissWelcomeBubble();
+      }
+
+      return nextOpen;
+    });
+  };
 
   const clearImage = () => {
     setImageFile(null);
@@ -108,7 +157,7 @@ const AiChat = () => {
       content: trimmedMessage || 'Please look at this image.',
       image: imagePreview
     };
-    const history = conversation.filter((entry) => !isInitialGreeting(entry));
+    const history = conversation.filter((entry) => !isGreeting(entry));
 
     setConversation((prev) => [...prev, userEntry]);
     setMessage('');
@@ -323,9 +372,35 @@ const AiChat = () => {
         </section>
       )}
 
+      {!isOpen && showWelcomeBubble && (
+        <div className="absolute bottom-16 right-0 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm text-slate-700 shadow-2xl shadow-blue-950/15">
+          <button
+            type="button"
+            onClick={dismissWelcomeBubble}
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            title="Dismiss greeting"
+            aria-label="Dismiss greeting"
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleChat}
+            className="block w-full pr-7 text-left"
+            aria-label="Open AI chat"
+          >
+            <span className="block font-semibold text-slate-950">Hi, {getFirstName(user)}!</span>
+            <span className="mt-1 block leading-relaxed">
+              Welcome back. I'm here if you need help finding lessons, assignments, or anything on PF Speaking Master.
+            </span>
+          </button>
+          <span className="absolute bottom-[-7px] right-6 h-4 w-4 rotate-45 border-b border-r border-blue-100 bg-white" aria-hidden="true" />
+        </div>
+      )}
+
       <button
         type="button"
-        onClick={() => setIsOpen((open) => !open)}
+        onClick={handleToggleChat}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-900/20 transition-transform hover:scale-105 hover:bg-blue-700"
         aria-label={isOpen ? 'Close AI chat' : 'Open AI chat'}
       >
