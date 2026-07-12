@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
-import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaBook, FaThumbtack } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaBook, FaThumbtack, FaCog } from 'react-icons/fa';
 import Whiteboard from './Whiteboard';
 import io from 'socket.io-client';
 import './VideoRoom.css';
@@ -16,6 +16,7 @@ const config = {
 
 const MAX_VIDEO_ROOM_STUDENTS = 40;
 const DESKTOP_PARTICIPANTS_PER_PAGE = 8;
+const WIDE_DESKTOP_PARTICIPANTS_PER_PAGE = 12;
 const MOBILE_PARTICIPANTS_PER_PAGE = 4;
 const REMOTE_STREAM_HIGH = 0;
 const REMOTE_STREAM_LOW = 1;
@@ -268,6 +269,13 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isVideoExpanded, setIsVideoExpanded] = useState(false);
   const [breakoutRooms, setBreakoutRooms] = useState([]);
+  const [showBreakoutPanel, setShowBreakoutPanel] = useState(false);
+  const [showDeviceSettings, setShowDeviceSettings] = useState(false);
+  const [audioInputDevices, setAudioInputDevices] = useState([]);
+  const [videoInputDevices, setVideoInputDevices] = useState([]);
+  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState('');
+  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState('');
+  const [deviceSettingsError, setDeviceSettingsError] = useState('');
   const [currentBreakoutRoom, setCurrentBreakoutRoom] = useState(null);
   const [breakoutMessage, setBreakoutMessage] = useState('');
   const [isRoomListCollapsed, setIsRoomListCollapsed] = useState(false);
@@ -312,6 +320,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
+  const [showSessionDetails, setShowSessionDetails] = useState(false);
   const [dictionaryWord, setDictionaryWord] = useState('');
   const [dictionaryResult, setDictionaryResult] = useState(null);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
@@ -323,6 +332,50 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   const [isCameraPictureInPicture, setIsCameraPictureInPicture] = useState(false);
+
+  const loadMediaDevices = useCallback(async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const microphones = devices.filter(device => device.kind === 'audioinput');
+      const cameras = devices.filter(device => device.kind === 'videoinput');
+      const activeAudioDeviceId = tracks?.[0]
+        ?.getMediaStreamTrack?.()
+        ?.getSettings?.().deviceId;
+      const activeVideoDeviceId = tracks?.[1]
+        ?.getMediaStreamTrack?.()
+        ?.getSettings?.().deviceId;
+
+      setAudioInputDevices(microphones);
+      setVideoInputDevices(cameras);
+      setSelectedAudioDeviceId(previous => (
+        microphones.some(device => device.deviceId === previous)
+          ? previous
+          : activeAudioDeviceId || microphones[0]?.deviceId || ''
+      ));
+      setSelectedVideoDeviceId(previous => (
+        cameras.some(device => device.deviceId === previous)
+          ? previous
+          : activeVideoDeviceId || cameras[0]?.deviceId || ''
+      ));
+      setDeviceSettingsError('');
+    } catch (deviceError) {
+      console.error('Unable to list media devices:', deviceError);
+      setDeviceSettingsError('Unable to load microphones and cameras.');
+    }
+  }, [tracks]);
+
+  useEffect(() => {
+    if (!ready) return undefined;
+
+    loadMediaDevices();
+    navigator.mediaDevices?.addEventListener?.('devicechange', loadMediaDevices);
+
+    return () => {
+      navigator.mediaDevices?.removeEventListener?.('devicechange', loadMediaDevices);
+    };
+  }, [ready, loadMediaDevices]);
 
   useEffect(() => {
     const setTrackEnabled = async () => {
@@ -348,6 +401,32 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   
   const toggleVideo = () => {
     setIsVideoMuted(prev => !prev);
+  };
+
+  const handleAudioDeviceChange = async (deviceId) => {
+    if (!deviceId || !tracks?.[0]?.setDevice) return;
+
+    try {
+      await tracks[0].setDevice(deviceId);
+      setSelectedAudioDeviceId(deviceId);
+      setDeviceSettingsError('');
+    } catch (deviceError) {
+      console.error('Unable to switch microphone:', deviceError);
+      setDeviceSettingsError('Could not switch to that microphone.');
+    }
+  };
+
+  const handleVideoDeviceChange = async (deviceId) => {
+    if (!deviceId || !tracks?.[1]?.setDevice) return;
+
+    try {
+      await tracks[1].setDevice(deviceId);
+      setSelectedVideoDeviceId(deviceId);
+      setDeviceSettingsError('');
+    } catch (deviceError) {
+      console.error('Unable to switch camera:', deviceError);
+      setDeviceSettingsError('Could not switch to that camera.');
+    }
   };
 
   useEffect(() => {
@@ -915,6 +994,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
     socketRef.current.emit('endBreakoutRooms', {
       sessionId
     });
+    setShowBreakoutPanel(false);
   };
 
   const handleWhiteboardToggle = () => {
@@ -1295,11 +1375,30 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const toggleDictionaryTool = () => {
     setShowDictionary(previous => !previous);
     setShowFeedbackPalette(false);
+    setShowBreakoutPanel(false);
+    setShowDeviceSettings(false);
   };
 
   const toggleFeedbackPalette = () => {
     setShowFeedbackPalette(previous => !previous);
     setShowDictionary(false);
+    setShowBreakoutPanel(false);
+    setShowDeviceSettings(false);
+  };
+
+  const toggleBreakoutPanel = () => {
+    setShowBreakoutPanel(previous => !previous);
+    setShowDictionary(false);
+    setShowFeedbackPalette(false);
+    setShowDeviceSettings(false);
+  };
+
+  const toggleDeviceSettings = () => {
+    setShowDeviceSettings(previous => !previous);
+    setShowDictionary(false);
+    setShowFeedbackPalette(false);
+    setShowBreakoutPanel(false);
+    loadMediaDevices();
   };
 
   const teacherUser = useMemo(
@@ -1333,9 +1432,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   );
   const isPhoneLandscapeLayout = viewportWidth <= 932 && viewportHeight <= 520 && viewportWidth > viewportHeight;
   const isMobileGalleryLayout = isMobileDevice || viewportWidth <= 768 || isPhoneLandscapeLayout;
+  const isWideDesktopLayout = !isMobileGalleryLayout && viewportWidth >= 1500;
   const participantPageSize = isMobileGalleryLayout
     ? MOBILE_PARTICIPANTS_PER_PAGE
-    : DESKTOP_PARTICIPANTS_PER_PAGE;
+    : isWideDesktopLayout
+      ? WIDE_DESKTOP_PARTICIPANTS_PER_PAGE
+      : DESKTOP_PARTICIPANTS_PER_PAGE;
   const pinnedParticipant = useMemo(
     () => pinnedParticipantUid
       ? studentUsers.find(remoteUser => getUidString(remoteUser.uid) === pinnedParticipantUid)
@@ -1779,49 +1881,59 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           )}
 
           {session && (
-            <div className="session-details">
-              <h2 className="text-xl font-semibold mb-4">{session.title}</h2>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Subject:</span>
-                  <span className="text-gray-900 text-sm md:text-base">{session.subject}</span>
+            <section className={`session-details-card ${showSessionDetails ? 'expanded' : ''}`}>
+              <button
+                type="button"
+                className="session-details-summary"
+                onClick={() => setShowSessionDetails(previous => !previous)}
+                aria-expanded={showSessionDetails}
+                aria-controls="video-room-session-details"
+              >
+                <div className="session-details-heading">
+                  <span className="session-details-kicker">Class details</span>
+                  <strong>{session.subject}</strong>
                 </div>
-                <div className="flex items-center">
-                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Status:</span>
-                  <span className={`px-2 py-1 rounded text-xs md:text-sm ${
-                    session.status === 'active'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
+                <div className="session-details-chips">
+                  <span className={`session-status-chip ${session.status === 'active' ? 'active' : ''}`}>
                     {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
                   </span>
+                  <span>{session.duration} min</span>
+                  <span>{session.gracePeriod} min grace</span>
                 </div>
-                {session.startedAt && (
-                  <div className="flex items-center">
-                    <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Started:</span>
-                    <span className="text-gray-900 text-sm md:text-base">
-                      {new Date(session.startedAt).toLocaleString()}
-                    </span>
+                <FaChevronDown className="session-details-chevron" aria-hidden="true" />
+              </button>
+
+              {showSessionDetails && (
+                <div className="session-details-body" id="video-room-session-details">
+                  <div className="session-details-grid">
+                    <div>
+                      <span>Session</span>
+                      <strong>{session.title}</strong>
+                    </div>
+                    {session.startedAt && (
+                      <div>
+                        <span>Started</span>
+                        <strong>{new Date(session.startedAt).toLocaleString()}</strong>
+                      </div>
+                    )}
+                    <div>
+                      <span>Duration</span>
+                      <strong>{session.duration} minutes</strong>
+                    </div>
+                    <div>
+                      <span>Grace period</span>
+                      <strong>{session.gracePeriod} minutes</strong>
+                    </div>
                   </div>
-                )}
-                <div className="flex items-center">
-                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Duration:</span>
-                  <span className="text-gray-900 text-sm md:text-base">{session.duration} minutes</span>
+                  {session.description && (
+                    <div className="session-description">
+                      <span>Description</span>
+                      <p>{session.description}</p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center">
-                  <span className="text-gray-600 w-24 md:w-32 text-sm md:text-base">Grace Period:</span>
-                  <span className="text-gray-900 text-sm md:text-base">{session.gracePeriod} minutes</span>
-                </div>
-                {session.description && (
-                  <div className="mt-4">
-                    <span className="text-gray-600 block mb-2 text-sm md:text-base">Description:</span>
-                    <p className="text-gray-900 bg-gray-50 p-3 rounded text-sm md:text-base">
-                      {session.description}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+              )}
+            </section>
           )}
         </div>
 
@@ -1907,8 +2019,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             <span className="meeting-control-label">{isVideoMuted ? 'Start video' : 'Stop video'}</span>
           </button>
 
-          <span className="meeting-controls-divider" aria-hidden="true" />
-
           <button
             type="button"
             onClick={toggleScreenShare}
@@ -1933,36 +2043,6 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             <span className="meeting-control-icon"><FaEdit /></span>
             <span className="meeting-control-label">Whiteboard</span>
           </button>
-
-          <span className="meeting-controls-divider" aria-hidden="true" />
-
-          <button
-            type="button"
-            onClick={toggleDictionaryTool}
-            className={`meeting-control ${showDictionary ? 'is-active' : ''}`}
-            title="Dictionary and pronunciation"
-            aria-label="Dictionary and pronunciation"
-            aria-pressed={showDictionary}
-          >
-            <span className="meeting-control-icon"><FaBook /></span>
-            <span className="meeting-control-label">Words</span>
-          </button>
-
-          {isTeacher && (
-            <button
-              type="button"
-              onClick={toggleFeedbackPalette}
-              className={`meeting-control ${showFeedbackPalette ? 'is-active' : ''}`}
-              title="Quick feedback"
-              aria-label="Quick feedback"
-              aria-pressed={showFeedbackPalette}
-            >
-              <span className="meeting-control-icon"><FaComments /></span>
-              <span className="meeting-control-label">Feedback</span>
-            </button>
-          )}
-
-          <span className="meeting-controls-divider" aria-hidden="true" />
 
           <button
             type="button"
@@ -1991,46 +2071,64 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
             </span>
             <span className="meeting-control-label">{isRecording ? 'Stop record' : 'Record'}</span>
           </button>
+
+          <span className="meeting-controls-divider" aria-hidden="true" />
+
+          {isTeacher && (
+            <button
+              type="button"
+              onClick={toggleBreakoutPanel}
+              className={`meeting-control ${showBreakoutPanel ? 'is-active' : ''}`}
+              title="Breakout rooms"
+              aria-label="Breakout rooms"
+              aria-pressed={showBreakoutPanel}
+            >
+              <span className="meeting-control-icon"><FaUsers /></span>
+              <span className="meeting-control-label">Breakouts</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={toggleDictionaryTool}
+            className={`meeting-control ${showDictionary ? 'is-active' : ''}`}
+            title="Dictionary and pronunciation"
+            aria-label="Dictionary and pronunciation"
+            aria-pressed={showDictionary}
+          >
+            <span className="meeting-control-icon"><FaBook /></span>
+            <span className="meeting-control-label">Dictionary</span>
+          </button>
+
+          {isTeacher && (
+            <button
+              type="button"
+              onClick={toggleFeedbackPalette}
+              className={`meeting-control ${showFeedbackPalette ? 'is-active' : ''}`}
+              title="Quick feedback"
+              aria-label="Quick feedback"
+              aria-pressed={showFeedbackPalette}
+            >
+              <span className="meeting-control-icon"><FaComments /></span>
+              <span className="meeting-control-label">Feedback</span>
+            </button>
+          )}
+
+          <span className="meeting-controls-divider" aria-hidden="true" />
+
+          <button
+            type="button"
+            onClick={toggleDeviceSettings}
+            className={`meeting-control ${showDeviceSettings ? 'is-active' : ''}`}
+            title="Audio and video settings"
+            aria-label="Audio and video settings"
+            aria-pressed={showDeviceSettings}
+          >
+            <span className="meeting-control-icon"><FaCog /></span>
+            <span className="meeting-control-label">Settings</span>
+          </button>
         </div>
       </div>
-
-      {/* Breakout Room Controls */}
-      {isTeacher && (
-        <div className="breakout-controls">
-          <button
-            onClick={() => createBreakoutRooms(4)}
-            className="control-button"
-            title="Create Breakout Rooms"
-          >
-            <FaUsers />
-          </button>
-          {breakoutRooms.length > 0 && (
-            <>
-              <input
-                type="text"
-                value={breakoutMessage}
-                onChange={(e) => setBreakoutMessage(e.target.value)}
-                placeholder="Broadcast message..."
-                className="broadcast-input"
-              />
-              <button
-                onClick={() => broadcastToBreakoutRooms(breakoutMessage)}
-                className="control-button"
-                title="Broadcast to Rooms"
-              >
-                <FaComments />
-              </button>
-              <button
-                onClick={endBreakoutRooms}
-                className="control-button"
-                title="End Breakout Rooms"
-              >
-                <FaTimesCircle />
-              </button>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Breakout Room List */}
       {breakoutRooms.length > 0 && !isTeacher && (
@@ -2123,6 +2221,148 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
               </button>
             ))}
           </div>
+        </section>
+      )}
+
+      {/* Teacher breakout room panel */}
+      {isTeacher && showBreakoutPanel && (
+        <section className="breakout-popover" aria-label="Breakout room controls">
+          <div className="breakout-popover-header">
+            <div>
+              <span>Teacher tool</span>
+              <h2>Breakout rooms</h2>
+              <p>Create small-group rooms and send one message to every group.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBreakoutPanel(false)}
+              aria-label="Close breakout room controls"
+              title="Close"
+            >
+              <FaTimesCircle />
+            </button>
+          </div>
+
+          {breakoutRooms.length === 0 ? (
+            <div className="breakout-empty-state">
+              <span className="breakout-empty-icon"><FaUsers /></span>
+              <div>
+                <h3>Start small-group practice</h3>
+                <p>Create four breakout rooms for this class.</p>
+              </div>
+              <button type="button" onClick={() => createBreakoutRooms(4)}>
+                Create 4 rooms
+              </button>
+            </div>
+          ) : (
+            <div className="breakout-active-controls">
+              <div className="breakout-active-status">
+                <span className="connection-dot" aria-hidden="true" />
+                <strong>{breakoutRooms.length} breakout rooms active</strong>
+              </div>
+              <label htmlFor="breakout-broadcast-message">Broadcast message</label>
+              <div className="breakout-broadcast-row">
+                <input
+                  id="breakout-broadcast-message"
+                  type="text"
+                  value={breakoutMessage}
+                  onChange={(e) => setBreakoutMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && breakoutMessage.trim()) {
+                      broadcastToBreakoutRooms(breakoutMessage);
+                    }
+                  }}
+                  placeholder="Message every room..."
+                />
+                <button
+                  type="button"
+                  className="breakout-send-button"
+                  onClick={() => broadcastToBreakoutRooms(breakoutMessage)}
+                  disabled={!breakoutMessage.trim()}
+                  aria-label="Broadcast message to breakout rooms"
+                >
+                  <FaComments />
+                </button>
+              </div>
+              <button type="button" className="breakout-end-button" onClick={endBreakoutRooms}>
+                <FaTimesCircle />
+                End all breakout rooms
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Audio and video device settings */}
+      {showDeviceSettings && (
+        <section className="device-settings-popover" aria-label="Audio and video settings">
+          <div className="device-settings-header">
+            <div>
+              <span>Room settings</span>
+              <h2>Audio and video</h2>
+              <p>Switch devices without leaving the classroom.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDeviceSettings(false)}
+              aria-label="Close audio and video settings"
+              title="Close"
+            >
+              <FaTimesCircle />
+            </button>
+          </div>
+
+          <div className="device-settings-fields">
+            <label htmlFor="video-room-microphone">
+              <span className="device-field-icon"><FaMicrophone /></span>
+              <span>
+                <strong>Microphone</strong>
+                <small>{audioInputDevices.length} available</small>
+              </span>
+            </label>
+            <select
+              id="video-room-microphone"
+              value={selectedAudioDeviceId}
+              onChange={(e) => handleAudioDeviceChange(e.target.value)}
+              disabled={audioInputDevices.length === 0}
+            >
+              {audioInputDevices.length === 0 ? (
+                <option value="">No microphone found</option>
+              ) : audioInputDevices.map((device, index) => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || `Microphone ${index + 1}`}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="video-room-camera">
+              <span className="device-field-icon"><FaVideo /></span>
+              <span>
+                <strong>Camera</strong>
+                <small>{videoInputDevices.length} available</small>
+              </span>
+            </label>
+            <select
+              id="video-room-camera"
+              value={selectedVideoDeviceId}
+              onChange={(e) => handleVideoDeviceChange(e.target.value)}
+              disabled={videoInputDevices.length === 0}
+            >
+              {videoInputDevices.length === 0 ? (
+                <option value="">No camera found</option>
+              ) : videoInputDevices.map((device, index) => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || `Camera ${index + 1}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {deviceSettingsError && (
+            <div className="device-settings-error" role="alert">
+              {deviceSettingsError}
+            </div>
+          )}
         </section>
       )}
 

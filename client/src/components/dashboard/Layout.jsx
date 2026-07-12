@@ -219,7 +219,13 @@ const Layout = ({ children, userType }) => {
 
       {/* Main Content */}
       <div className={`flex-1 bg-gray-50 ${location.pathname === '/' ? 'h-full' : ''}`}>
-        <div className={`${location.pathname === '/' ? 'h-full' : 'max-w-7xl mx-auto px-4 py-8'}`}>
+        <div className={`${
+          location.pathname === '/'
+            ? 'h-full'
+            : isClassroomView
+              ? 'h-full w-full'
+              : 'max-w-7xl mx-auto px-4 py-8'
+        }`}>
           {children}
         </div>
       </div>
