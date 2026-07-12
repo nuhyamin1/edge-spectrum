@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { AgoraVideoPlayer, createClient, createMicrophoneAndCameraTracks } from 'agora-rtc-react';
+import { AgoraVideoPlayer, createClient } from 'agora-rtc-react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { useAuth } from '../../context/AuthContext';
 import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaDesktop, FaTimesCircle, FaExpand, FaCompress, FaEdit, FaHandPaper, FaUsers, FaComments, FaChevronUp, FaChevronDown, FaGripVertical, FaCircle, FaStop, FaStar, FaThumbsUp, FaChevronLeft, FaChevronRight, FaVolumeUp, FaBook, FaThumbtack, FaCog } from 'react-icons/fa';
@@ -254,13 +254,64 @@ const useRecording = () => {
 };
 
 const useClient = createClient(config);
-const useMicrophoneAndCameraTracks = createMicrophoneAndCameraTracks();
+
+const releaseLocalMediaTracks = (localTracks = []) => {
+  localTracks.filter(Boolean).forEach(track => {
+    try {
+      track.stop();
+      track.close();
+    } catch (trackError) {
+      console.warn('Unable to release a local media track:', trackError);
+    }
+  });
+};
+
+// The agora-rtc-react track helper is not cancellation-safe under React Strict Mode.
+// Own track creation here so abandoned setup passes and normal unmounts both release hardware.
+const useLocalMediaTracks = () => {
+  const [mediaState, setMediaState] = useState({
+    ready: false,
+    tracks: null,
+    error: null
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    let createdTracks = null;
+
+    AgoraRTC.createMicrophoneAndCameraTracks()
+      .then(localTracks => {
+        createdTracks = localTracks;
+
+        if (cancelled) {
+          releaseLocalMediaTracks(localTracks);
+          return;
+        }
+
+        setMediaState({ ready: true, tracks: localTracks, error: null });
+      })
+      .catch(trackError => {
+        if (!cancelled) {
+          console.error('Unable to create microphone and camera tracks:', trackError);
+          setMediaState({ ready: false, tracks: null, error: trackError });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      releaseLocalMediaTracks(createdTracks || []);
+    };
+  }, []);
+
+  return mediaState;
+};
 
 
 const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const [users, setUsers] = useState([]);
   const [start, setStart] = useState(false);
   const [error, setError] = useState(null);
+  const [connectionState, setConnectionState] = useState('DISCONNECTED');
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [remoteScreenTrack, setRemoteScreenTrack] = useState(null);
@@ -286,7 +337,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   const cameraPictureInPictureRef = useRef(null);
   const wasScreenSharingRef = useRef(false);
   const client = useClient();
-  const { ready, tracks } = useMicrophoneAndCameraTracks();
+  const { ready, tracks } = useLocalMediaTracks();
   const { user } = useAuth();
   const activeAgoraChannel = currentBreakoutRoom
     ? `${sessionId}_breakout_${currentBreakoutRoom}`
@@ -686,6 +737,14 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       }
     };
 
+    let isEffectActive = true;
+
+    const handleConnectionStateChange = (currentState) => {
+      if (isEffectActive) {
+        setConnectionState(currentState);
+      }
+    };
+
     const init = async () => {
       try {
         // Check if client is already connected or connecting
@@ -698,6 +757,7 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         client.on("user-unpublished", handleUserUnpublished);
         client.on("user-left", handleUserLeft);
         client.on("volume-indicator", handleVolumeIndicator);
+        client.on("connection-state-change", handleConnectionStateChange);
 
         // Add more detailed logging
         console.log("Joining channel with config:", {
@@ -711,8 +771,14 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         const uid = isTeacher ? 'teacher' : `${user.name}___${user.id}_${Math.floor(Math.random() * 1000000)}`;
 
         // Join channel with the unique ID
+        setConnectionState('CONNECTING');
         await client.join(config.appId, sessionId, null, uid);
         console.log("Successfully joined channel");
+
+        if (!isEffectActive) {
+          await client.leave();
+          return;
+        }
 
         try {
           if (client.setLowStreamParameter) {
@@ -739,10 +805,14 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           console.log("Publishing tracks:", tracks);
           await client.publish(tracks);
           setStart(true);
+          setConnectionState(client.connectionState);
         }
       } catch (err) {
         console.error("Error setting up video room:", err);
-        setError("Failed to join video room: " + (err.message || "Unknown error"));
+        if (isEffectActive) {
+          setConnectionState('DISCONNECTED');
+          setError("Failed to join video room: " + (err.message || "Unknown error"));
+        }
       }
     };
 
@@ -759,6 +829,8 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
 
     // Cleanup function
     return () => {
+      isEffectActive = false;
+
       try {
         if (initTimer) {
           clearTimeout(initTimer);
@@ -768,28 +840,27 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         client.off("user-unpublished", handleUserUnpublished);
         client.off("user-left", handleUserLeft);
         client.off("volume-indicator", handleVolumeIndicator);
+        client.off("connection-state-change", handleConnectionStateChange);
 
-        if (tracks) {
-          tracks.forEach(track => {
-            if (track) {
-              track.stop();
-              track.close();
+        const disconnectClient = async () => {
+          try {
+            if (client.connectionState === 'CONNECTED' && tracks) {
+              await client.unpublish(tracks.filter(Boolean));
             }
-          });
-        }
-        
-        if (client.connectionState === 'CONNECTED') {
-          if (tracks) {
-            client.unpublish(tracks).then(() => {
-              client.leave();
-            }).catch(err => {
-              console.error("Error during unpublish:", err);
-              client.leave();
-            });
-          } else {
-            client.leave();
+          } catch (unpublishError) {
+            console.warn('Unable to unpublish while leaving the room:', unpublishError);
+          } finally {
+            if (client.connectionState !== 'DISCONNECTED') {
+              try {
+                await client.leave();
+              } catch (leaveError) {
+                console.warn('Unable to leave the Agora channel cleanly:', leaveError);
+              }
+            }
           }
-        }
+        };
+
+        disconnectClient();
       } catch (err) {
         console.error("Error during cleanup:", err);
       }
@@ -1468,6 +1539,19 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
   );
   const displayedStudentCount = studentUsers.length + (!isTeacher && start && tracks ? 1 : 0);
   const remainingCapacity = Math.max(0, MAX_VIDEO_ROOM_STUDENTS - displayedStudentCount);
+  const connectionStatus = (() => {
+    switch (connectionState) {
+      case 'CONNECTED':
+        return { label: 'Connected', tone: 'connected' };
+      case 'CONNECTING':
+      case 'RECONNECTING':
+        return { label: start ? 'Reconnecting' : 'Connecting', tone: 'connecting' };
+      case 'DISCONNECTING':
+        return { label: 'Leaving', tone: 'connecting' };
+      default:
+        return { label: 'Disconnected', tone: 'disconnected' };
+    }
+  })();
   const dictionaryPronunciationText = dictionaryLanguage === 'id'
     ? dictionaryResult?.meanings?.[0]?.definitions?.[0]?.definition || ''
     : dictionaryResult?.word || dictionaryWord;
@@ -1740,7 +1824,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
         <div className="mobile-zoom-room">
           <div className="room-header mobile-room-header">
             <div className="room-header-identity">
-              <span className="room-live-indicator" aria-hidden="true" />
+              <span
+                className={`room-live-indicator ${connectionStatus.tone}`}
+                role="status"
+                aria-label={connectionStatus.label}
+                title={connectionStatus.label}
+              />
               <div className="room-header-copy">
                 <h1>{session?.title || 'Live Classroom'}</h1>
                 <p>{session?.subject || (isTeacher ? 'Teacher room' : 'Student room')}</p>
@@ -1783,7 +1872,12 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
       <div className="video-room-layout">
         <div className="room-header desktop-room-header">
           <div className="room-header-identity">
-            <span className="room-live-indicator" aria-hidden="true" />
+            <span
+              className={`room-live-indicator ${connectionStatus.tone}`}
+              role="status"
+              aria-label={connectionStatus.label}
+              title={connectionStatus.label}
+            />
             <div className="room-header-copy">
               <div className="room-header-title-row">
                 <h1>{session?.title || 'Live Classroom'}</h1>
@@ -1798,9 +1892,9 @@ const VideoRoom = ({ sessionId, isTeacher, session }) => {
           </div>
 
           <div className="room-header-actions">
-            <span className="room-header-badge connection-badge">
+            <span className={`room-header-badge connection-badge ${connectionStatus.tone}`}>
               <span className="connection-dot" aria-hidden="true" />
-              {start ? 'Connected' : 'Connecting'}
+              {connectionStatus.label}
             </span>
             <span className="room-header-badge participant-count-badge">
               <FaUsers aria-hidden="true" />
