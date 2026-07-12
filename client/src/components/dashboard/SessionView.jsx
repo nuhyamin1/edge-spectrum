@@ -12,7 +12,11 @@ import {
   LinkIcon,
   ArrowLeftIcon,
   DocumentIcon,
-  VideoCameraIcon
+  VideoCameraIcon,
+  CheckCircleIcon,
+  PlayIcon,
+  ArrowTopRightOnSquareIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 
@@ -165,17 +169,6 @@ const SessionView = () => {
     });
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'active':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-yellow-100 text-yellow-800';
-    }
-  };
-
   if (loading) {
     return (
       <Layout userType={isTeacher ? 'teacher' : 'student'}>
@@ -204,163 +197,176 @@ const SessionView = () => {
     );
   }
 
+  const enrolledStudents = session.enrolledStudents || [];
+  const statusDetails = {
+    active: {
+      label: 'Live now',
+      badge: 'border-emerald-300 bg-emerald-50 text-emerald-700',
+      dot: 'bg-emerald-500'
+    },
+    completed: {
+      label: 'Completed',
+      badge: 'border-slate-200 bg-slate-100 text-slate-600',
+      dot: 'bg-slate-400'
+    },
+    scheduled: {
+      label: 'Scheduled',
+      badge: 'border-amber-200 bg-amber-50 text-amber-700',
+      dot: 'bg-amber-400'
+    }
+  }[session.status] || {
+    label: session.status,
+    badge: 'border-blue-200 bg-blue-50 text-blue-700',
+    dot: 'bg-blue-500'
+  };
+
+  const hasResources = session.materials ||
+    (session.externalLinks && session.externalLinks.length > 0) ||
+    (session.files && session.files.length > 0);
+
   return (
     <Layout userType={isTeacher ? 'teacher' : 'student'}>
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto max-w-6xl pb-8">
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center text-gray-400 hover:text-neon-blue transition-colors"
+          className="group mb-5 inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-white hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          <ArrowLeftIcon className="w-5 h-5 mr-1" />
-          Back
+          <ArrowLeftIcon className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          Back to sessions
         </button>
 
-        <div className="relative bg-gray-100/10 rounded-xl overflow-hidden 
-          border border-gray-400 ">
-        
-
-          <div className="p-6">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h1 className="mb-5 text-2xl font-bold text-gray-600">
-                  {session.title}
-                </h1>
-
-                <p className="text-lg text-neon-blue">{session.subject}</p>
-              </div>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium 
-                ${session.status === 'completed' ? 'bg-green-500/20 text-green-400' : 
-                  session.status === 'active' ? 'bg-blue-500/20 text-blue-400' : 
-                  'bg-yellow-500/20 text-yellow-400'}`}>
-                {session.status}
+        <section className="relative overflow-hidden rounded-3xl bg-blue-950 px-6 py-8 text-white shadow-xl shadow-blue-950/10 sm:px-9 sm:py-10">
+          <div className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border border-white/10 bg-white/[0.04]" />
+          <div className="pointer-events-none absolute -bottom-28 right-1/3 h-56 w-56 rounded-full border border-white/10" />
+          <div className="relative">
+            <div className="mb-6 flex flex-wrap items-center gap-3">
+              <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-wider ${statusDetails.badge}`}>
+                <span className={`h-2 w-2 rounded-full ${statusDetails.dot}`} />
+                {statusDetails.label}
+              </span>
+              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-100">
+                {session.subject}
               </span>
             </div>
+            <div className="max-w-3xl">
+              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-blue-200">Session details</p>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{session.title}</h1>
+              {session.description && (
+                <p className="mt-4 max-w-2xl text-base leading-7 text-blue-100 sm:text-lg">{session.description}</p>
+              )}
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3 text-sm">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-blue-50 backdrop-blur-sm">
+                <CalendarIcon className="h-5 w-5 text-blue-200" />
+                {formatDate(session.dateTime)}
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-blue-50 backdrop-blur-sm">
+                <ClockIcon className="h-5 w-5 text-blue-200" />
+                {session.duration} minutes
+              </span>
+            </div>
+          </div>
+        </section>
 
-            <p className="text-gray-600 mb-6">{session.description}</p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <CalendarIcon className="w-5 h-5 mr-2 text-gray-400" />
-                  {formatDate(session.dateTime)}
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <div className="mb-6 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-600">At a glance</p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-900">Session information</h2>
                 </div>
-                <div className="flex items-center text-gray-600">
-                  <ClockIcon className="w-5 h-5 mr-2 text-gray-400" />
-                  Duration: {session.duration} minutes
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <ClockIcon className="w-5 h-5 mr-2 text-gray-400" />
-                  Grace Period: {session.gracePeriod || 5} minutes
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <UserGroupIcon className="w-5 h-5 mr-2 text-gray-400" />
-                  {session.enrolledStudents.length} Students Enrolled
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <AcademicCapIcon className="w-5 h-5 mr-2 text-gray-400" />
-                  Teacher: {session.teacher.name}
+                <div className="hidden h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700 sm:flex">
+                  <CalendarIcon className="h-6 w-6" />
                 </div>
               </div>
+              <dl className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <ClockIcon className="h-4 w-4 text-blue-600" /> Grace period
+                  </dt>
+                  <dd className="mt-2 text-base font-bold text-slate-800">{session.gracePeriod || 5} minutes</dd>
+                </div>
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <UserGroupIcon className="h-4 w-4 text-blue-600" /> Enrollment
+                  </dt>
+                  <dd className="mt-2 text-base font-bold text-slate-800">{enrolledStudents.length} students</dd>
+                </div>
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 sm:col-span-2">
+                  <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <AcademicCapIcon className="h-4 w-4 text-blue-600" /> Teacher
+                  </dt>
+                  <dd className="mt-2 text-base font-bold text-slate-800">{session.teacher?.name || 'Teacher not assigned'}</dd>
+                </div>
+              </dl>
+            </section>
 
-              <div className="space-y-6">
-                {/* Main Materials */}
-                {session.materials && (
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-700">Main Material</h3>
-                    <a
-                      href={session.materials}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-neon-blue hover:text-neon-blue/80 transition-colors"
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+              <div className="mb-5 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Class roster</p>
+                  <h2 className="mt-1 text-xl font-bold text-slate-900">Enrolled students</h2>
+                </div>
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">{enrolledStudents.length}</span>
+              </div>
+              {enrolledStudents.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {enrolledStudents.map((student, index) => (
+                    <div
+                      key={student._id || student.id || index}
+                      className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-blue-200 hover:bg-blue-50/40"
                     >
-                      <LinkIcon className="w-5 h-5 mr-2" />
-                      View Material
-                    </a>
-                  </div>
-                )}
-
-                {/* External Links */}
-                {session.externalLinks && session.externalLinks.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-700">External Links</h3>
-                    <div className="space-y-2">
-                      {session.externalLinks.map((link, index) => (
-                        <a
-                          key={index}
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-neon-blue hover:text-neon-blue/80 transition-colors"
-                        >
-                          <LinkIcon className="w-5 h-5 mr-2" />
-                          {link.title}
-                        </a>
-                      ))}
+                      {student.profilePicture?.data ? (
+                        <img
+                          src={student.profilePicture.data}
+                          alt={`${student.name}'s profile`}
+                          className="h-11 w-11 flex-shrink-0 rounded-full object-cover ring-2 ring-slate-100"
+                        />
+                      ) : (
+                        <UserCircleIcon className="h-11 w-11 flex-shrink-0 text-slate-300" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-slate-800">{student.name}</p>
+                        <p className="truncate text-sm text-slate-500">{student.email}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+                  <UsersIcon className="mx-auto h-9 w-9 text-slate-300" />
+                  <p className="mt-3 font-semibold text-slate-700">No students enrolled yet</p>
+                  <p className="mt-1 text-sm text-slate-500">Enrolled students will appear here.</p>
+                </div>
+              )}
+            </section>
+          </div>
 
-                {/* Downloadable Files */}
-                {session.files && session.files.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-700">Files</h3>
-                    <div className="space-y-2">
-                      {session.files.map((file, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleFileDownload(file)}
-                          className="flex items-center text-neon-blue hover:text-neon-blue/80 transition-colors w-full text-left"
-                        >
-                          <DocumentIcon className="w-5 h-5 mr-2" />
-                          {file.originalname}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Enrolled Students Section */}
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                Enrolled Students ({session.enrolledStudents.length})
-              </h3>
-              <div className="space-y-4">
-                {session.enrolledStudents.map((student) => (
-                  <div key={student._id} 
-                    className="flex items-center space-x-3 p-3 
-                    bg-gray-200/30 rounded-lg border border-gray-700
-                    hover:border-neon-blue/50 transition-all duration-300">
-                    {student.profilePicture?.data ? (
-                      <img
-                        src={student.profilePicture.data}
-                        alt={`${student.name}'s profile`}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <UserCircleIcon className="w-10 h-10 text-gray-400" />
-                    )}
-                    <div>
-                      <p className="font-medium text-gray-600">{student.name}</p>
-                      <p className="text-sm text-blue-600">{student.email}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-8 pt-6 border-t border-gray-700/50">
+          <aside className="space-y-6 lg:sticky lg:top-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Session controls</p>
+              <h2 className="mt-1 text-lg font-bold text-slate-900">
+                {session.status === 'active' ? 'Class is in progress' : session.status === 'completed' ? 'Session finished' : 'Ready when you are'}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {session.status === 'active'
+                  ? 'Enter the live classroom to begin or continue the lesson.'
+                  : session.status === 'completed'
+                    ? 'This session has ended. Its details and resources remain available.'
+                    : isTeacher
+                      ? 'Start the session when you are ready to teach.'
+                      : isEnrolled
+                        ? 'You are enrolled. Return here when the teacher starts the session.'
+                        : 'Enroll now to reserve your place in this session.'}
+              </p>
+              <div className="mt-5 space-y-3">
               {isTeacher ? (
-                <div className="flex space-x-4">
+                <>
                   {session.status === 'active' && (
                     <button
                       onClick={handleJoinLiveSession}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg
-                      hover:bg-green-600 transition-all duration-300
-                      border border-green-400 hover:border-green-300
-                      hover:shadow-lg hover:shadow-green-400/20"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
                     >
                       <VideoCameraIcon className="w-5 h-5" />
                       Join Live
@@ -369,46 +375,40 @@ const SessionView = () => {
                   {session.status === 'scheduled' && (
                     <button
                       onClick={handleStartSession}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg 
-                      hover:bg-gray-300 transition-all duration-300 
-                      border border-gray-200 hover:border-gray-400/50
-                      hover:shadow-lg hover:shadow-green-400/20"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                     >
+                      <PlayIcon className="h-5 w-5" />
                       Start Session
                     </button>
                   )}
                   {session.status === 'active' && (
                     <button
                       onClick={handleEndSession}
-                      className="px-4 py-2 bg-gray-100 text-red-400 rounded-lg 
-                      hover:bg-gray-300 transition-all duration-300 
-                      border border-gray-300 hover:border-red-400/50
-                      hover:shadow-lg hover:shadow-red-400/20"
+                      className="w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-2"
                     >
                       End Session
                     </button>
                   )}
-                </div>
+                  {session.status === 'completed' && (
+                    <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+                      <CheckCircleIcon className="h-5 w-5 text-emerald-600" /> Session completed
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="flex space-x-4">
+                <>
                   {session.status === 'scheduled' && (
                     isEnrolled ? (
                       <button
                         onClick={handleUnenroll}
-                        className="px-4 py-2 bg-gray-800 text-red-400 rounded-lg 
-                        hover:bg-gray-700 transition-all duration-300 
-                        border border-gray-700 hover:border-red-400/50
-                        hover:shadow-lg hover:shadow-red-400/20"
+                        className="w-full rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-offset-2"
                       >
                         Unenroll from Session
                       </button>
                     ) : (
                       <button
                         onClick={handleEnroll}
-                        className="px-4 py-2 bg-gray-100 text-neon-blue rounded-lg 
-                        hover:bg-gray-200 transition-all duration-300 
-                        border border-gray-300 hover:border-neon-blue/50
-                        hover:shadow-lg hover:shadow-neon-blue/20"
+                        className="w-full rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                       >
                         Enroll in Session
                       </button>
@@ -417,19 +417,77 @@ const SessionView = () => {
                   {session.status === 'active' && isEnrolled && (
                     <button
                       onClick={handleJoinLiveSession}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-green-400 rounded-lg
-                      hover:bg-gray-700 transition-all duration-300
-                      border border-gray-700 hover:border-green-400/50
-                      hover:shadow-lg hover:shadow-green-400/20"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
                     >
                       <VideoCameraIcon className="w-5 h-5" />
                       Join Live
                     </button>
                   )}
-                </div>
+                  {session.status === 'completed' && (
+                    <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+                      <CheckCircleIcon className="h-5 w-5 text-emerald-600" /> Session completed
+                    </div>
+                  )}
+                </>
               )}
-            </div>
-          </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Lesson support</p>
+                  <h2 className="mt-1 text-lg font-bold text-slate-900">Resources</h2>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                  <DocumentIcon className="h-5 w-5" />
+                </div>
+              </div>
+
+              {hasResources ? (
+                <div className="space-y-3">
+                  {session.materials && (
+                    <a
+                      href={session.materials}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <LinkIcon className="h-5 w-5 flex-shrink-0 text-blue-600" />
+                      <span className="min-w-0 flex-1 truncate">Main material</span>
+                      <ArrowTopRightOnSquareIcon className="h-4 w-4 flex-shrink-0 text-slate-400 group-hover:text-blue-600" />
+                    </a>
+                  )}
+                  {session.externalLinks?.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <LinkIcon className="h-5 w-5 flex-shrink-0 text-blue-600" />
+                      <span className="min-w-0 flex-1 truncate">{link.title}</span>
+                      <ArrowTopRightOnSquareIcon className="h-4 w-4 flex-shrink-0 text-slate-400 group-hover:text-blue-600" />
+                    </a>
+                  ))}
+                  {session.files?.map((file, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleFileDownload(file)}
+                      className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-3 text-left text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <DocumentIcon className="h-5 w-5 flex-shrink-0 text-blue-600" />
+                      <span className="min-w-0 flex-1 truncate">{file.originalname}</span>
+                      <span className="text-xs font-bold text-blue-600">Download</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">No resources have been added.</p>
+              )}
+            </section>
+          </aside>
         </div>
       </div>
     </Layout>

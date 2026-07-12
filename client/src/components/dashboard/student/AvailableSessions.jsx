@@ -4,6 +4,17 @@ import Layout from '../Layout';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import {
+  AcademicCapIcon,
+  CalendarDaysIcon,
+  ClockIcon,
+  FunnelIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  UserGroupIcon,
+  VideoCameraIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 
 const AvailableSessions = () => {
   const [sessions, setSessions] = useState([]);
@@ -23,16 +34,17 @@ const AvailableSessions = () => {
 
   // Add helper function to highlight matched text
   const highlightText = (text, searchTerm) => {
-    if (!searchTerm) return text;
+    if (!searchTerm || !text) return text;
     
-    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
     const parts = text.split(regex);
     
     return parts.map((part, index) => 
-      regex.test(part) ? (
-        <span key={index} className="bg-yellow-200/30 text-yellow-100 font-medium">
+      index % 2 === 1 ? (
+        <mark key={index} className="rounded bg-amber-100 px-0.5 font-semibold text-slate-900">
           {part}
-        </span>
+        </mark>
       ) : (
         part
       )
@@ -55,11 +67,6 @@ const AvailableSessions = () => {
     if (e.key === 'Enter') {
       setSearchTerm(searchInput);
     }
-  };
-
-  // Add function to clear date range
-  const clearDateRange = () => {
-    setDateRange({ start: '', end: '' });
   };
 
   useEffect(() => {
@@ -303,6 +310,33 @@ const AvailableSessions = () => {
     }
   };
 
+  const filteredSessions = sessions.filter(session => {
+    const normalizedSearch = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm ||
+      (session.title || '').toLowerCase().includes(normalizedSearch) ||
+      (session.description || '').toLowerCase().includes(normalizedSearch);
+    const matchesSubject = !selectedSubject || session.subject === selectedSubject;
+    const matchesStatus = !selectedStatus || session.status === selectedStatus;
+    const sessionDate = new Date(session.dateTime);
+    const matchesDateRange =
+      (!dateRange.start || sessionDate >= new Date(dateRange.start)) &&
+      (!dateRange.end || sessionDate <= new Date(`${dateRange.end}T23:59:59`));
+
+    return matchesSearch && matchesSubject && matchesStatus && matchesDateRange;
+  });
+  const liveCount = sessions.filter(session => session.status === 'active').length;
+  const scheduledCount = sessions.filter(session => (session.status || 'scheduled') === 'scheduled').length;
+  const enrolledCount = enrolledSessions.length;
+  const hasActiveFilters = Boolean(searchTerm || selectedSubject || selectedStatus || dateRange.start || dateRange.end);
+
+  const clearAllFilters = () => {
+    setSearchInput('');
+    setSearchTerm('');
+    setSelectedSubject('');
+    setSelectedStatus('');
+    setDateRange({ start: '', end: '' });
+  };
+
   if (loading) {
     return (
       <Layout userType="student">
@@ -325,30 +359,50 @@ const AvailableSessions = () => {
 
   return (
     <Layout userType="student">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-gray-800">Available Sessions</h1>
-        </div>
+      <div className="mx-auto max-w-7xl space-y-6 pb-8">
+        <section className="relative overflow-hidden rounded-3xl bg-blue-950 px-6 py-8 text-white shadow-xl shadow-blue-950/10 sm:px-9 sm:py-10">
+          <div className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border border-white/10 bg-white/[0.04]" />
+          <div className="pointer-events-none absolute -bottom-28 right-1/3 h-56 w-56 rounded-full border border-white/10" />
+          <div className="relative max-w-2xl">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-200">Learning schedule</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Find your next session</h1>
+            <p className="mt-3 max-w-xl leading-7 text-blue-100">Explore upcoming lessons, manage your enrollment, and join live classes when they begin.</p>
+          </div>
+          <div className="relative mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: 'Available', value: sessions.length, icon: CalendarDaysIcon },
+              { label: 'Enrolled', value: enrolledCount, icon: UserGroupIcon },
+              { label: 'Live now', value: liveCount, icon: VideoCameraIcon },
+              { label: 'Coming up', value: scheduledCount, icon: ClockIcon }
+            ].map(({ label, value, icon: Icon }) => (
+              <div key={label} className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-blue-100"><Icon className="h-5 w-5" /></div>
+                <div><p className="text-2xl font-bold">{value}</p><p className="text-xs font-semibold text-blue-200">{label}</p></div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        {/* Search and Filter Section */}
-        <div className="bg-gray-100/50 backdrop-blur-sm rounded-xl shadow-lg border border-gray-700 p-6">
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyPress={handleSearchKeyPress}
-            placeholder="Search sessions..."
-            className="w-full p-2 rounded border border-blue-200 focus:border-blue-400 focus:outline-none"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-4 mt-4">
-          {/* Dropdowns Row */}
-          <div className="flex gap-4 flex-wrap flex-1">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><FunnelIcon className="h-5 w-5" /></div>
+              <div><h2 className="font-bold text-slate-900">Find the right class</h2><p className="text-sm text-slate-500">Search by topic, status, or date.</p></div>
+            </div>
+            {hasActiveFilters && (
+              <button onClick={clearAllFilters} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"><XMarkIcon className="h-4 w-4" /> Clear filters</button>
+            )}
+          </div>
+          <div className="grid gap-3 lg:grid-cols-[minmax(260px,1.5fr)_repeat(2,minmax(160px,0.7fr))]">
+            <div className="relative">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <input type="search" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} onKeyDown={handleSearchKeyPress} placeholder="Search sessions" className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-24 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
+              <button onClick={() => setSearchTerm(searchInput)} className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-800">Search</button>
+            </div>
             <select
               value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
-              className="p-2 rounded border border-blue-200 focus:border-blue-400 focus:outline-none"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">All Subjects</option>
               {getUniqueSubjects().map(subject => (
@@ -359,7 +413,7 @@ const AvailableSessions = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="p-2 rounded border border-blue-200 focus:border-blue-400 focus:outline-none"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">All Statuses</option>
               <option value="active">Active</option>
@@ -368,51 +422,39 @@ const AvailableSessions = () => {
             </select>
           </div>
 
-          {/* Date Range */}
-          <div className="flex items-center gap-2">
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="relative">
+              <span className="pointer-events-none absolute left-3 top-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">From</span>
             <input
               type="date"
               value={dateRange.start}
               onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-              className="p-2 rounded border border-blue-200 focus:border-blue-400 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 px-3 pb-2 pt-5 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             />
+            </label>
+            <label className="relative">
+              <span className="pointer-events-none absolute left-3 top-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">To</span>
             <input
               type="date"
               value={dateRange.end}
               onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-              className="p-2 rounded border border-blue-200 focus:border-blue-400 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 px-3 pb-2 pt-5 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
             />
-            <button
-              onClick={clearDateRange}
-              className="px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-            >
-              Clear
-            </button>
+            </label>
           </div>
-        </div>
+        </section>
 
         {/* Sessions List */}
-        <div className="space-y-4 mt-4">
-          {sessions
-            .filter(session => {
-              const matchesSearch = !searchTerm || 
-                session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                session.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-              const matchesSubject = !selectedSubject || 
-                session.subject === selectedSubject;
-
-              const matchesStatus = !selectedStatus || 
-                session.status === selectedStatus;
-
-              const sessionDate = new Date(session.dateTime);
-              const matchesDateRange = 
-                (!dateRange.start || sessionDate >= new Date(dateRange.start)) &&
-                (!dateRange.end || sessionDate <= new Date(dateRange.end));
-
-              return matchesSearch && matchesSubject && matchesStatus && matchesDateRange;
-            })
-            .map((session) => {
+        {filteredSessions.length === 0 && (
+          <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+            <AcademicCapIcon className="mx-auto h-12 w-12 text-slate-300" />
+            <h2 className="mt-4 text-lg font-bold text-slate-800">No sessions match</h2>
+            <p className="mt-2 text-sm text-slate-500">Try changing your search or clearing the current filters.</p>
+            {hasActiveFilters && <button onClick={clearAllFilters} className="mt-5 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">Clear filters</button>}
+          </section>
+        )}
+        <div className="grid gap-5 lg:grid-cols-2">
+          {filteredSessions.map((session) => {
               const isEnrolled = enrolledSessions.includes(session._id);
               const status = session.status || 'scheduled';
               const isActive = status === 'active';
@@ -424,33 +466,33 @@ const AvailableSessions = () => {
                 session.description.toLowerCase().includes(searchTerm.toLowerCase());
 
               return (
-                <div key={session._id} className="bg-gray-100/50 backdrop-blur-sm rounded-xl shadow-lg border border-gray-700 p-6">
-                  <div className="flex justify-between items-start">
+                <article key={session._id} className="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-950/5 sm:p-6">
+                  <div className="flex h-full flex-col">
                     <div className="flex-1 text-left">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-lg font-semibold text-gray-800">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h3 className="text-xl font-bold text-slate-900 transition-colors group-hover:text-blue-800">
                           {highlightText(session.title, searchTerm)}
                           {!titleMatch && descriptionMatch && (
-                            <span className="ml-2 text-sm text-gray-500 font-normal">
-                              (matched in description)
+                            <span className="ml-2 text-xs font-semibold text-slate-400">
+                              Match in description
                             </span>
                           )}
                         </h3>
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${
-                          isActive ? 'bg-green-100 text-green-800' :
-                          isCompleted ? 'bg-gray-100 text-gray-800' :
-                          'bg-yellow-100 text-yellow-800'
+                        <span className={`rounded-full border px-2.5 py-1 text-xs font-bold capitalize ${
+                          isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-700' :
+                          isCompleted ? 'border-slate-200 bg-slate-100 text-slate-600' :
+                          'border-amber-200 bg-amber-50 text-amber-700'
                         }`}>
                           {status.charAt(0).toUpperCase() + status.slice(1)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="mt-2 text-sm font-semibold text-blue-700">
                         {session.subject} • Taught by {session.teacher?.name || 'Unknown Teacher'}
                       </p>
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
                         {highlightText(session.description, searchTerm)}
                       </p>
-                      <div className="mt-2 text-sm text-gray-600">
+                      <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 rounded-xl bg-slate-50 p-4 text-sm font-medium text-slate-600">
                         <span>Duration: {session.duration} mins</span>
                         <span className="mx-2">•</span>
                         <span>Grace Period: {session.gracePeriod || 5} mins</span>
@@ -460,61 +502,62 @@ const AvailableSessions = () => {
                           href={session.materials} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-400 hover:text-blue-300 mt-2 inline-block"
+                          className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-blue-700 hover:text-blue-900"
                         >
-                          View Materials
+                          <LinkIcon className="h-4 w-4" /> View material
                         </a>
                       )}
                       {session.status === 'active' && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium text-blue-400">
-                            Session is active!
+                        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                          <p className="text-sm font-bold text-emerald-800">
+                            This session is live
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="mt-1 text-sm text-emerald-700">
                             Grace period: {gracePeriodTimers[session._id] ? 
                               formatTimeLeft(gracePeriodTimers[session._id].timeLeft) :
                               `${session.gracePeriod} minutes`}
                           </p>
                           {session.startedAt && (
-                            <p className="text-xs text-gray-500">
+                            <p className="mt-1 text-xs text-emerald-600">
                               Started at: {new Date(session.startedAt).toLocaleTimeString()}
                             </p>
                           )}
                         </div>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">
+                    <div className="mt-5 border-t border-slate-100 pt-4">
+                      <p className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-600">
+                        <CalendarDaysIcon className="h-4 w-4 text-blue-600" />
                         {new Date(session.dateTime).toLocaleString()}
                       </p>
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button onClick={() => navigate(`/dashboard/session/${session._id}`)} className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">View details</button>
+                        <div className="flex-1" />
                         {!isCompleted && (
                           <button
                             onClick={() => handleEnrollment(session._id, isEnrolled)}
-                            className={`px-4 py-2 rounded-lg transition-all duration-300
+                            className={`rounded-lg px-3 py-2 text-sm font-bold transition
                               ${isEnrolled ? 
-                                'bg-red-400/10 text-red-400 border border-red-400/20 hover:bg-red-400/20 hover:border-red-400/50' :
-                                'bg-green-400/10 text-green-400 border border-green-400/20 hover:bg-green-400/20 hover:border-green-400/50'
+                                'border border-red-200 text-red-600 hover:bg-red-50' :
+                                'bg-blue-700 text-white hover:bg-blue-800'
                               }`}
                           >
-                            {isEnrolled ? 'Leave' : 'Enroll'}
+                            {isEnrolled ? 'Leave session' : 'Enroll'}
                           </button>
                         )}
 
                         {isActive && isEnrolled && (
                           <button
                             onClick={() => handleJoinSession(session)}
-                            className="px-4 py-2 rounded-lg bg-neon-blue/10 text-neon-blue
-                              border border-neon-blue/20 hover:bg-neon-blue/20 hover:border-neon-blue/50
-                              transition-all duration-300"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
                           >
-                            Join Live
+                            <VideoCameraIcon className="h-4 w-4" /> Join live
                           </button>
                         )}
                       </div>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
         </div>
