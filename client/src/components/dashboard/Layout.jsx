@@ -231,7 +231,7 @@ const Layout = ({ children, userType }) => {
       </div>
 
       {/* Footer */}
-      <footer className={`bg-blue-900 text-white ${location.pathname === '/' ? 'hidden' : ''}`}>
+      <footer className={`bg-blue-900 text-white ${location.pathname === '/' || isClassroomView ? 'hidden' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>

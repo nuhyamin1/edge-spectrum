@@ -4,12 +4,20 @@ import { toast } from 'react-toastify';
 import axios from '../../../utils/axios';
 import Layout from '../Layout';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+  CheckIcon,
+  XMarkIcon,
+  MagnifyingGlassIcon,
+  UsersIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArrowPathIcon
+} from '@heroicons/react/24/outline';
 import { io } from 'socket.io-client';
 import VideoRoom from '../VideoRoom';
 import Whiteboard from '../Whiteboard';
 import ExerciseRoom from '../ExerciseRoom';
-import { FaArrowLeft, FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaPlayCircle, FaTimesCircle, FaFolder } from 'react-icons/fa';
+import { FaHome, FaUserCheck, FaVideo, FaChalkboard, FaComments, FaBook, FaPlayCircle, FaTimesCircle, FaFolder } from 'react-icons/fa';
 import DiscussionRoom from '../DiscussionRoom';
 import MaterialRoom from '../MaterialRoom';
 import { exitAppFullscreen, requestAppFullscreen } from '../../../utils/browserFullscreen';
@@ -21,6 +29,10 @@ const Classroom = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('attendance');
   const [attendanceStatus, setAttendanceStatus] = useState({});
+  const [attendanceSearch, setAttendanceSearch] = useState('');
+  const [attendanceFilter, setAttendanceFilter] = useState('all');
+  const [updatingStudentIds, setUpdatingStudentIds] = useState(() => new Set());
+  const [bulkAttendanceStatus, setBulkAttendanceStatus] = useState(null);
   const [exerciseContent, setExerciseContent] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const socketRef = useRef(null);
@@ -57,38 +69,38 @@ const Classroom = () => {
         // Update local attendance state
         updateAttendanceStatus(data.studentId, 'present');
 
-        // Update enrolledStudents list using functional update to avoid duplicates
-        if (session && session.enrolledStudents) {
-          setSession(prevSession => {
-            // Update existing student info if found
-            const updatedStudents = prevSession.enrolledStudents.map(student => {
-              if (student._id === data.studentId) {
-                return {
-                  ...student,
-                  name: data.studentName,
-                  email: data.studentEmail,
-                  profilePicture: data.studentProfilePicture
-                };
-              }
-              return student;
-            });
+        // Update enrolledStudents list using a functional update to avoid stale socket closures.
+        setSession(prevSession => {
+          if (!prevSession?.enrolledStudents) return prevSession;
 
-            // If the student isn't in the list, add them
-            if (!prevSession.enrolledStudents.some(student => student._id === data.studentId)) {
-              updatedStudents.push({
-                _id: data.studentId,
+          // Update existing student info if found
+          const updatedStudents = prevSession.enrolledStudents.map(student => {
+            if (student._id === data.studentId) {
+              return {
+                ...student,
                 name: data.studentName,
                 email: data.studentEmail,
                 profilePicture: data.studentProfilePicture
-              });
+              };
             }
-
-            return {
-              ...prevSession,
-              enrolledStudents: updatedStudents
-            };
+            return student;
           });
-        }
+
+          // If the student isn't in the list, add them
+          if (!prevSession.enrolledStudents.some(student => student._id === data.studentId)) {
+            updatedStudents.push({
+              _id: data.studentId,
+              name: data.studentName,
+              email: data.studentEmail,
+              profilePicture: data.studentProfilePicture
+            });
+          }
+
+          return {
+            ...prevSession,
+            enrolledStudents: updatedStudents
+          };
+        });
 
         // Emit attendance update to all clients
         if (socketRef.current) {
@@ -103,7 +115,7 @@ const Classroom = () => {
         toast.error('Failed to update attendance status');
       }
     }
-  }, [sessionId, updateAttendanceStatus, session]);
+  }, [sessionId, updateAttendanceStatus]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -192,7 +204,8 @@ const Classroom = () => {
 
   const toggleAttendance = useCallback(async (studentId) => {
     const newStatus = attendanceStatus[studentId] === 'present' ? 'absent' : 'present';
-    
+
+    setUpdatingStudentIds(prev => new Set(prev).add(studentId));
     try {
       // Update attendance status in the database
       await axios.post(`/api/sessions/${sessionId}/attendance`, {
@@ -214,15 +227,24 @@ const Classroom = () => {
     } catch (error) {
       console.error('Error updating attendance status:', error);
       toast.error('Failed to update attendance status');
+    } finally {
+      setUpdatingStudentIds(prev => {
+        const next = new Set(prev);
+        next.delete(studentId);
+        return next;
+      });
     }
   }, [sessionId, attendanceStatus, updateAttendanceStatus]);
 
-  const handleMarkAllPresent = useCallback(async () => {
+  const handleMarkAllAttendance = useCallback(async (status) => {
+    if (!session.enrolledStudents.length || bulkAttendanceStatus) return;
+
+    setBulkAttendanceStatus(status);
     try {
       const promises = session.enrolledStudents.map(student => 
         axios.post(`/api/sessions/${sessionId}/attendance`, {
           studentId: student._id,
-          status: 'present'
+          status
         })
       );
       
@@ -230,58 +252,30 @@ const Classroom = () => {
 
       const newStatus = {};
       session.enrolledStudents.forEach(student => {
-        newStatus[student._id] = 'present';
+        newStatus[student._id] = status;
         
         // Emit socket event for each student
         if (socketRef.current) {
           socketRef.current.emit('attendanceUpdate', {
             sessionId,
             studentId: student._id,
-            status: 'present'
+            status
           });
         }
       });
       
       setAttendanceStatus(newStatus);
-      toast.success('Marked all students as present');
+      toast.success(`Marked all students as ${status}`);
     } catch (error) {
-      console.error('Error marking all present:', error);
+      console.error(`Error marking all ${status}:`, error);
       toast.error('Failed to update attendance status');
+    } finally {
+      setBulkAttendanceStatus(null);
     }
-  }, [session, sessionId]);
+  }, [session, sessionId, bulkAttendanceStatus]);
 
-  const handleMarkAllAbsent = useCallback(async () => {
-    try {
-      const promises = session.enrolledStudents.map(student => 
-        axios.post(`/api/sessions/${sessionId}/attendance`, {
-          studentId: student._id,
-          status: 'absent'
-        })
-      );
-      
-      await Promise.all(promises);
-
-      const newStatus = {};
-      session.enrolledStudents.forEach(student => {
-        newStatus[student._id] = 'absent';
-        
-        // Emit socket event for each student
-        if (socketRef.current) {
-          socketRef.current.emit('attendanceUpdate', {
-            sessionId,
-            studentId: student._id,
-            status: 'absent'
-          });
-        }
-      });
-      
-      setAttendanceStatus(newStatus);
-      toast.success('Marked all students as absent');
-    } catch (error) {
-      console.error('Error marking all absent:', error);
-      toast.error('Failed to update attendance status');
-    }
-  }, [session, sessionId]);
+  const handleMarkAllPresent = useCallback(() => handleMarkAllAttendance('present'), [handleMarkAllAttendance]);
+  const handleMarkAllAbsent = useCallback(() => handleMarkAllAttendance('absent'), [handleMarkAllAttendance]);
 
   const handleStartSession = async () => {
     try {
@@ -326,13 +320,27 @@ const Classroom = () => {
     );
   }
 
+  const enrolledStudents = session.enrolledStudents || [];
+  const presentCount = enrolledStudents.filter(student => attendanceStatus[student._id] === 'present').length;
+  const absentCount = enrolledStudents.length - presentCount;
+  const normalizedSearch = attendanceSearch.trim().toLowerCase();
+  const filteredStudents = enrolledStudents.filter(student => {
+    const matchesSearch = !normalizedSearch ||
+      (student.name || '').toLowerCase().includes(normalizedSearch) ||
+      (student.email || '').toLowerCase().includes(normalizedSearch);
+    const matchesStatus = attendanceFilter === 'all' || attendanceStatus[student._id] === attendanceFilter;
+    return matchesSearch && matchesStatus;
+  });
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Mobile Menu Button */}
       <button 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="fixed md:hidden z-[100] top-4 right-4 p-4 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-colors mobile-menu-button"
+        className="fixed md:hidden z-[100] top-4 right-4 p-3 bg-slate-900 rounded-full shadow-lg hover:bg-slate-800 transition-colors mobile-menu-button"
+        aria-label={isMobileMenuOpen ? 'Close classroom menu' : 'Open classroom menu'}
+        aria-expanded={isMobileMenuOpen}
       >
         <svg 
           className="w-8 h-8 text-white" 
@@ -468,51 +476,112 @@ const Classroom = () => {
       {/* Main Content */}
       <div className="flex-1">
         <Layout userType="teacher">
-          <div className="space-y-6">
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/60">
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6 lg:p-8">
               {activeTab === 'attendance' && (
-                <div className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-semibold">Attendance Room</h3>
-                    <div className="flex space-x-4">
-                      <button
-                        onClick={handleMarkAllPresent}
-                        className="flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors"
-                      >
-                        <CheckIcon className="w-5 h-5 mr-2" />
-                        Mark All Present
-                      </button>
-                      <button
-                        onClick={handleMarkAllAbsent}
-                        className="flex items-center px-4 py-2 bg-red-100 text-red-800 rounded-md hover:bg-red-200 transition-colors"
-                      >
-                        <XMarkIcon className="w-5 h-5 mr-2" />
-                        Mark All Absent
-                      </button>
+                <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-white/80 bg-white shadow-xl shadow-slate-200/60">
+                  <div className="relative overflow-hidden bg-gradient-to-r from-blue-950 via-blue-800 to-indigo-700 px-5 py-7 text-white sm:px-8 sm:py-9">
+                    <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" />
+                    <div className="absolute right-28 top-16 h-28 w-28 rounded-full bg-cyan-300/10" />
+                    <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+                      <div>
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-50 backdrop-blur-sm">
+                            {session.subject || 'Class session'}
+                          </span>
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                            session.status === 'active' ? 'bg-emerald-400/20 text-emerald-100' : 'bg-white/15 text-blue-50'
+                          }`}>
+                            <span className={`h-2 w-2 rounded-full ${session.status === 'active' ? 'bg-emerald-300 animate-pulse' : 'bg-blue-200'}`} />
+                            {session.status || 'scheduled'}
+                          </span>
+                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Attendance Room</h1>
+                        <p className="mt-2 max-w-2xl text-sm text-blue-100 sm:text-base">
+                          {session.title || 'Review and update student attendance for this class.'}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={handleMarkAllPresent}
+                          disabled={Boolean(bulkAttendanceStatus) || updatingStudentIds.size > 0 || !enrolledStudents.length}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-emerald-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                        >
+                          {bulkAttendanceStatus === 'present' ? <ArrowPathIcon className="mr-2 h-5 w-5 animate-spin" /> : <CheckIcon className="mr-2 h-5 w-5" />}
+                          Mark all present
+                        </button>
+                        <button
+                          onClick={handleMarkAllAbsent}
+                          disabled={Boolean(bulkAttendanceStatus) || updatingStudentIds.size > 0 || !enrolledStudents.length}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-sm font-bold text-white backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                        >
+                          {bulkAttendanceStatus === 'absent' ? <ArrowPathIcon className="mr-2 h-5 w-5 animate-spin" /> : <XMarkIcon className="mr-2 h-5 w-5" />}
+                          Mark all absent
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    {session.enrolledStudents.map((student) => (
-                      <div 
-                        key={student._id} 
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center space-x-4">
+
+                  <div className="p-5 sm:p-8">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <button onClick={() => setAttendanceFilter('all')} aria-pressed={attendanceFilter === 'all'} className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${attendanceFilter === 'all' ? 'border-blue-300 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
+                        <span className="rounded-xl bg-blue-100 p-2.5 text-blue-700"><UsersIcon className="h-6 w-6" /></span>
+                        <span><span className="block text-2xl font-bold text-slate-900">{enrolledStudents.length}</span><span className="text-sm font-medium text-slate-500">Enrolled students</span></span>
+                      </button>
+                      <button onClick={() => setAttendanceFilter('present')} aria-pressed={attendanceFilter === 'present'} className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${attendanceFilter === 'present' ? 'border-emerald-300 bg-emerald-50 ring-2 ring-emerald-100' : 'border-slate-200 bg-white hover:border-emerald-200'}`}>
+                        <span className="rounded-xl bg-emerald-100 p-2.5 text-emerald-700"><CheckCircleIcon className="h-6 w-6" /></span>
+                        <span><span className="block text-2xl font-bold text-slate-900">{presentCount}</span><span className="text-sm font-medium text-slate-500">Present</span></span>
+                      </button>
+                      <button onClick={() => setAttendanceFilter('absent')} aria-pressed={attendanceFilter === 'absent'} className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${attendanceFilter === 'absent' ? 'border-rose-300 bg-rose-50 ring-2 ring-rose-100' : 'border-slate-200 bg-white hover:border-rose-200'}`}>
+                        <span className="rounded-xl bg-rose-100 p-2.5 text-rose-700"><XCircleIcon className="h-6 w-6" /></span>
+                        <span><span className="block text-2xl font-bold text-slate-900">{absentCount}</span><span className="text-sm font-medium text-slate-500">Absent</span></span>
+                      </button>
+                    </div>
+
+                    <div className="my-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">Student attendance</h2>
+                        <p className="text-sm text-slate-500">Select a student&apos;s status to update it instantly.</p>
+                      </div>
+                      <label className="relative block w-full sm:max-w-sm">
+                        <span className="sr-only">Search students</span>
+                        <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="search"
+                          value={attendanceSearch}
+                          onChange={(event) => setAttendanceSearch(event.target.value)}
+                          placeholder="Search by name or email"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="space-y-3">
+                      {filteredStudents.map((student) => {
+                        const isPresent = attendanceStatus[student._id] === 'present';
+                        const isUpdating = updatingStudentIds.has(student._id);
+                        return (
+                          <div
+                            key={student._id}
+                            className="group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-slate-200/60 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+                          >
+                        <div className="flex min-w-0 items-center gap-4">
                           {student.profilePicture?.data ? (
                             <img
                               src={student.profilePicture.data}
                               alt={`${student.name}'s profile`}
-                              className="w-12 h-12 rounded-full object-cover"
+                              className="h-14 w-14 flex-none rounded-2xl object-cover ring-4 ring-slate-100"
                             />
                           ) : (
-                            <UserCircleIcon className="w-12 h-12 text-gray-400" />
+                            <UserCircleIcon className="h-14 w-14 flex-none text-slate-300" />
                           )}
-                          <div>
-                            <p className="font-medium text-gray-900">{student.name}</p>
-                            <p className="text-sm text-gray-500">{student.email}</p>
-                            {attendanceStatus[student._id] === 'present' && session.status === 'active' && (
-                              <span className="text-xs text-green-600 font-medium">
+                          <div className="min-w-0">
+                            <p className="truncate font-bold text-slate-900">{student.name}</p>
+                            <p className="truncate text-sm text-slate-500">{student.email}</p>
+                            {isPresent && session.status === 'active' && (
+                              <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                 Currently in classroom
                               </span>
                             )}
@@ -520,16 +589,36 @@ const Classroom = () => {
                         </div>
                         <button
                           onClick={() => toggleAttendance(student._id)}
-                          className={`px-4 py-2 rounded-md text-sm font-medium ${
-                            attendanceStatus[student._id] === 'present'
-                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                              : 'bg-red-100 text-red-800 hover:bg-red-200'
+                          disabled={isUpdating || Boolean(bulkAttendanceStatus)}
+                          aria-label={`Mark ${student.name} as ${isPresent ? 'absent' : 'present'}`}
+                          className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition disabled:cursor-wait disabled:opacity-60 sm:w-32 ${
+                            isPresent
+                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                              : 'bg-rose-100 text-rose-800 hover:bg-rose-200'
                           }`}
                         >
-                          {attendanceStatus[student._id] === 'present' ? <CheckIcon className="w-5 h-5" title="Present" /> : <XMarkIcon className="w-5 h-5" title="Absent" />}
+                          {isUpdating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : isPresent ? <CheckIcon className="h-5 w-5" /> : <XMarkIcon className="h-5 w-5" />}
+                          {isPresent ? 'Present' : 'Absent'}
                         </button>
+                          </div>
+                        );
+                      })}
+
+                    {!filteredStudents.length && (
+                      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+                        <UsersIcon className="mx-auto h-10 w-10 text-slate-300" />
+                        <h3 className="mt-3 font-bold text-slate-800">No students found</h3>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {enrolledStudents.length ? 'Try another search or attendance filter.' : 'No students are enrolled in this session yet.'}
+                        </p>
+                        {(attendanceSearch || attendanceFilter !== 'all') && enrolledStudents.length > 0 && (
+                          <button onClick={() => { setAttendanceSearch(''); setAttendanceFilter('all'); }} className="mt-4 text-sm font-bold text-blue-700 hover:text-blue-900">
+                            Clear filters
+                          </button>
+                        )}
                       </div>
-                    ))}
+                    )}
+                    </div>
                   </div>
                 </div>
               )}
